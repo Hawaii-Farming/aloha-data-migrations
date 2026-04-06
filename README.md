@@ -15,7 +15,9 @@ but no code.
 | `processes/` | Ongoing operational workflows (e.g. payroll). Run on a schedule or on-demand. |
 | `python/` | Older one-off process scripts. Kept for reference. |
 | `sql/` | One-shot SQL deploys (view contracts, test data seeding) run via Supabase SQL Editor. |
+| `schema-reference/` | Read-only snapshot of the schema from `aloha-app` (10 markdown module docs + 102 SQL migrations). Browse here when writing a new migration script — no need to switch repos. |
 | `MIGRATION_CONVENTIONS.md` | The rules every script in this repo must follow. |
+| `sync-schema-reference.sh` | Pulls the latest schema docs and SQL from the sibling `aloha-app` repo into `schema-reference/`. Run whenever the schema changes upstream. |
 
 ## Setup
 
