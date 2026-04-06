@@ -1,0 +1,8 @@
+# Migration scripts (scripts/migrations/*.py)
+supabase>=2.0      # Supabase Python client for inserting/upserting rows
+gspread>=6.0       # Google Sheets API client for reading legacy data
+google-auth>=2.0   # Provides google.oauth2.service_account.Credentials
+
+# Process scripts (scripts/processes/*.py) — ongoing payroll workflows
+pandas>=2.0        # DataFrame manipulation in process_payroll.py
+openpyxl>=3.1      # Pandas .xlsx engine (indirect, used when reading Excel)
