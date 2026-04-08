@@ -23,20 +23,30 @@ Rerunnable: clears and reinserts all data on each run.
 import os
 import re
 import gspread
+import psycopg2
 from google.oauth2.service_account import Credentials
 from supabase import create_client
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://kfwqtaazdankxmdlqdak.supabase.co")
-SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 
-if not SUPABASE_KEY:
+def _load_dotenv():
+    """Populate os.environ from .env at the repo root if keys are missing."""
     try:
         with open(".env") as f:
             for line in f:
-                if line.startswith("SUPABASE_SERVICE_KEY="):
-                    SUPABASE_KEY = line.strip().split("=", 1)[1]
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k, v)
     except FileNotFoundError:
         pass
+
+
+_load_dotenv()
+
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://kfwqtaazdankxmdlqdak.supabase.co")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
+SUPABASE_DB_URL = os.environ.get("SUPABASE_DB_URL")
 
 AUDIT_USER = "data@hawaiifarming.com"
 
@@ -78,6 +88,47 @@ def insert_rows(supabase, table: str, rows: list):
             all_data.extend(result.data)
         print(f"  Inserted {len(rows)} rows")
     return all_data
+
+
+def truncate_all_public_tables():
+    """Truncate every table in the public schema except the four sys_* lookup
+    tables (which this script re-seeds immediately after). Uses a single
+    TRUNCATE ... CASCADE so FK dependency order is handled by Postgres.
+
+    Auth/storage/realtime schemas are left untouched.
+    """
+    if not SUPABASE_DB_URL:
+        raise SystemExit(
+            "ERROR: SUPABASE_DB_URL is required to truncate public tables. "
+            "Set it in .env (Supabase Dashboard -> Settings -> Database -> Connection string)."
+        )
+
+    excluded = ("sys_access_level", "sys_module", "sys_sub_module", "sys_uom")
+
+    print("Discovering public tables...")
+    with psycopg2.connect(SUPABASE_DB_URL) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT tablename
+                FROM pg_tables
+                WHERE schemaname = 'public'
+                  AND tablename NOT IN %s
+                ORDER BY tablename;
+                """,
+                (excluded,),
+            )
+            tables = [r[0] for r in cur.fetchall()]
+
+            if not tables:
+                print("  No tables to truncate")
+                return
+
+            print(f"  Truncating {len(tables)} tables (CASCADE)...")
+            qualified = ", ".join(f'public."{t}"' for t in tables)
+            cur.execute(f"TRUNCATE {qualified} RESTART IDENTITY CASCADE;")
+        conn.commit()
+    print(f"  Truncated {len(tables)} public tables")
 
 
 def get_sheets():
@@ -265,68 +316,9 @@ def main():
     print("SYSTEM DATA MIGRATION")
     print("=" * 60)
 
-    # Clear ALL dependent tables in reverse migration order (leaf tables first)
-    print("Clearing all dependent tables...")
-    for t in [
-              # fsafe
-              "ops_corrective_action_taken",
-              "fsafe_pest_result", "fsafe_result", "fsafe_test_hold_po",
-              "fsafe_test_hold", "fsafe_lab_test", "fsafe_lab",
-              # maint
-              "maint_request_photo", "maint_request_invnt_item", "maint_request",
-              # pack
-              "pack_productivity_hour_fail", "pack_productivity_hour",
-              "pack_productivity_fail_category",
-              "pack_shelf_life_photo", "pack_shelf_life_result",
-              "pack_shelf_life", "pack_shelf_life_metric",
-              # sales
-              "sales_po_fulfillment", "pack_lot_item", "pack_lot",
-              "sales_po_line", "sales_po",
-              "sales_product_price", "sales_customer",
-              "sales_customer_group", "sales_fob",
-              # grow (higher)
-              "grow_task_photo", "grow_task_seed_batch",
-              "grow_monitoring_result", "grow_monitoring_metric",
-              "grow_fertigation", "grow_fertigation_recipe_site",
-              "grow_fertigation_recipe_item", "grow_fertigation_recipe",
-              # grow (spray/scout/harvest/seed)
-              "grow_spray_equipment", "grow_spray_input",
-              "grow_spray_compliance", "grow_scout_result",
-              "grow_harvest_weight", "grow_harvest_container",
-              "grow_seed_batch", "grow_seed_mix_item", "grow_seed_mix",
-              "grow_trial_type", "grow_cycle_pattern",
-              # ops
-              "ops_template_result_photo", "ops_template_result",
-              "ops_template_question", "ops_corrective_action_choice",
-              "ops_task_template", "ops_template",
-              "ops_training_attendee", "ops_training", "ops_training_type",
-              "ops_task_schedule", "ops_task_tracker",
-              "sales_product", "ops_task",
-              # invnt
-              "invnt_onhand", "invnt_po_received", "invnt_lot",
-              "invnt_po", "invnt_item", "invnt_category", "invnt_vendor",
-              # hr
-              "hr_payroll", "hr_disciplinary_warning",
-              "hr_travel_request", "hr_time_off_request",
-              "hr_module_access", "hr_employee",
-              "hr_title", "hr_work_authorization", "hr_department",
-              # grow (base)
-              "grow_disease", "grow_pest", "grow_grade", "grow_variety",
-              # org
-              "org_business_rule", "org_equipment", "org_site",
-              "org_site_category", "org_sub_module", "org_module",
-              "org_farm", "org",
-              ]:
-        try:
-            supabase.table(t).delete().neq("org_id", "___never___").execute()
-        except Exception:
-            try:
-                supabase.table(t).delete().neq("id", "___never___").execute()
-            except Exception:
-                pass
-    print("  All dependencies cleared")
+    truncate_all_public_tables()
 
-    # Clear sys tables in reverse FK order
+    # Clear sys tables in reverse FK order so they can be re-seeded below.
     print("Clearing sys tables...")
     supabase.table("sys_sub_module").delete().neq("id", "___never___").execute()
     supabase.table("sys_module").delete().neq("id", "___never___").execute()

@@ -9,7 +9,7 @@ Source: https://docs.google.com/spreadsheets/d/1MbHJoJmq0w8hWz8rl9VXezmK-63MFmuK
   - fsafe_log_training_employees: 10656 rows → ops_training_attendee
 
 Usage:
-    python scripts/migrations/20260401000007d_ops_training.py
+    python scripts/migrations/20260401000019_ops_training.py
 
 Rerunnable: clears and reinserts all data on each run.
 """

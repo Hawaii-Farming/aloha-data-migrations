@@ -11,7 +11,7 @@ Source: https://docs.google.com/spreadsheets/d/1XEwjbU_NKNmoUED4w5iuaGV_ilovCJg4
   - pack_L_prod: 1907 rows → ops_task_tracker + pack_productivity_hour + pack_productivity_hour_fail
 
 Usage:
-    python scripts/migrations/20260401000009_pack_productivity.py
+    python scripts/migrations/20260401000010_pack_productivity.py
 
 Rerunnable: clears and reinserts all data on each run.
 """

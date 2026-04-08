@@ -11,7 +11,7 @@ Source: https://docs.google.com/spreadsheets/d/1MbHJoJmq0w8hWz8rl9VXezmK-63MFmuK
   - fsafe_log_test_n_hold: 587 rows -> fsafe_test_hold + fsafe_result (unpivoted)
 
 Usage:
-    python scripts/migrations/20260401000007c_fsafe_results.py
+    python scripts/migrations/20260401000011_fsafe_results.py
 
 Rerunnable: clears and reinserts all data on each run.
 """
@@ -391,9 +391,9 @@ def migrate_emp(supabase, wb, sampled_by_lookup, email_map):
         # FailCode
         fail_code = str(r.get("FailCode", "")).strip() or None
 
-        # Timestamps
-        sampled_at = parse_timestamp(str(r.get("Timestamp", "")).strip())
-        completed_at = parse_timestamp(str(r.get("CompletedDate", "")).strip())
+        # Timestamps (EMP sheet uses SampleDateTime and CompletedDateTime)
+        sampled_at = parse_timestamp(str(r.get("SampleDateTime", "")).strip())
+        completed_at = parse_timestamp(str(r.get("CompletedDateTime", "")).strip())
 
         # Sampled by / verified by
         sampled_by = resolve_sampled_by(r.get("SampledBy", ""), sampled_by_lookup)
@@ -473,7 +473,7 @@ def migrate_water(supabase, wb, water_site_map, sampled_by_lookup):
         lab_raw = str(r.get("Lab", "")).strip().lower()
         fsafe_lab_id = lab_by_name.get(lab_raw)
 
-        sampled_at = parse_timestamp(str(r.get("Timestamp", "")).strip())
+        sampled_at = parse_timestamp(str(r.get("SampleDateTime", "")).strip())
         sampled_by = resolve_sampled_by(r.get("SampledBy", ""), sampled_by_lookup)
 
         base = {
@@ -658,8 +658,34 @@ def migrate_test_hold(supabase, wb, sampled_by_lookup):
 # ---------------------------------------------------------------------------
 
 def clear_data(supabase):
-    """Clear fsafe_result, fsafe_test_hold, fsafe_lab in FK dependency order."""
+    """Clear fsafe_result, fsafe_test_hold, fsafe_lab in FK dependency order.
+
+    ops_corrective_action_taken.fsafe_result_id FK-references fsafe_result,
+    so we must NULL those references out (or delete them) before we can
+    delete the parent rows. We just null the FK — the corrective action
+    migration will re-link them on its next run.
+    """
     print("\nClearing food safety results data...")
+
+    # Detach corrective actions from fsafe_result (the corrective action
+    # migration will re-link them after 7l re-runs). We can't null a column
+    # via PostgREST's .update() without a filter, so we delete CA rows that
+    # have fsafe_result_id set instead — they'll be rebuilt by 7l.
+    ca_with_fsafe = (
+        supabase.table("ops_corrective_action_taken")
+        .select("id")
+        .not_.is_("fsafe_result_id", "null")
+        .execute()
+        .data
+    )
+    if ca_with_fsafe:
+        ids = [r["id"] for r in ca_with_fsafe]
+        for i in range(0, len(ids), 100):
+            supabase.table("ops_corrective_action_taken").delete().in_(
+                "id", ids[i:i + 100]
+            ).execute()
+        print(f"  Detached {len(ids)} corrective actions referencing fsafe_result")
+
     supabase.table("fsafe_result").delete().neq(
         "id", "00000000-0000-0000-0000-000000000000"
     ).execute()
@@ -679,11 +705,6 @@ def clear_data(supabase):
 # ---------------------------------------------------------------------------
 
 def main():
-    if not SUPABASE_KEY:
-        print("ERROR: Set SUPABASE_SERVICE_KEY in .env or environment")
-        print("  Get it from: Supabase Dashboard -> Settings -> API -> service_role key")
-        return
-
     supabase = create_client(SUPABASE_URL, require_supabase_key())
     gc = get_sheets()
 

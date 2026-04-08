@@ -210,8 +210,13 @@ def migrate_org_site_category(supabase):
 
 
 def migrate_org_module(supabase):
-    """Copy sys_module records into org_module for this org."""
-    # Read sys_module
+    """Copy sys_module records into org_module for this org.
+
+    Only `human_resources` is enabled for now; all other modules are
+    provisioned but disabled until they are ready to roll out.
+    """
+    ENABLED_MODULES = {"human_resources"}
+
     result = supabase.table("sys_module").select("id, name, display_order").order("display_order").execute()
 
     rows = []
@@ -221,7 +226,7 @@ def migrate_org_module(supabase):
             "org_id": ORG_ID,
             "sys_module_id": mod["id"],
             "display_name": mod["name"],
-            "is_enabled": True,
+            "is_enabled": mod["id"] in ENABLED_MODULES,
             "display_order": mod["display_order"],
         }))
 
@@ -229,8 +234,20 @@ def migrate_org_module(supabase):
 
 
 def migrate_org_sub_module(supabase):
-    """Copy sys_sub_module records into org_sub_module for this org."""
-    # Read sys_sub_module
+    """Copy sys_sub_module records into org_sub_module for this org.
+
+    Only the HR sub-modules currently in use are enabled: register, scheduler,
+    payroll_comp, time_off, payroll_data. Everything else is provisioned but
+    disabled.
+    """
+    ENABLED_SUB_MODULES = {
+        "register",
+        "scheduler",
+        "payroll_comp",
+        "time_off",
+        "payroll_data",
+    }
+
     result = supabase.table("sys_sub_module").select(
         "id, sys_module_id, name, sys_access_level_id, display_order"
     ).order("display_order").execute()
@@ -244,7 +261,7 @@ def migrate_org_sub_module(supabase):
             "sys_sub_module_id": sub["id"],
             "sys_access_level_id": sub["sys_access_level_id"],
             "display_name": proper_case(sub["name"]),
-            "is_enabled": True,
+            "is_enabled": sub["id"] in ENABLED_SUB_MODULES,
             "display_order": sub["display_order"],
         }))
 
@@ -471,6 +488,7 @@ def migrate_ops_task(supabase):
         ("monitoring", "Monitoring", "Recording environmental readings at growing sites"),
         ("packing", "Packing", "Processing harvested crops into packaged products"),
         ("pest_trap_inspection", "Pest Trap Inspection", "Checking and recording pest trap counts at food safety sites"),
+        ("food_safety_log", "Food Safety Log", "Completing food safety checklists, facility inspections, and equipment calibration"),
     ]
 
     rows = [

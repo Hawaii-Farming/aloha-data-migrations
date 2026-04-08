@@ -17,7 +17,7 @@ Sources:
           - pack_C_prod: 10394 rows → pack_lot (cuke) summed by date + pack_lot_item per product column
 
 Usage:
-    python scripts/migrations/20260401000008_pack.py
+    python scripts/migrations/20260401000009_pack.py
 
 Rerunnable: clears and reinserts all data on each run.
 """

@@ -10,7 +10,7 @@ Source: https://docs.google.com/spreadsheets/d/1lSWWLxyD0l83HfuiNI_iud6F9hopY4ho
 Auto-creates missing customers/products as inactive.
 
 Usage:
-    python scripts/migrations/20260401000011_sales_po.py
+    python scripts/migrations/20260401000023_sales_po.py
 
 Rerunnable: clears and reinserts all data on each run.
 """

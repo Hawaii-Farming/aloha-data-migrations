@@ -5,7 +5,7 @@ Seeds org_business_rule with business rules, workflows, calculations,
 requirements, and definitions derived from the schema and process docs.
 
 Usage:
-    python scripts/migrations/20260401000012_business_rule.py
+    python scripts/migrations/20260401000024_business_rule.py
 
 Rerunnable: clears and reinserts all data on each run.
 """
@@ -481,10 +481,6 @@ RULES = [
 
 
 def main():
-    if not SUPABASE_KEY:
-        print("ERROR: Set SUPABASE_SERVICE_KEY in .env or environment")
-        return
-
     supabase = create_client(SUPABASE_URL, require_supabase_key())
 
     # Clear existing rules

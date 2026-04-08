@@ -12,7 +12,7 @@ Source: https://docs.google.com/spreadsheets/d/1MbHJoJmq0w8hWz8rl9VXezmK-63MFmuK
   - fsafe_corrective_actions: 11 rows → ops_corrective_action_choice
 
 Usage:
-    python scripts/migrations/20260401000007b_fsafe.py
+    python scripts/migrations/20260401000008_fsafe.py
 
 Rerunnable: clears and reinserts all data on each run.
 """
@@ -212,6 +212,86 @@ def migrate_pest_stations(supabase, gc):
     insert_rows(supabase, "org_site", rows, upsert=True)
 
 
+FM_TEMPLATE_ID = "foreign_material_event"
+FM_ENUM_OPTIONS = [
+    "Glass", "Metal", "Wood", "Plastic", "Hair",
+    "Insect", "Rubber", "Paper", "Excessive Soil", "Other",
+]
+
+
+def ensure_foreign_material_template(supabase):
+    """Create the org-scoped Foreign Material Event template and its single
+    enum question. Runs as part of the food safety lookup bootstrap so that
+    per-farm checklist migrations (cuke PH, lettuce PH) can reference it
+    without owning the schema.
+    """
+    TASK_ID = "food_safety_log"
+    print("\n--- foreign_material_event template ---")
+
+    supabase.table("ops_template").upsert(audit({
+        "id": FM_TEMPLATE_ID,
+        "org_id": ORG_ID,
+        "farm_id": None,
+        "name": "Foreign Material Event",
+        "org_module_id": "food_safety",
+        "description": "Recorded when a foreign material event occurs during packing or food safety inspection",
+        "display_order": 100,
+    })).execute()
+    print(f"  Upserted template {FM_TEMPLATE_ID}")
+
+    # Replace the template's questions idempotently. Must delete any results
+    # first, because results FK to questions.
+    existing_results = (
+        supabase.table("ops_template_result")
+        .select("id,ops_task_tracker_id")
+        .eq("ops_template_id", FM_TEMPLATE_ID)
+        .execute()
+        .data
+    )
+    if existing_results:
+        # Photos FK to results, so delete photos first
+        result_ids = [r["id"] for r in existing_results]
+        for i in range(0, len(result_ids), 100):
+            supabase.table("ops_template_result_photo").delete().in_(
+                "ops_template_result_id", result_ids[i:i + 100]
+            ).execute()
+        # Then the results
+        supabase.table("ops_template_result").delete().eq(
+            "ops_template_id", FM_TEMPLATE_ID
+        ).execute()
+        print(f"  Cleared {len(result_ids)} existing foreign_material_event results + photos")
+
+    supabase.table("ops_template_question").delete().eq(
+        "ops_template_id", FM_TEMPLATE_ID
+    ).execute()
+    inserted_q = supabase.table("ops_template_question").insert(audit({
+        "org_id": ORG_ID,
+        "farm_id": None,
+        "ops_template_id": FM_TEMPLATE_ID,
+        "question_text": "Type of foreign material",
+        "response_type": "enum",
+        "is_required": True,
+        "enum_options": FM_ENUM_OPTIONS,
+        "enum_pass_options": [],
+        "include_photo": True,
+        "display_order": 1,
+        "is_deleted": False,
+    })).execute()
+    print(f"  Inserted foreign_material_event enum question")
+
+    # Idempotent task->template link (org-scoped, no farm_id)
+    supabase.table("ops_task_template").delete().eq(
+        "ops_template_id", FM_TEMPLATE_ID
+    ).eq("ops_task_id", TASK_ID).execute()
+    supabase.table("ops_task_template").insert(audit({
+        "org_id": ORG_ID,
+        "farm_id": None,
+        "ops_task_id": TASK_ID,
+        "ops_template_id": FM_TEMPLATE_ID,
+    })).execute()
+    print(f"  Linked template to {TASK_ID}")
+
+
 def migrate_corrective_action_choices(supabase, gc):
     wb = gc.open_by_key(FSAFE_SHEET_ID)
     data = wb.worksheet("fsafe_corrective_actions").get_all_records()
@@ -257,6 +337,7 @@ def main():
     migrate_fsafe_sites(supabase, gc)
     migrate_pest_stations(supabase, gc)
     migrate_corrective_action_choices(supabase, gc)
+    ensure_foreign_material_template(supabase)
 
     print("\n" + "=" * 60)
     print("DONE")

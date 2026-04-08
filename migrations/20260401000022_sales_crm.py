@@ -10,7 +10,7 @@ Source: https://docs.google.com/spreadsheets/d/1lSWWLxyD0l83HfuiNI_iud6F9hopY4ho
   - sales_CRM_store_visit_prices: 356 rows → sales_crm_store_visit_result (unpivoted)
 
 Usage:
-    python scripts/migrations/20260401000010b_sales_crm.py
+    python scripts/migrations/20260401000022_sales_crm.py
 
 Rerunnable: clears and reinserts all data on each run.
 """

@@ -43,3 +43,4 @@ COMMENT ON COLUMN ops_template_question.enum_options IS 'JSON array of available
 COMMENT ON COLUMN ops_template_question.enum_pass_options IS 'JSON array of enum values that constitute a pass';
 COMMENT ON COLUMN ops_template_question.ops_corrective_action_choice_ids IS 'JSON array of suggested corrective action choice IDs when this question fails';
 COMMENT ON COLUMN ops_template_question.farm_id IS 'Inherited from ops_template.farm_id when question is created';
+COMMENT ON COLUMN ops_template_question.is_deleted IS 'True for retired/legacy questions kept for historical results but no longer asked of users. Active queries filter is_deleted = false.';

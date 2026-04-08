@@ -36,7 +36,7 @@ The service key can be found in the Supabase Dashboard → Settings → API.
 
 ```bash
 # From the repo root:
-python migrations/20260401000007b_fsafe.py
+python migrations/20260401000008_fsafe.py
 ```
 
 Each script is **idempotent** (clear-and-reinsert) and **logs partial-failure
