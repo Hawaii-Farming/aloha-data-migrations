@@ -72,8 +72,28 @@ CREATE POLICY "hr_employee_read" ON public.hr_employee
   FOR SELECT TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
--- Write/update enforced in app layer via hr_module_access.
--- Mutations use service_role key, so no INSERT/UPDATE policies needed.
+-- ============================================================
+-- Mutation Strategy: hr_employee and org
+-- ============================================================
+-- INSERT/UPDATE/DELETE on hr_employee and org are performed
+-- exclusively through the service_role key in server-side
+-- route actions (app/lib/supabase/clients/server-client.server.ts).
+--
+-- The service_role key bypasses RLS entirely. Fine-grained
+-- write permissions are enforced in the application layer by
+-- checking hr_module_access (can_edit, can_delete, can_verify)
+-- before issuing mutations.
+--
+-- No INSERT/UPDATE/DELETE RLS policies are defined here because:
+--   1. The authenticated role has only SELECT grants on these tables.
+--   2. All mutations flow through service_role, which bypasses RLS.
+--   3. Application-layer enforcement via hr_module_access provides
+--      per-employee per-module CRUD control that is more granular
+--      than row-level policies alone.
+--
+-- If authenticated-role mutations are needed in the future,
+-- add org-scoped INSERT/UPDATE policies following the pattern
+-- in supabase/CLAUDE.md.
 
 -- ============================================================
 -- RLS: org (read by any authenticated user with membership)
@@ -88,8 +108,22 @@ CREATE POLICY "org_read" ON public.org
   USING (id IN (SELECT public.get_user_org_ids()));
 
 -- ============================================================
+-- Performance: composite index for app_navigation join
+-- ============================================================
+
+CREATE INDEX IF NOT EXISTS idx_hr_module_access_employee_module
+  ON public.hr_module_access(hr_employee_id, org_module_id);
+
+-- ============================================================
 -- app_navigation
 -- ============================================================
+-- Cross-tenant note: This view is NOT cross-tenant despite being
+-- granted to all authenticated users. The WHERE clause filters on
+-- `e.user_id = auth.uid()`, which restricts results to orgs where
+-- the current user has an hr_employee membership. A user in Org A
+-- cannot see Org B's navigation — they would need an hr_employee
+-- row in Org B. The authenticated GRANT is safe because the view
+-- itself enforces tenant isolation via the auth.uid() join.
 -- Returns one row per accessible sub-module with parent module info.
 -- Applies all three access control layers:
 --   Layer 1 — org_module.is_enabled + org_sub_module.is_enabled

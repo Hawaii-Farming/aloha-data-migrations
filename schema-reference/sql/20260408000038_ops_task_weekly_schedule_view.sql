@@ -1,4 +1,5 @@
-CREATE OR REPLACE VIEW ops_task_weekly_schedule AS
+DROP VIEW IF EXISTS ops_task_weekly_schedule;
+CREATE VIEW ops_task_weekly_schedule AS
 WITH schedule_base AS (
     -- Planned schedule entries only (no tracker linked).
     -- Derives the task date from start_time and the Sunday-anchored week start date.
@@ -21,10 +22,15 @@ SELECT
     sb.week_start_date,
     e.first_name || ' ' || e.last_name                                      AS full_name,
     e.id                                                                    AS hr_employee_id,
+    e.profile_photo_url,
     sb.org_id,
     e.hr_department_id,
+    d.name                                                                  AS department_name,
     e.hr_work_authorization_id,
+    wa.name                                                                 AS work_authorization_name,
     t.name                                                                  AS task,
+    sb.farm_id,
+    f.name                                                                  AS farm_name,
 
     -- Day columns — formatted as "HH:MM - HH:MM"; null when employee is not scheduled that day
     MAX(CASE WHEN sb.day_of_week = 0
@@ -90,6 +96,9 @@ SELECT
 FROM schedule_base sb
 JOIN hr_employee e  ON e.id = sb.hr_employee_id
 JOIN ops_task    t  ON t.id = sb.ops_task_id
+LEFT JOIN hr_department d ON d.id = e.hr_department_id
+LEFT JOIN hr_work_authorization wa ON wa.id = e.hr_work_authorization_id
+LEFT JOIN org_farm f ON f.id = sb.farm_id
 WHERE e.is_deleted = false
 GROUP BY
     sb.week_start_date,
@@ -98,10 +107,14 @@ GROUP BY
     e.id,
     e.first_name,
     e.last_name,
+    e.profile_photo_url,
     e.hr_department_id,
+    d.name,
     e.hr_work_authorization_id,
+    wa.name,
     e.overtime_threshold,
-    t.name
+    t.name,
+    f.name
 ORDER BY
     sb.week_start_date,
     e.last_name,
