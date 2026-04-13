@@ -460,14 +460,14 @@ def migrate_grow_grade(supabase):
     """Migrate grow grades -- hardcoded for Cuke farm."""
     rows = [
         audit({
-            "id": "on_grade",
+            "id": "1",
             "org_id": ORG_ID,
             "farm_id": "cuke",
             "code": "1",
             "name": "On Grade",
         }),
         audit({
-            "id": "off_grade",
+            "id": "2",
             "org_id": ORG_ID,
             "farm_id": "cuke",
             "code": "2",
