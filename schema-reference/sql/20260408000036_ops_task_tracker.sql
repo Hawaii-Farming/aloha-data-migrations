@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS ops_task_tracker (
     start_time      TIMESTAMPTZ NOT NULL,
     stop_time       TIMESTAMPTZ,
     is_completed    BOOLEAN NOT NULL DEFAULT false,
+    number_of_people INTEGER,
     notes           TEXT,
     verified_at     TIMESTAMPTZ,
     verified_by     TEXT REFERENCES hr_employee(id),
@@ -28,4 +29,5 @@ CREATE INDEX idx_ops_task_tracker_site   ON ops_task_tracker (site_id);
 COMMENT ON COLUMN ops_task_tracker.farm_id IS 'Pre-filled from ops_task.farm_id when task is selected; editable';
 COMMENT ON COLUMN ops_task_tracker.sales_product_id IS 'The product being packed; set for packing activities, null for all other task types';
 COMMENT ON COLUMN ops_task_tracker.is_completed IS 'Auto-set to true when stop_time is entered and activity is submitted';
+COMMENT ON COLUMN ops_task_tracker.number_of_people IS 'Crew size for this activity session; used when individual employee assignments are not tracked via ops_task_schedule';
 
