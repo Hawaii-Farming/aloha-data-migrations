@@ -477,6 +477,27 @@ RULES = [
         '["auth.users", "hr_employee.company_email", "hr_employee.user_id"]',
         42,
     ),
+
+    # =====================================================================
+    # 11. GROW — harvest tare calculation
+    # =====================================================================
+    rule(
+        "grow_harvest_tare_calculation", "calculation", "grow",
+        "Harvest tare: formula-based or fixed per container",
+        "When grow_harvest_container.is_tare_calculated = true, tare is computed from tare_formula "
+        "using gross_weight as the input variable (linear regression per variety+grade for cuke pallets). "
+        "When false, tare = fixed tare_weight x number_of_containers. "
+        "Net weight = gross_weight - tare. "
+        "Cuke pallet formulas use ROUND(slope * gross_weight + intercept) * 3 + offset, "
+        "where the coefficients vary by variety and grade. Grade 1 (on-grade) adds a +48 offset; "
+        "grade 2 (off-grade) does not. J and E share identical coefficients; K has its own.",
+        "Legacy tare calculation is weight-dependent (heavier pallets have proportionally more container "
+        "material). A single fixed tare_weight per container cannot express this, so the formula column "
+        "follows the same pattern as grow_monitoring_metric.formula.",
+        '["grow_harvest_container.tare_formula", "grow_harvest_container.is_tare_calculated", '
+        '"grow_harvest_weight.gross_weight", "grow_harvest_weight.net_weight"]',
+        43,
+    ),
 ]
 
 
