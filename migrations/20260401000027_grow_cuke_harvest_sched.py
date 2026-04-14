@@ -227,12 +227,12 @@ def build_tracker_row(sheet_row, known_sites):
     if clock_in is None:
         return {"_skip": "no_clock_in"}
 
+    # ClockOutTime empty means the session is still in progress — we still
+    # insert the row with stop_time=NULL and is_completed=False.
     clock_out = parse_time(sheet_row.get("ClockOutTime"))
-    if clock_out is None:
-        return {"_skip": "no_clock_out"}
 
     start_time = combine_datetime(harvest_date, clock_in)
-    stop_time = combine_datetime(harvest_date, clock_out)
+    stop_time = combine_datetime(harvest_date, clock_out) if clock_out else None
     # Note: a handful of legacy rows have stop_time < start_time (AM/PM
     # data entry errors like 11:04 AM -> 12:44 AM). We preserve them as
     # recorded; data corrections happen in the sheet, not here.
@@ -252,8 +252,8 @@ def build_tracker_row(sheet_row, known_sites):
         "site_id": gh,
         "ops_task_id": OPS_TASK_ID,
         "start_time": start_time.isoformat(),
-        "stop_time": stop_time.isoformat(),
-        "is_completed": True,
+        "stop_time": stop_time.isoformat() if stop_time else None,
+        "is_completed": stop_time is not None,
         "number_of_people": number_of_people,
         "notes": TRACKER_NOTE_MARKER,
         "created_by": reported_by,
