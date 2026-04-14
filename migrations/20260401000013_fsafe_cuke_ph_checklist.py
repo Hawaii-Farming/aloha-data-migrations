@@ -50,6 +50,7 @@ from _config import (
     SUPABASE_URL,
     require_supabase_key,
 )
+from _pg import paginate_select
 
 FSAFE_SHEET_ID = SHEET_IDS["fsafe"]
 TASK_ID = "food_safety_log"
@@ -261,10 +262,10 @@ def parse_numeric_cell(val):
 # ---------------------------------------------------------------------------
 
 def load_employee_email_map(supabase):
-    result = supabase.table("hr_employee").select("id, company_email").execute()
+    employees = paginate_select(supabase, "hr_employee", "id, company_email")
     return {
         (r["company_email"] or "").lower(): r["id"]
-        for r in result.data
+        for r in employees
         if r.get("company_email")
     }
 

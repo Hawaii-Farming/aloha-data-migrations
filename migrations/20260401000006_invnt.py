@@ -15,9 +15,16 @@ Rerunnable: clears and reinserts all data on each run.
 
 import os
 import re
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+
 import gspread
 from google.oauth2.service_account import Credentials
 from supabase import create_client
+
+from _pg import paginate_select
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://kfwqtaazdankxmdlqdak.supabase.co")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
@@ -446,9 +453,9 @@ def migrate_invnt_po(supabase, gc):
     """Migrate POs from both invnt_item_po (historical) and proc_requests (active)."""
 
     # Build employee email -> id lookup from Supabase
-    emp_result = supabase.table("hr_employee").select("id, company_email").execute()
+    employees = paginate_select(supabase, "hr_employee", "id, company_email")
     email_to_emp = {}
-    for e in emp_result.data:
+    for e in employees:
         if e.get("company_email"):
             email_to_emp[e["company_email"].lower()] = e["id"]
 
@@ -456,16 +463,16 @@ def migrate_invnt_po(supabase, gc):
     FALLBACK_EMP = email_to_emp.get("data@hawaiifarming.com") or email_to_emp.get("admin@hawaiifarming.com")
 
     # Build item name -> id lookup
-    item_result = supabase.table("invnt_item").select("id, name, invnt_category_id, burn_uom, order_uom, burn_per_order, farm_id, is_active").execute()
+    items = paginate_select(supabase, "invnt_item", "id, name, invnt_category_id, burn_uom, order_uom, burn_per_order, farm_id, is_active")
     item_by_name = {}
     item_by_id = {}
-    for it in item_result.data:
+    for it in items:
         item_by_name[it["name"].lower()] = it
         item_by_id[it["id"]] = it
 
     # Build vendor name -> id lookup
-    vendor_result = supabase.table("invnt_vendor").select("id, name").execute()
-    vendor_by_name = {v["name"].lower(): v["id"] for v in vendor_result.data}
+    vendors = paginate_select(supabase, "invnt_vendor", "id, name")
+    vendor_by_name = {v["name"].lower(): v["id"] for v in vendors}
 
     # UOM mapping
     UOM_MAP = {
@@ -750,15 +757,15 @@ def migrate_invnt_onhand(supabase, gc):
     records = ws.get_all_records()
 
     # Build item name -> record lookup from Supabase
-    item_result = supabase.table("invnt_item").select("id, name, farm_id, burn_uom, onhand_uom, burn_per_onhand, is_active").execute()
+    items = paginate_select(supabase, "invnt_item", "id, name, farm_id, burn_uom, onhand_uom, burn_per_onhand, is_active")
     item_by_name = {}
-    for it in item_result.data:
+    for it in items:
         item_by_name[it["name"].lower()] = it
 
     # Build lot lookup: lot_number -> lot_id (only active-item lots)
-    lot_result = supabase.table("invnt_lot").select("id, lot_number").execute()
+    lots = paginate_select(supabase, "invnt_lot", "id, lot_number")
     lot_by_number = {}
-    for lot in lot_result.data:
+    for lot in lots:
         lot_by_number[lot["lot_number"].lower()] = lot["id"]
 
     # UOM mapping
@@ -862,9 +869,9 @@ def migrate_grow_spray_compliance(supabase, gc):
     records = ws.get_all_records()
 
     # Build item name -> record lookup
-    item_result = supabase.table("invnt_item").select("id, name, burn_uom, farm_id").execute()
+    items = paginate_select(supabase, "invnt_item", "id, name, burn_uom, farm_id")
     item_by_name = {}
-    for it in item_result.data:
+    for it in items:
         item_by_name[it["name"].lower()] = it
 
     # Farm mapping
@@ -892,64 +899,67 @@ def migrate_grow_spray_compliance(supabase, gc):
         return UOM_MAP.get(v, v) if v else None
 
     rows = []
-    skipped = 0
+    skipped_no_label = 0
+    unresolved_items = set()
+    unresolved_farms = set()
 
     for r_raw in records:
         r = {str(k).strip(): v for k, v in r_raw.items()}
 
+        # Only require LabelLink — that's the regulatory document we care
+        # about preserving. Everything else may be missing/null and the row
+        # still imports. Schema columns (FKs and other NOT NULLs) for the
+        # missing fields have been relaxed to nullable in
+        # 20260401000056_grow_spray_compliance.sql to support this.
+        label_url = str(r.get("LabelLink", "")).strip()
+        if not label_url:
+            skipped_no_label += 1
+            continue
+
         item_name = str(r.get("ItemName", "")).strip()
-        if not item_name:
-            continue
+        item = item_by_name.get(item_name.lower()) if item_name else None
+        if item_name and not item:
+            unresolved_items.add(item_name)
+            print(f"  WARN: Unknown item '{item_name}' — inserting with NULL invnt_item_id")
 
-        item = item_by_name.get(item_name.lower())
-        if not item:
-            print(f"  SKIP: Unknown item '{item_name}'")
-            skipped += 1
-            continue
-
-        # Farm
+        # Farm — try sheet, fall back to item, else None
         farm_raw = str(r.get("Farm", "")).strip().lower()
-        farm_id = FARM_MAP.get(farm_raw) or item.get("farm_id")
+        farm_id = FARM_MAP.get(farm_raw) or (item.get("farm_id") if item else None)
         if not farm_id:
-            skipped += 1
-            continue
+            unresolved_farms.add(farm_raw or "(blank)")
 
-        # Registration
-        epa_reg = str(r.get("RegistrationNumber", "")).strip()
-        if not epa_reg:
-            skipped += 1
-            continue
+        # Registration — preserve when present, null when missing
+        epa_reg = str(r.get("RegistrationNumber", "")).strip() or None
 
-        # Application method -> JSONB array
+        # Application method -> JSONB array (empty list when missing)
         app_method = proper_case(r.get("ApplicationMethod", ""))
         application_method = [app_method] if app_method else []
 
-        # Target -> JSONB array
+        # Target -> JSONB array (empty list when missing)
         target = proper_case(r.get("Target", ""))
         target_pest_disease = [target] if target else []
 
-        # UOM and quantity
-        app_uom = map_uom(r.get("PerAcreUnits", "")) or "ounce"
-        max_qty = safe_numeric(r.get("QuantityPerAcre", ""))
+        # UOM and quantity — null when missing rather than defaulting
+        app_uom = map_uom(r.get("PerAcreUnits", ""))
+        max_qty_raw = str(r.get("QuantityPerAcre", "")).strip()
+        max_qty = safe_numeric(max_qty_raw) if max_qty_raw else None
 
-        # Burn UOM from item
-        burn_uom = item.get("burn_uom") or app_uom
+        # Burn UOM from item, fall back to app_uom, else null
+        burn_uom = (item.get("burn_uom") if item else None) or app_uom
 
-        # Application per burn
-        app_per_burn = safe_numeric(r.get("MaximumUsagePerSeason", ""))
+        # Application per burn — null when missing
+        app_per_burn_raw = str(r.get("MaximumUsagePerSeason", "")).strip()
+        app_per_burn = safe_numeric(app_per_burn_raw) if app_per_burn_raw else None
 
-        # Dates
+        # Dates — null when missing
         label_date = parse_date(r.get("LabelDate", ""))
-        if not label_date:
-            skipped += 1
-            continue
 
-        # Label URL
-        label_url = str(r.get("LabelLink", "")).strip() or ""
-
-        # PHI / REI
-        phi_days = int(safe_numeric(r.get("PHIDays", "")))
-        rei_hours = int(safe_numeric(r.get("REIHours", "")))
+        # PHI / REI — null when missing rather than 0 (which means "no waiting
+        # period required" and could be misleading)
+        phi_raw = str(r.get("PHIDays", "")).strip()
+        rei_raw = str(r.get("REIHours", "")).strip()
+        phi_days = int(safe_numeric(phi_raw)) if phi_raw else None
+        rei_hours = int(safe_numeric(rei_raw)) if rei_raw else None
 
         # Audit
         updated_by_email = str(r.get("LastUpdateBy", "")).strip().lower()
@@ -958,7 +968,7 @@ def migrate_grow_spray_compliance(supabase, gc):
         row = {
             "org_id": ORG_ID,
             "farm_id": farm_id,
-            "invnt_item_id": item["id"],
+            "invnt_item_id": item["id"] if item else None,
             "epa_registration": epa_reg,
             "phi_days": phi_days,
             "rei_hours": rei_hours,
@@ -979,8 +989,12 @@ def migrate_grow_spray_compliance(supabase, gc):
         rows.append(row)
 
     insert_rows(supabase, "grow_spray_compliance", rows)
-    if skipped:
-        print(f"  Skipped {skipped} rows (unknown item, missing date, or missing registration)")
+    if skipped_no_label:
+        print(f"  Skipped {skipped_no_label} rows with no LabelLink")
+    if unresolved_items:
+        print(f"  Inserted with NULL invnt_item_id ({len(unresolved_items)} unique unknown items): {sorted(unresolved_items)[:5]}...")
+    if unresolved_farms:
+        print(f"  Inserted with NULL farm_id ({len(unresolved_farms)} unique unknown farms): {sorted(unresolved_farms)}")
 
 
 def migrate_grow_seed_mix(supabase, gc):
@@ -995,8 +1009,8 @@ def migrate_grow_seed_mix(supabase, gc):
     print(f"\nProcessing {len(records)} seed mix ratio rows...")
 
     # Build invnt_item lookup
-    item_result = supabase.table("invnt_item").select("id, name").execute()
-    item_by_name = {it["name"].lower(): it["id"] for it in item_result.data}
+    items = paginate_select(supabase, "invnt_item", "id, name")
+    item_by_name = {it["name"].lower(): it["id"] for it in items}
 
     # Group by mix name
     mixes = {}

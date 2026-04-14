@@ -32,6 +32,7 @@ Usage:
 
 import re
 import sys
+import uuid
 from datetime import datetime
 from pathlib import Path
 
@@ -48,6 +49,7 @@ from _config import (
     SUPABASE_URL,
     require_supabase_key,
 )
+from _pg import get_pg_conn, paginate_select, pg_bulk_insert
 
 FSAFE_SHEET_ID = SHEET_IDS["fsafe"]
 TASK_ID = "pest_trap_inspection"
@@ -140,10 +142,10 @@ def parse_bool_cell(val):
 # ---------------------------------------------------------------------------
 
 def load_employee_email_map(supabase):
-    result = supabase.table("hr_employee").select("id, company_email").execute()
+    employees = paginate_select(supabase, "hr_employee", "id, company_email")
     return {
         (r["company_email"] or "").lower(): r["id"]
-        for r in result.data
+        for r in employees
         if r.get("company_email")
     }
 
@@ -196,13 +198,11 @@ def load_trap_index(supabase):
 
     Returns dict keyed by org_site.id for all pest_trap rows.
     """
-    result = (
-        supabase.table("org_site")
-        .select("id,site_id_parent,farm_id")
-        .eq("org_site_category_id", "pest_trap")
-        .execute()
+    sites = paginate_select(
+        supabase, "org_site", "id,site_id_parent,farm_id",
+        eq_filters={"org_site_category_id": "pest_trap"},
     )
-    return {r["id"]: r for r in result.data}
+    return {r["id"]: r for r in sites}
 
 
 def build_trap_id(farm: str, site_name: str, station: str) -> str | None:
@@ -278,7 +278,7 @@ def migrate(supabase, gc, email_map, stub_cache):
     print(f"  {len(trap_index)} pest_trap sites loaded for resolution")
 
     trackers = []
-    pending_results = []  # (tracker_idx, dict of fsafe_pest_result fields)
+    pending_results = []  # dicts of fsafe_pest_result fields (tracker_id pre-assigned)
     skipped_no_date = 0
     skipped_no_site = 0
     skipped_unknown_traps = []  # list of (trap_id_attempted)
@@ -336,8 +336,11 @@ def migrate(supabase, gc, email_map, stub_cache):
                 # Trap has no parent — fall back to the farm parent (gh/bip)
                 parent_site = "gh" if farm_id == "lettuce" else "bip"
 
-            tracker_idx = len(trackers)
+            # Pre-generate tracker UUID so we can assign it to the
+            # pest_result row without a DB roundtrip.
+            tracker_id = str(uuid.uuid4())
             trackers.append({
+                "id": tracker_id,
                 "org_id": ORG_ID,
                 "farm_id": farm_id,
                 "site_id": parent_site,
@@ -355,16 +358,17 @@ def migrate(supabase, gc, email_map, stub_cache):
             if pest_type is not None:
                 pest_active_total += 1
 
-            pending_results.append((tracker_idx, {
+            pending_results.append({
                 "org_id": ORG_ID,
                 "farm_id": farm_id,
                 "site_id": trap_id,
+                "ops_task_tracker_id": tracker_id,
                 "pest_type": pest_type,
                 "photo_url": photo_raw or None,
                 "notes": warning_raw or None,
                 "created_by": reported_by,
                 "updated_by": reported_by,
-            }))
+            })
 
     print(f"  {fanned_out} multi-station rows fanned out")
     print(f"  {len(trackers)} trackers to insert")
@@ -382,15 +386,16 @@ def migrate(supabase, gc, email_map, stub_cache):
     if not trackers:
         return
 
-    inserted_trackers = insert_rows(supabase, "ops_task_tracker", trackers)
-
-    result_rows = []
-    for tracker_idx, base in pending_results:
-        tracker = inserted_trackers[tracker_idx]
-        row = {**base, "ops_task_tracker_id": tracker["id"]}
-        result_rows.append(row)
-
-    insert_rows(supabase, "fsafe_pest_result", result_rows)
+    # Bulk insert via psycopg2 — single transaction, orders of magnitude
+    # faster than ~100 PostgREST roundtrips for 10k+ rows.
+    print(f"\n--- ops_task_tracker ---")
+    with get_pg_conn() as conn:
+        pg_bulk_insert(conn, "ops_task_tracker", trackers)
+        print(f"  Inserted {len(trackers)} rows")
+        print(f"\n--- fsafe_pest_result ---")
+        pg_bulk_insert(conn, "fsafe_pest_result", pending_results)
+        print(f"  Inserted {len(pending_results)} rows")
+        conn.commit()
 
 
 # ---------------------------------------------------------------------------

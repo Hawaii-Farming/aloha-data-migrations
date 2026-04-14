@@ -36,6 +36,7 @@ from _config import (
     SUPABASE_URL,
     require_supabase_key,
 )
+from _pg import paginate_select
 
 FSAFE_SHEET_ID = SHEET_IDS["fsafe_results"]
 
@@ -203,9 +204,10 @@ def get_sheets():
 
 def build_sampled_by_lookup(supabase):
     """Build name -> hr_employee.id lookup from hr_employee table."""
-    emps = supabase.table("hr_employee").select(
-        "id, first_name, last_name, preferred_name"
-    ).eq("org_id", ORG_ID).execute().data
+    emps = paginate_select(
+        supabase, "hr_employee", "id, first_name, last_name, preferred_name",
+        eq_filters={"org_id": ORG_ID},
+    )
 
     lookup = {}
     for e in emps:
@@ -229,9 +231,10 @@ def build_sampled_by_lookup(supabase):
 
 def build_email_to_emp(supabase):
     """Build company_email -> hr_employee.id lookup."""
-    emps = supabase.table("hr_employee").select(
-        "id, company_email"
-    ).eq("org_id", ORG_ID).execute().data
+    emps = paginate_select(
+        supabase, "hr_employee", "id, company_email",
+        eq_filters={"org_id": ORG_ID},
+    )
 
     return {
         e["company_email"].strip().lower(): e["id"]
@@ -345,9 +348,10 @@ def migrate_emp(supabase, wb, sampled_by_lookup, email_map):
     print(f"\n  Reading fsafe_log_emp: {len(data)} rows")
 
     # Build org_site lookup: name (lowered) -> id for food_safety sites
-    sites = supabase.table("org_site").select("id, name, farm_id").eq(
-        "org_id", ORG_ID
-    ).execute().data
+    sites = paginate_select(
+        supabase, "org_site", "id, name, farm_id",
+        eq_filters={"org_id": ORG_ID},
+    )
     site_by_name = {s["name"].lower(): s["id"] for s in sites}
 
     rows = []
@@ -458,7 +462,7 @@ def migrate_water(supabase, wb, water_site_map, sampled_by_lookup):
     print(f"\n  Reading fsafe_log_water: {len(data)} rows")
 
     # Build lab lookup: name (lowered) -> fsafe_lab.id
-    labs = supabase.table("fsafe_lab").select("id, name").eq("org_id", ORG_ID).execute().data
+    labs = paginate_select(supabase, "fsafe_lab", "id, name", eq_filters={"org_id": ORG_ID})
     lab_by_name = {l["name"].lower(): l["id"] for l in labs}
 
     rows = []
@@ -545,19 +549,21 @@ def migrate_test_hold(supabase, wb, sampled_by_lookup):
     print(f"\n  Reading fsafe_log_test_n_hold: {len(data)} rows")
 
     # Build pack_lot lookup: lot_number -> {id, farm_id}
-    lots = supabase.table("pack_lot").select("id, lot_number, farm_id").eq(
-        "org_id", ORG_ID
-    ).execute().data
+    lots = paginate_select(
+        supabase, "pack_lot", "id, lot_number, farm_id",
+        eq_filters={"org_id": ORG_ID},
+    )
     lot_by_number = {l["lot_number"]: l for l in lots}
 
     # Build lab lookup
-    labs = supabase.table("fsafe_lab").select("id, name").eq("org_id", ORG_ID).execute().data
+    labs = paginate_select(supabase, "fsafe_lab", "id, name", eq_filters={"org_id": ORG_ID})
     lab_by_name = {l["name"].lower(): l["id"] for l in labs}
 
     # Build Costco customer group lookup
-    groups = supabase.table("sales_customer_group").select("id, name").eq(
-        "org_id", ORG_ID
-    ).execute().data
+    groups = paginate_select(
+        supabase, "sales_customer_group", "id, name",
+        eq_filters={"org_id": ORG_ID},
+    )
     group_by_name = {g["name"].lower(): g["id"] for g in groups}
     costco_group_id = group_by_name.get("costco")
 

@@ -54,6 +54,7 @@ from _config import (
     SUPABASE_URL,
     require_supabase_key,
 )
+from _pg import get_pg_conn, paginate_select, pg_bulk_insert
 
 GROW_SHEET_ID = SHEET_IDS.get("grow") or "1VtEecYn-W1pbnIU1hRHfxIpkH2DtK7hj0CpcpiLoziM"
 FARM_ID = "cuke"
@@ -234,13 +235,14 @@ def ensure_containers(supabase):
 # ---------------------------------------------------------------------------
 
 def build_batch_lookup(supabase):
-    """Build a dict of batch_code -> id from grow_seed_batch for cuke farm."""
-    batches = (
-        supabase.table("grow_seed_batch")
-        .select("id,batch_code")
-        .eq("farm_id", FARM_ID)
-        .execute()
-        .data
+    """Build a dict of batch_code -> id from grow_seed_batch for cuke farm.
+
+    Paginated to bypass the 1000-row PostgREST cap (this table will grow
+    well past 1000 as the farm expands).
+    """
+    batches = paginate_select(
+        supabase, "grow_seed_batch", "id,batch_code",
+        eq_filters={"farm_id": FARM_ID},
     )
     return {b["batch_code"]: b["id"] for b in batches}
 
@@ -510,7 +512,13 @@ def main():
     if unmatched_batches:
         print(f"  Unmatched batch codes ({len(unmatched_batches)}): {sorted(unmatched_batches)}")
 
-    insert_rows(supabase, "grow_harvest_weight", rows)
+    # Bulk insert via psycopg2 — 53k rows in one transaction is orders
+    # of magnitude faster than ~530 PostgREST roundtrips.
+    print(f"\n--- grow_harvest_weight ---")
+    with get_pg_conn() as conn:
+        pg_bulk_insert(conn, "grow_harvest_weight", rows)
+        conn.commit()
+    print(f"  Inserted {len(rows)} rows")
 
     print("\n" + "=" * 60)
     print("DONE")
