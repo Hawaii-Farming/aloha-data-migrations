@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS grow_fertigation (
     farm_id             TEXT NOT NULL REFERENCES org_farm(id),
     ops_task_tracker_id         UUID NOT NULL REFERENCES ops_task_tracker(id),
     grow_fertigation_recipe_id  TEXT NOT NULL REFERENCES grow_fertigation_recipe(id),
-    equipment_id                TEXT NOT NULL REFERENCES org_equipment(id),
+    equipment_id                TEXT REFERENCES org_equipment(id),
     volume_uom          TEXT NOT NULL REFERENCES sys_uom(code),
     volume_applied      NUMERIC NOT NULL,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -18,6 +18,6 @@ CREATE TABLE IF NOT EXISTS grow_fertigation (
 COMMENT ON TABLE grow_fertigation IS 'Tanks used during a fertigation event with the volume applied per tank.';
 
 COMMENT ON COLUMN grow_fertigation.grow_fertigation_recipe_id IS 'Pre-filled from grow_fertigation_recipe_site based on selected sites; editable';
-COMMENT ON COLUMN grow_fertigation.equipment_id IS 'Filtered to org_equipment where type = tank; pre-filled from grow_fertigation_recipe_item.equipment_id; editable';
+COMMENT ON COLUMN grow_fertigation.equipment_id IS 'Filtered to org_equipment where type = tank; pre-filled from grow_fertigation_recipe_item.equipment_id; editable. Nullable for water-only recipes (top-up, flush) that do not use a tank.';
 
 CREATE INDEX idx_grow_fertigation_tracker ON grow_fertigation (ops_task_tracker_id);

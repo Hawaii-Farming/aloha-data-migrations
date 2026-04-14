@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS grow_fertigation_recipe_item (
     org_id                      TEXT NOT NULL REFERENCES org(id),
     farm_id                     TEXT NOT NULL REFERENCES org_farm(id),
     grow_fertigation_recipe_id  TEXT NOT NULL REFERENCES grow_fertigation_recipe(id),
-    equipment_id                TEXT NOT NULL REFERENCES org_equipment(id),
+    equipment_id                TEXT REFERENCES org_equipment(id),
     invnt_item_id               TEXT REFERENCES invnt_item(id),
     item_name                   TEXT NOT NULL,
     application_uom             TEXT NOT NULL REFERENCES sys_uom(code),
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS grow_fertigation_recipe_item (
     is_deleted                  BOOLEAN NOT NULL DEFAULT false
 );
 
-COMMENT ON TABLE grow_fertigation_recipe_item IS 'Individual fertilizer items within a recipe. invnt_item_id is nullable for products not stored in-house; item_name is always set for display.';
+COMMENT ON TABLE grow_fertigation_recipe_item IS 'Individual fertilizer items within a recipe. invnt_item_id is nullable for products not stored in-house; item_name is always set for display. equipment_id is nullable for water-only recipes (top-up, flush) that do not use a tank.';
 
 COMMENT ON COLUMN grow_fertigation_recipe_item.item_name IS 'Pre-filled from invnt_item.name when invnt_item_id is set; editable';
 COMMENT ON COLUMN grow_fertigation_recipe_item.burn_uom IS 'Pre-filled from grow_spray_compliance.burn_uom when a compliance record exists; editable';
