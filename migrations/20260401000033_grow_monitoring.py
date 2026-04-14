@@ -351,20 +351,107 @@ def clear_existing():
             )
             d2 = cur.rowcount
             cur.execute(
+                """
+                DELETE FROM grow_task_seed_batch
+                WHERE ops_task_tracker_id IN (
+                    SELECT id FROM ops_task_tracker
+                    WHERE ops_task_id = %s AND notes LIKE %s
+                )
+                """,
+                (OPS_TASK_ID, f"%{NOTES_MARKER}%"),
+            )
+            d4 = cur.rowcount
+            cur.execute(
                 "DELETE FROM ops_task_tracker WHERE ops_task_id = %s AND notes LIKE %s",
                 (OPS_TASK_ID, f"%{NOTES_MARKER}%"),
             )
             d3 = cur.rowcount
         conn.commit()
-    print(f"  Deleted: {d1} grow_monitoring_result, {d2} grow_task_photo, {d3} ops_task_tracker")
+    print(f"  Deleted: {d1} grow_monitoring_result, {d2} grow_task_photo, "
+          f"{d4} grow_task_seed_batch, {d3} ops_task_tracker")
+
+
+# ---------------------------------------------------------------------------
+# Seed batch lookups for SeedingCycle linking
+# ---------------------------------------------------------------------------
+
+def build_batch_lookups(supabase):
+    """Return (cuke_by_prefix, lettuce_by_code).
+
+    cuke_by_prefix: dict from seeding cycle prefix -> list of batch_ids
+      Built by scanning all cuke batch_codes and grouping by leading prefix
+      that matches the sheet's SeedingCycle pattern (YYMM + optional GH).
+      We handle this by storing the full batch_code list and doing
+      startswith matching at link time (with a lookup short-circuit index).
+
+    lettuce_by_code: dict from batch_code (both base and disambiguated with
+      _N suffix) -> batch_id.
+    """
+    from collections import defaultdict
+
+    all_batches = paginate_select(
+        supabase, "grow_seed_batch", "id,batch_code,farm_id",
+    )
+    cuke_codes = [b for b in all_batches if b["farm_id"] == "cuke"]
+    lettuce_codes = [b for b in all_batches if b["farm_id"] == "lettuce"]
+
+    # Cuke: build a dict keyed by batch_code, plus a sorted list for
+    # prefix matching.
+    cuke_list = sorted((b["batch_code"], b["id"]) for b in cuke_codes)
+
+    # Lettuce: both the original batch_code and disambiguated variants
+    # index to the same row in DB (different id per disambiguated row).
+    # Build: base_code -> [id, id2, ...] where base_code strips trailing _N.
+    lettuce_by_base = defaultdict(list)
+    for b in lettuce_codes:
+        code = b["batch_code"]
+        base = re.sub(r"_\d+$", "", code)
+        lettuce_by_base[base].append(b["id"])
+        # Also allow exact match
+        if code != base:
+            lettuce_by_base[code].append(b["id"])
+
+    print(f"  Loaded {len(cuke_codes)} cuke + {len(lettuce_codes)} lettuce batches")
+    return cuke_list, lettuce_by_base
+
+
+def match_cuke_batches(cycle: str, cuke_list) -> list[str]:
+    """Return batch IDs whose batch_code starts with the given cycle prefix."""
+    if not cycle:
+        return []
+    matches = []
+    for code, bid in cuke_list:
+        if code.startswith(cycle):
+            matches.append(bid)
+    return matches
+
+
+def match_lettuce_batches(cycle_cell: str, lettuce_by_base) -> list[str]:
+    """Split lettuce cycle cell on '+' and find all matching batch IDs.
+
+    Returns deduped list.
+    """
+    if not cycle_cell:
+        return []
+    seen = set()
+    matches = []
+    for part in str(cycle_cell).split("+"):
+        code = part.strip()
+        if not code:
+            continue
+        for bid in lettuce_by_base.get(code, []):
+            if bid not in seen:
+                seen.add(bid)
+                matches.append(bid)
+    return matches
 
 
 # ---------------------------------------------------------------------------
 # Row builder
 # ---------------------------------------------------------------------------
 
-def build_rows(sheet_row, known_sites):
-    """Return (tracker, results, photos) or {'_skip': reason}."""
+def build_rows(sheet_row, known_sites, cuke_list, lettuce_by_base):
+    """Return {tracker, results, photos, seed_batch_links} or {'_skip': reason}."""
     farm_raw = str(sheet_row.get("Farm", "")).strip().lower()
     if farm_raw not in ("cuke", "lettuce"):
         return {"_skip": "no_farm"}
@@ -469,7 +556,30 @@ def build_rows(sheet_row, known_sites):
             "updated_by": reporter,
         })
 
-    return {"tracker": tracker, "results": results, "photos": photos}
+    # Seed batch links from SeedingCycle column
+    cycle_cell = str(sheet_row.get("SeedingCycle", "")).strip()
+    if farm_raw == "cuke":
+        batch_ids = match_cuke_batches(cycle_cell, cuke_list)
+    else:
+        batch_ids = match_lettuce_batches(cycle_cell, lettuce_by_base)
+
+    seed_batch_links = []
+    for batch_id in batch_ids:
+        seed_batch_links.append({
+            "org_id": ORG_ID,
+            "farm_id": farm_raw,
+            "ops_task_tracker_id": tracker_id,
+            "grow_seed_batch_id": batch_id,
+            "created_by": reporter,
+            "updated_by": reporter,
+        })
+
+    return {
+        "tracker": tracker,
+        "results": results,
+        "photos": photos,
+        "seed_batch_links": seed_batch_links,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -492,6 +602,10 @@ def main():
     known_sites = {s["id"] for s in sites if s.get("farm_id") in ("cuke", "lettuce")}
     print(f"\n  Known cuke/lettuce sites: {len(known_sites)}")
 
+    # Load seed batch lookups for SeedingCycle linking
+    print("\nLoading seed batches for SeedingCycle linking...")
+    cuke_list, lettuce_by_base = build_batch_lookups(supabase)
+
     wb = gc.open_by_key(GROW_SHEET_ID)
     print("\nReading grow_chem...")
     records = wb.worksheet("grow_chem").get_all_records()
@@ -500,11 +614,12 @@ def main():
     trackers = []
     results = []
     photos = []
+    seed_batch_links = []
     skip_counts = {}
     unknown_sites = set()
 
     for r in records:
-        out = build_rows(r, known_sites)
+        out = build_rows(r, known_sites, cuke_list, lettuce_by_base)
         if "_skip" in out:
             reason = out["_skip"]
             skip_counts[reason] = skip_counts.get(reason, 0) + 1
@@ -514,8 +629,10 @@ def main():
         trackers.append(out["tracker"])
         results.extend(out["results"])
         photos.extend(out["photos"])
+        seed_batch_links.extend(out["seed_batch_links"])
 
-    print(f"\n  Built {len(trackers)} trackers, {len(results)} results, {len(photos)} photos")
+    print(f"\n  Built {len(trackers)} trackers, {len(results)} results, "
+          f"{len(photos)} photos, {len(seed_batch_links)} seed batch links")
     for reason, cnt in sorted(skip_counts.items()):
         print(f"  Skipped {cnt} rows: {reason}")
     if unknown_sites:
@@ -531,6 +648,9 @@ def main():
         print(f"\n--- grow_task_photo ---")
         pg_bulk_insert(conn, "grow_task_photo", photos)
         print(f"  Inserted {len(photos)} rows")
+        print(f"\n--- grow_task_seed_batch ---")
+        pg_bulk_insert(conn, "grow_task_seed_batch", seed_batch_links)
+        print(f"  Inserted {len(seed_batch_links)} rows")
         conn.commit()
 
     print("\n" + "=" * 60)
