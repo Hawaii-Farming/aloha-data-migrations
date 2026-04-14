@@ -295,6 +295,7 @@ def migrate_uom(supabase):
         {"code": "each",         "name": "each",          "category": "quantity"},
         {"code": "hour",         "name": "hr",           "category": "time"},
         {"code": "day",          "name": "day",          "category": "time"},
+        {"code": "millisiemens", "name": "mS/cm",        "category": "conductivity"},
     ]
 
     for row in rows:
