@@ -39,6 +39,7 @@ Rerunnable: unlinks weigh-ins from our trackers, deletes our trackers
 (identified by notes marker), then re-inserts.
 """
 
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -46,6 +47,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 import gspread
+import psycopg2
 from google.oauth2.service_account import Credentials
 from supabase import create_client
 
@@ -56,6 +58,14 @@ from _config import (
     SUPABASE_URL,
     require_supabase_key,
 )
+
+
+def get_pg_conn():
+    """Direct psycopg2 connection for bulk operations that are too slow via PostgREST."""
+    db_url = os.environ.get("SUPABASE_DB_URL")
+    if not db_url:
+        raise SystemExit("ERROR: SUPABASE_DB_URL must be set in .env for bulk operations")
+    return psycopg2.connect(db_url)
 
 GROW_SHEET_ID = SHEET_IDS.get("grow") or "1VtEecYn-W1pbnIU1hRHfxIpkH2DtK7hj0CpcpiLoziM"
 FARM_ID = "cuke"
@@ -167,41 +177,38 @@ def normalize_gh(raw):
 # Clear existing data for rerun
 # ---------------------------------------------------------------------------
 
-def clear_existing(supabase):
+def clear_existing():
     """Unlink weigh-ins from our trackers and delete our trackers.
 
-    Identifies our trackers by the notes marker so we don't touch any
-    app-created harvesting trackers. Deletes in batches to stay under
-    PostgREST URL length limits when the .in_() filter is used.
+    Uses direct SQL via psycopg2 — bulk unlink + delete in one transaction
+    is orders of magnitude faster than PostgREST batching.
     """
     print("\nClearing existing harvest schedule trackers...")
-    our_trackers = (
-        supabase.table("ops_task_tracker")
-        .select("id")
-        .eq("farm_id", FARM_ID)
-        .eq("ops_task_id", OPS_TASK_ID)
-        .eq("notes", TRACKER_NOTE_MARKER)
-        .execute()
-        .data
-    )
-    tracker_ids = [t["id"] for t in our_trackers]
-    print(f"  Found {len(tracker_ids)} existing trackers to clear")
-    if not tracker_ids:
-        return
-
-    # Unlink grow_harvest_weight rows first (FK safety) in batches of 100
-    for i in range(0, len(tracker_ids), 100):
-        batch = tracker_ids[i:i + 100]
-        supabase.table("grow_harvest_weight").update(
-            {"ops_task_tracker_id": None}
-        ).in_("ops_task_tracker_id", batch).execute()
-    print(f"  Unlinked grow_harvest_weight rows")
-
-    # Delete trackers in batches of 100
-    for i in range(0, len(tracker_ids), 100):
-        batch = tracker_ids[i:i + 100]
-        supabase.table("ops_task_tracker").delete().in_("id", batch).execute()
-    print(f"  Deleted {len(tracker_ids)} trackers")
+    with get_pg_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE grow_harvest_weight
+                SET ops_task_tracker_id = NULL
+                WHERE ops_task_tracker_id IN (
+                    SELECT id FROM ops_task_tracker
+                    WHERE farm_id = %s AND ops_task_id = %s AND notes = %s
+                )
+                """,
+                (FARM_ID, OPS_TASK_ID, TRACKER_NOTE_MARKER),
+            )
+            unlinked = cur.rowcount
+            cur.execute(
+                """
+                DELETE FROM ops_task_tracker
+                WHERE farm_id = %s AND ops_task_id = %s AND notes = %s
+                """,
+                (FARM_ID, OPS_TASK_ID, TRACKER_NOTE_MARKER),
+            )
+            deleted = cur.rowcount
+        conn.commit()
+    print(f"  Unlinked {unlinked} grow_harvest_weight rows")
+    print(f"  Deleted {deleted} trackers")
 
 # ---------------------------------------------------------------------------
 # Row transform
@@ -226,11 +233,9 @@ def build_tracker_row(sheet_row, known_sites):
 
     start_time = combine_datetime(harvest_date, clock_in)
     stop_time = combine_datetime(harvest_date, clock_out)
-    # Overnight shifts (stop_time on the next day) would appear as
-    # stop_time < start_time here. Cuke harvest crews work daytime only,
-    # so treating this as malformed data is correct.
-    if stop_time < start_time:
-        return {"_skip": "stop_before_start"}
+    # Note: a handful of legacy rows have stop_time < start_time (AM/PM
+    # data entry errors like 11:04 AM -> 12:44 AM). We preserve them as
+    # recorded; data corrections happen in the sheet, not here.
 
     gh = normalize_gh(sheet_row.get("Greenhouse"))
     if not gh or gh not in known_sites:
@@ -259,12 +264,12 @@ def build_tracker_row(sheet_row, known_sites):
 # Link harvest weights to trackers
 # ---------------------------------------------------------------------------
 
-def link_weights_to_trackers(supabase, trackers):
+def link_weights_to_trackers(trackers):
     """For each (date, site_id) pair, link the earliest tracker to matching
     grow_harvest_weight rows.
 
-    Since only the earliest tracker per pair can win weigh-ins (via IS NULL
-    guard), we dedupe upfront and skip non-earliest trackers entirely.
+    Uses a single SQL UPDATE with a VALUES-based join — ~6,000 roundtrips
+    collapse into one query.
 
     `trackers` is a list of dicts as returned from insert: each must have
     id, start_time, site_id.
@@ -273,28 +278,43 @@ def link_weights_to_trackers(supabase, trackers):
 
     # Sort by start_time, then pick the earliest tracker per (date, site)
     sorted_trackers = sorted(trackers, key=lambda t: t["start_time"])
-    earliest_per_pair = {}  # (date_str, site_id) -> tracker dict
+    earliest_per_pair = {}  # (date_str, site_id) -> tracker_id
     for t in sorted_trackers:
         key = (t["start_time"][:10], t["site_id"])
         if key not in earliest_per_pair:
-            earliest_per_pair[key] = t
+            earliest_per_pair[key] = t["id"]
 
     print(f"  {len(earliest_per_pair)} unique (date, site) pairs out of {len(trackers)} trackers")
 
-    total_linked = 0
-    for idx, ((harvest_date, site_id), tracker) in enumerate(earliest_per_pair.items(), 1):
-        result = (
-            supabase.table("grow_harvest_weight")
-            .update({"ops_task_tracker_id": tracker["id"]})
-            .eq("farm_id", FARM_ID)
-            .eq("harvest_date", harvest_date)
-            .eq("site_id", site_id)
-            .is_("ops_task_tracker_id", "null")
-            .execute()
-        )
-        total_linked += len(result.data)
-        if idx % 500 == 0:
-            print(f"  Progress: {idx}/{len(earliest_per_pair)} pairs processed, {total_linked} linked so far")
+    if not earliest_per_pair:
+        print("  Nothing to link")
+        return
+
+    # Build list of (harvest_date, site_id, tracker_id) tuples
+    rows = [(d, s, tid) for (d, s), tid in earliest_per_pair.items()]
+
+    with get_pg_conn() as conn:
+        with conn.cursor() as cur:
+            # Build the VALUES list safely via mogrify, then splice into a
+            # single UPDATE that joins grow_harvest_weight with the VALUES
+            # table on (harvest_date, site_id).
+            values_sql = ",".join(
+                cur.mogrify("(%s, %s, %s)", row).decode("utf-8") for row in rows
+            )
+            cur.execute(
+                f"""
+                UPDATE grow_harvest_weight w
+                SET ops_task_tracker_id = v.tracker_id::uuid
+                FROM (VALUES {values_sql}) AS v(harvest_date, site_id, tracker_id)
+                WHERE w.farm_id = %s
+                  AND w.harvest_date = v.harvest_date::date
+                  AND w.site_id = v.site_id
+                  AND w.ops_task_tracker_id IS NULL
+                """,
+                (FARM_ID,),
+            )
+            total_linked = cur.rowcount
+        conn.commit()
 
     print(f"  Linked {total_linked} grow_harvest_weight rows to trackers")
 
@@ -310,7 +330,7 @@ def main():
     print("GROW CUKE HARVEST SCHEDULE MIGRATION")
     print("=" * 60)
 
-    clear_existing(supabase)
+    clear_existing()
 
     # Load known cuke greenhouse site IDs for validation
     sites = (
@@ -351,7 +371,7 @@ def main():
     inserted = insert_rows(supabase, "ops_task_tracker", rows)
 
     # Link harvest weights to the newly-created trackers
-    link_weights_to_trackers(supabase, inserted)
+    link_weights_to_trackers(inserted)
 
     print("\n" + "=" * 60)
     print("DONE")
