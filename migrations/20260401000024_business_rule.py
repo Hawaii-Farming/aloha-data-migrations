@@ -498,6 +498,22 @@ RULES = [
         '"grow_harvest_weight.gross_weight", "grow_harvest_weight.net_weight"]',
         43,
     ),
+    rule(
+        "grow_scouting_site_hierarchy", "business_rule", "grow",
+        "Scouting: task site vs. observation site (two-tier hierarchy)",
+        "A scouting event is organized around a primary site (greenhouse or pond — e.g. 'gh', '01', 'hi', 'p4') "
+        "recorded on ops_task_tracker.site_id. Within that primary site, the scout walks and inspects specific "
+        "sub-locations (yellow card monitoring cards, growing rows, bag numbers, etc.). Each pest or disease "
+        "finding is recorded as a grow_scout_result row whose site_id points to the specific sub-site where "
+        "the observation was made (org_site with a narrower category like 'row' or a monitoring station). "
+        "When the sub-site granularity is unavailable (legacy data, aggregate observations), "
+        "grow_scout_result.site_id stays NULL and the broader location is inferred from the tracker.",
+        "Mirrors how scouting actually works in the field: one task per greenhouse/pond, many distinct "
+        "observations across different spots within it. Keeping the two levels separate lets us aggregate "
+        "findings by primary site while preserving the granularity of where each observation was made.",
+        '["ops_task_tracker.site_id", "grow_scout_result.site_id", "org_site"]',
+        44,
+    ),
 ]
 
 
