@@ -525,7 +525,7 @@ def build_event_rows(
         "ops_task_id": OPS_TASK_ID,
         "start_time": start_dt.isoformat(),
         "stop_time": stop_dt.isoformat() if stop_dt else None,
-        "is_completed": True,
+        "is_completed": stop_dt is not None,
         "notes": notes,
         "created_by": created_by,
         "updated_by": created_by,

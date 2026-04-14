@@ -265,14 +265,15 @@ def clear_existing(supabase):
 
 
 def ensure_grades(supabase):
-    """Ensure grow_grade rows use id='1' and '2' instead of 'on_grade'/'off_grade'."""
+    """Ensure grow_grade rows '1' and '2' exist for cuke.
+
+    Does NOT delete any pre-existing rows (including old-style
+    'on_grade'/'off_grade' IDs that may be referenced from other tables
+    like sales_product). The source of truth for grade IDs is now the
+    20260401000002_org.py migration which creates '1'/'2' directly; this
+    function just upserts the same rows idempotently.
+    """
     print("\n--- grow_grade ---")
-    # Delete old-style IDs if they exist (no-op if already correct)
-    for old_id in ("on_grade", "off_grade"):
-        try:
-            supabase.table("grow_grade").delete().eq("id", old_id).execute()
-        except Exception:
-            pass
     rows = [
         audit({
             "id": "1",

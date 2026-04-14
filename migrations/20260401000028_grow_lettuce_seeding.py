@@ -469,6 +469,10 @@ def build_rows(
 
     batch_id = str(uuid.uuid4())
 
+    # Capture sheet row's entryid (stable, unique per physical row) so we can
+    # sort deterministically when applying disambiguation suffixes below.
+    entryid = str(sheet_row.get("entryid", "")).strip()
+
     seed_batch = {
         "id": batch_id,
         "org_id": ORG_ID,
@@ -492,6 +496,9 @@ def build_rows(
         "notes": notes,
         "created_by": created_by,
         "updated_by": created_by,
+        # Non-DB field — used only for stable disambiguation sort below.
+        # Removed before insert.
+        "_entryid": entryid,
     }
 
     # Build harvest_weight only if the cycle is actually harvested
@@ -582,7 +589,14 @@ def main():
     # code verbatim; subsequent duplicates get _2, _3, ... appended.
     # (The sheet has ~64 duplicate cycles, mostly Mixed Version mix seedings
     # of the same mix on the same day.)
+    #
+    # Sort by (batch_code, entryid) before applying suffixes so the suffix
+    # is stable across re-runs: entryid is unique per sheet row, so adding
+    # or removing OTHER rows (with different entryids) never shifts which
+    # row gets which suffix. A given physical sheet row always gets the
+    # same batch_code suffix as long as its entryid is stable.
     from collections import Counter as _Counter
+    seed_batches.sort(key=lambda sb: (sb["batch_code"], sb.get("_entryid") or ""))
     seen = _Counter()
     dupe_count = 0
     for sb in seed_batches:
@@ -593,6 +607,10 @@ def main():
             dupe_count += 1
     if dupe_count:
         print(f"  Disambiguated {dupe_count} duplicate batch_codes (appended _2, _3, ...)")
+
+    # Strip the non-DB sort helper before insert
+    for sb in seed_batches:
+        sb.pop("_entryid", None)
 
     print(f"\n  Built {len(seed_batches)} seed_batch rows, {len(harvest_weights)} harvest_weight rows")
     for reason, count in sorted(skip_counts.items()):
