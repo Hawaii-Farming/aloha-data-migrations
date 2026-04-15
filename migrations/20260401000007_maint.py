@@ -896,9 +896,10 @@ def migrate_house_inspections(supabase, client):
             return "garage"
         return None
 
-    # 1. Create ops_task
+    # 1. Create ops_task (upsert — house_inspection may already exist as a
+    # system task seeded by the org migration)
     task_id = "house_inspection"
-    supabase.table("ops_task").insert({
+    supabase.table("ops_task").upsert({
         "id": task_id,
         "org_id": ORG_ID,
         "name": "House Inspection",
@@ -907,7 +908,7 @@ def migrate_house_inspections(supabase, client):
         "updated_by": AUDIT_USER,
     }).execute()
     print("\n--- ops_task ---")
-    print("  Inserted house_inspection task")
+    print("  Upserted house_inspection task")
 
     # 2. Create ops_template + ops_template_question for each room type
     template_questions = {}  # room_type -> {question_text: question_id}

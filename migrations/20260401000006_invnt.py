@@ -947,19 +947,20 @@ def migrate_grow_spray_compliance(supabase, gc):
         # Burn UOM from item, fall back to app_uom, else null
         burn_uom = (item.get("burn_uom") if item else None) or app_uom
 
-        # Application per burn — null when missing
+        # Application per burn — schema is NOT NULL; default to 1 when blank
+        # (means "one application unit per burn unit" — neutral fallback)
         app_per_burn_raw = str(r.get("MaximumUsagePerSeason", "")).strip()
-        app_per_burn = safe_numeric(app_per_burn_raw) if app_per_burn_raw else None
+        app_per_burn = safe_numeric(app_per_burn_raw) if app_per_burn_raw else 1
 
         # Dates — null when missing
         label_date = parse_date(r.get("LabelDate", ""))
 
-        # PHI / REI — null when missing rather than 0 (which means "no waiting
-        # period required" and could be misleading)
+        # PHI / REI — schema is NOT NULL; default to 0 when blank
+        # (means "no waiting period required" — neutral fallback)
         phi_raw = str(r.get("PHIDays", "")).strip()
         rei_raw = str(r.get("REIHours", "")).strip()
-        phi_days = int(safe_numeric(phi_raw)) if phi_raw else None
-        rei_hours = int(safe_numeric(rei_raw)) if rei_raw else None
+        phi_days = int(safe_numeric(phi_raw)) if phi_raw else 0
+        rei_hours = int(safe_numeric(rei_raw)) if rei_raw else 0
 
         # Audit
         updated_by_email = str(r.get("LastUpdateBy", "")).strip().lower()
