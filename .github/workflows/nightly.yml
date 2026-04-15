@@ -1,0 +1,78 @@
+name: Nightly Data Migration
+
+on:
+  schedule:
+    # 10:00 UTC daily = midnight HST (Hawaii is UTC-10, no DST)
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Which migrations to run'
+        required: true
+        default: 'default'
+        type: choice
+        options:
+          - default     # _run_nightly.py default set (007-033)
+          - all         # all migrations 001-033
+          - grow_only   # grow-related only (024-032)
+      skip_clear:
+        description: 'Skip the TRUNCATE pre-clear step'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      MIGRATION_AUDIT_USER: ${{ vars.MIGRATION_AUDIT_USER }}
+      MIGRATION_ORG_ID: ${{ vars.MIGRATION_ORG_ID }}
+      # Override the grow Google Sheet ID via repo variable if you ever fork a sandbox
+      SHEET_GROW: ${{ vars.SHEET_GROW }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Write Google service account credentials
+        env:
+          CREDS: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+        run: |
+          printf '%s' "$CREDS" > credentials.json
+          python -c "import json; json.load(open('credentials.json'))" && echo "credentials.json is valid JSON"
+
+      - name: Pre-clear transactional tables
+        if: ${{ inputs.skip_clear != true }}
+        run: python migrations/_clear_transactional.py
+
+      - name: Run migrations (default set)
+        if: ${{ github.event_name == 'schedule' || inputs.mode == 'default' || inputs.mode == '' }}
+        run: python migrations/_run_nightly.py
+
+      - name: Run migrations (all)
+        if: ${{ inputs.mode == 'all' }}
+        run: python migrations/_run_nightly.py --all
+
+      - name: Run migrations (grow only)
+        if: ${{ inputs.mode == 'grow_only' }}
+        run: python migrations/_run_nightly.py --only 024,025,026,027,028,029,030,031,032
+
+      - name: Cleanup credentials on failure
+        if: ${{ always() }}
+        run: rm -f credentials.json
