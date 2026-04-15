@@ -170,8 +170,113 @@ def ensure_additional_tasks(supabase):
 # SCHEDULE MIGRATION
 # ─────────────────────────────────────────────────────────────
 
+def _resolve_or_create_task(supabase, task_name: str, task_cache: dict) -> tuple[str, str | None]:
+    """Resolve a sheet task name to (ops_task_id, farm_id).
+
+    Falls back to creating a new ops_task row when the task isn't in TASK_MAP
+    or task_cache. The new task is created with a derived id, the original
+    task name as the display name, and farm_id=None (since we don't know it).
+
+    task_cache is a per-run map of {task_name_lower: (ops_task_id, farm_id)}
+    that's mutated to record auto-created tasks.
+    """
+    key = task_name.lower()
+    if key in task_cache:
+        return task_cache[key]
+
+    mapping = TASK_MAP.get(key)
+    if mapping:
+        task_cache[key] = mapping
+        return mapping
+
+    # Auto-create
+    new_id = to_id(task_name)
+    if not new_id:
+        # Empty derived id — fall back to a sentinel; this should be unreachable
+        # because callers check for empty task_name before calling.
+        new_id = "unknown_task"
+    try:
+        supabase.table("ops_task").upsert({
+            "id": new_id,
+            "org_id": ORG_ID,
+            "name": task_name,
+            "description": f"Auto-created from legacy schedule (task name: {task_name!r})",
+            "created_by": AUDIT_USER,
+            "updated_by": AUDIT_USER,
+        }).execute()
+    except Exception as e:
+        print(f"  WARN failed to auto-create ops_task {new_id!r}: {type(e).__name__}: {e}")
+        # Fall back to 'other' so the row still inserts
+        task_cache[key] = ("other", None)
+        return task_cache[key]
+
+    print(f"  Auto-created ops_task: {new_id!r} (from legacy task name {task_name!r})")
+    task_cache[key] = (new_id, None)
+    return task_cache[key]
+
+
+def _resolve_or_create_employee(supabase, full_name: str, emp_by_name: dict) -> str | None:
+    """Resolve a sheet 'LASTNAME FIRSTNAME' string to hr_employee.id.
+
+    Falls back to creating an inactive (is_deleted=true) stub employee when
+    the name isn't in the existing lookup. Mutates emp_by_name with the new id.
+
+    Returns None when the name can't be parsed at all (empty/whitespace).
+    """
+    if full_name in emp_by_name:
+        return emp_by_name[full_name]
+    if not full_name.strip():
+        return None
+
+    parts = full_name.split()
+    if len(parts) >= 2:
+        last = proper_case(parts[0])
+        first = proper_case(" ".join(parts[1:]))
+    else:
+        last = proper_case(full_name)
+        first = "Unknown"
+
+    emp_id = to_id(full_name)
+    if not emp_id:
+        return None
+
+    try:
+        supabase.table("hr_employee").upsert({
+            "id": emp_id,
+            "org_id": ORG_ID,
+            "first_name": first,
+            "last_name": last,
+            "is_primary_org": True,
+            "sys_access_level_id": "employee",
+            "is_deleted": True,
+            "created_by": AUDIT_USER,
+            "updated_by": AUDIT_USER,
+        }).execute()
+    except Exception as e:
+        print(f"  WARN failed to auto-create hr_employee {emp_id!r}: {type(e).__name__}: {e}")
+        return None
+
+    print(f"  Auto-created inactive hr_employee: {emp_id!r} (from legacy name {full_name!r})")
+    emp_by_name[full_name] = emp_id
+    # Also register the last-name-only key
+    emp_by_name[last.upper()] = emp_id
+    return emp_id
+
+
+def proper_case(val):
+    """Normalize a string to title case, stripping extra whitespace."""
+    if not val or not str(val).strip():
+        return val
+    return str(val).strip().title()
+
+
 def migrate_schedule(supabase, gc):
-    """Migrate hr_ee_sched_daily → ops_task_schedule (planned mode)."""
+    """Migrate hr_ee_sched_daily → ops_task_schedule (planned mode).
+
+    Auto-creates missing ops_task records and inactive hr_employee stubs
+    inline rather than dropping rows. Time-off rows (PTO/Request Off/Sick
+    Leave) and rows with unparseable dates are still skipped.
+    """
     wb = gc.open_by_key(HR_SHEET_ID)
     data = wb.worksheet("hr_ee_sched_daily").get_all_records()
 
@@ -186,37 +291,44 @@ def migrate_schedule(supabase, gc):
         # Also try last_name only for partial matches
         emp_by_name[e["last_name"].upper()] = e["id"]
 
-    dedup_map = {}  # (ops_task_id, emp_id, start_time) → row
-    skipped = 0
-    unmatched_employees = set()
-    unmatched_tasks = set()
+    task_cache = {}  # task_name.lower() -> (ops_task_id, farm_id)
+    dedup_map = {}   # (ops_task_id, emp_id, start_time) → row
+    skipped_timeoff = 0
+    skipped_no_date = 0
+    skipped_no_emp = 0
+    skipped_no_task = 0
+    auto_created_tasks = set()
+    auto_created_emps = set()
 
     for r in data:
         task_name = str(r.get("Task", "")).strip()
-        if not task_name or task_name.lower() in SKIP_TASKS:
-            skipped += 1
+        if not task_name:
+            skipped_no_task += 1
+            continue
+        if task_name.lower() in SKIP_TASKS:
+            skipped_timeoff += 1
             continue
 
-        # Resolve task
-        mapping = TASK_MAP.get(task_name.lower())
-        if not mapping:
-            unmatched_tasks.add(task_name)
-            skipped += 1
-            continue
-        ops_task_id, farm_id = mapping
+        # Resolve task (auto-create if unmapped)
+        was_known = task_name.lower() in task_cache or task_name.lower() in TASK_MAP
+        ops_task_id, farm_id = _resolve_or_create_task(supabase, task_name, task_cache)
+        if not was_known:
+            auto_created_tasks.add(ops_task_id)
 
-        # Resolve employee
+        # Resolve employee (auto-create stub if unknown)
         full_name = str(r.get("FullName", "")).strip().upper()
-        emp_id = emp_by_name.get(full_name)
+        was_known_emp = full_name in emp_by_name
+        emp_id = _resolve_or_create_employee(supabase, full_name, emp_by_name)
         if not emp_id:
-            unmatched_employees.add(full_name)
-            skipped += 1
+            skipped_no_emp += 1
             continue
+        if not was_known_emp:
+            auto_created_emps.add(emp_id)
 
         # Parse date and times
         date = parse_date(r.get("Date"))
         if not date:
-            skipped += 1
+            skipped_no_date += 1
             continue
 
         start_time_str = parse_time(r.get("StartTime"))
@@ -244,12 +356,15 @@ def migrate_schedule(supabase, gc):
     rows = list(dedup_map.values())
     insert_rows(supabase, "ops_task_schedule", rows)
 
-    if skipped:
-        print(f"  Skipped {skipped} rows (time-off, unmapped task, unknown employee, missing date)")
-    if unmatched_employees:
-        print(f"  Unmatched employees ({len(unmatched_employees)}): {sorted(unmatched_employees)[:10]}...")
-    if unmatched_tasks:
-        print(f"  Unmatched tasks: {sorted(unmatched_tasks)}")
+    print(f"  Auto-created {len(auto_created_tasks)} ops_tasks, {len(auto_created_emps)} inactive employees")
+    if skipped_timeoff:
+        print(f"  Skipped {skipped_timeoff} time-off rows (PTO / Request Off / Sick Leave)")
+    if skipped_no_date:
+        print(f"  Skipped {skipped_no_date} rows with no parseable date")
+    if skipped_no_emp:
+        print(f"  Skipped {skipped_no_emp} rows where employee name couldn't be parsed at all")
+    if skipped_no_task:
+        print(f"  Skipped {skipped_no_task} rows with empty Task")
 
 
 # ─────────────────────────────────────────────────────────────

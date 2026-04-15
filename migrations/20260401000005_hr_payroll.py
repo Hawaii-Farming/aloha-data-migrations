@@ -230,29 +230,63 @@ def migrate_payroll(supabase, gc):
     wa_by_name = {w["name"].lower(): w["id"] for w in wa_result.data}
 
     rows = []
-    skipped = 0
+    skipped_adjustment = 0
+    skipped_no_name = 0
+    auto_created_emps = set()
 
     for r in data:
         name = str(r.get("full_name", "")).strip().upper()
-        if not name or name == "ADJUSTMENT":
-            skipped += 1
+        if not name:
+            skipped_no_name += 1
+            continue
+        # ADJUSTMENT rows are aggregate non-employee payroll lines (e.g.
+        # quarter-end true-ups). They have no employee to attach to and
+        # don't represent a specific person's pay.
+        if name == "ADJUSTMENT":
+            skipped_adjustment += 1
             continue
 
-        # Resolve employee
+        # Resolve employee — falls back to inline auto-create if neither
+        # the prior pre-pass nor the lookups find a match.
         eid = str(r.get("employee_id", "")).strip()
         emp = emp_by_pid.get(eid) if eid else None
         if not emp:
             emp = emp_by_name.get(name)
         if not emp:
-            skipped += 1
-            continue
+            # Inline auto-create as a safety net for rows the prior pass
+            # didn't catch (e.g. names with parsing edge cases).
+            new_id = to_id(name)
+            if new_id:
+                parts = name.split()
+                last = proper_case(parts[0]) if parts else proper_case(name)
+                first = proper_case(" ".join(parts[1:])) if len(parts) >= 2 else "Unknown"
+                stub = {
+                    "id": new_id,
+                    "org_id": ORG_ID,
+                    "first_name": first,
+                    "last_name": last,
+                    "is_primary_org": True,
+                    "sys_access_level_id": "employee",
+                    "payroll_id": eid or new_id,
+                    "is_deleted": True,
+                    "created_by": AUDIT_USER,
+                    "updated_by": AUDIT_USER,
+                }
+                try:
+                    supabase.table("hr_employee").upsert(stub).execute()
+                    emp = stub
+                    emp_by_name[name] = stub
+                    if eid:
+                        emp_by_pid[eid] = stub
+                    auto_created_emps.add(new_id)
+                except Exception as e:
+                    print(f"  WARN failed to auto-create hr_employee {new_id!r}: {type(e).__name__}: {e}")
+                    continue
+            else:
+                continue
 
-        check_date = parse_date(r.get("check_date"))
-        if not check_date:
-            skipped += 1
-            continue
-
-        # Pay period dates from y1/m1/d1 and y2/m2/d2
+        # Pay period dates from y1/m1/d1 and y2/m2/d2 (parsed early so we
+        # can fall back to pay_period_end when check_date is missing)
         y1 = str(r.get("y1", "")).strip()
         m1 = str(r.get("m1", "")).strip()
         d1 = str(r.get("d1", "")).strip()
@@ -266,6 +300,17 @@ def migrate_payroll(supabase, gc):
             pay_period_start = parse_date(f"{m1}/{d1}/{y1}")
         if y2 and m2 and d2:
             pay_period_end = parse_date(f"{m2}/{d2}/{y2}")
+
+        # check_date is NOT NULL on hr_payroll, so we need a value. Try the
+        # sheet's check_date first, then fall back to pay_period_end, then
+        # pay_period_start. If all are missing the row is genuinely undated
+        # and we skip — that case should be vanishingly rare.
+        check_date = parse_date(r.get("check_date"))
+        if not check_date:
+            check_date = pay_period_end or pay_period_start
+        if not check_date:
+            skipped_no_name += 1
+            continue
 
         # Fallback: use check_date if pay period dates missing
         if not pay_period_start:
@@ -350,8 +395,12 @@ def migrate_payroll(supabase, gc):
         rows.append(row)
 
     insert_rows(supabase, "hr_payroll", rows)
-    if skipped:
-        print(f"  Skipped {skipped} rows (adjustment, unknown employee, missing date)")
+    if auto_created_emps:
+        print(f"  Inline-created {len(auto_created_emps)} additional employee stubs")
+    if skipped_adjustment:
+        print(f"  Skipped {skipped_adjustment} ADJUSTMENT rows (aggregate non-employee payroll lines)")
+    if skipped_no_name:
+        print(f"  Skipped {skipped_no_name} rows with empty name or no parseable date")
 
 
 # ─────────────────────────────────────────────────────────────
