@@ -30,10 +30,12 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      # Optional overrides — scripts have hardcoded defaults for production.
+      # Only set the repo Variables below if you want to point a run at a
+      # different audit user or org (e.g. for a sandbox). Sheet IDs are all
+      # hardcoded inside each migration script and do not have env overrides.
       MIGRATION_AUDIT_USER: ${{ vars.MIGRATION_AUDIT_USER }}
       MIGRATION_ORG_ID: ${{ vars.MIGRATION_ORG_ID }}
-      # Override the grow Google Sheet ID via repo variable if you ever fork a sandbox
-      SHEET_GROW: ${{ vars.SHEET_GROW }}
 
     steps:
       - name: Checkout
