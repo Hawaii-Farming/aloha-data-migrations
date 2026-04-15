@@ -203,11 +203,16 @@ def build_description(spec):
 
 
 def build_photos(spec):
-    """Build photos JSONB array from Image01..Image03."""
+    """Build photos JSONB array from Image01..Image03.
+
+    Normalizes legacy 'images/sales_products/' -> 'images/sales_product/' to
+    match the unified bucket layout (one folder per current table name).
+    """
     photos = []
     for col in ["Image01", "Image02", "Image03"]:
         v = str(spec.get(col, "")).strip()
         if v:
+            v = v.replace("images/sales_products/", "images/sales_product/")
             photos.append(v)
     return photos
 
@@ -791,6 +796,8 @@ def migrate_shelf_life(supabase, gc):
         if not photo_url:
             skipped_photos += 1
             continue
+        # Normalize legacy 'images/pack_slife/' -> 'images/pack_shelf_life/'
+        photo_url = photo_url.replace("images/pack_slife/", "images/pack_shelf_life/")
 
         photo_type = str(r.get("PhotoType", "")).strip()
         side = PHOTO_SIDE_MAP.get(photo_type)

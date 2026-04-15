@@ -395,8 +395,10 @@ def migrate_invnt_item(supabase, gc):
         status = str(r.get("ItemStatus", "")).strip().lower()
         is_active = status != "inactive"
 
-        # Photo
+        # Photo — normalize legacy sheet path to the unified 'images/' bucket layout
         photo = str(r.get("ItemPhoto", "")).strip()
+        if photo:
+            photo = photo.replace("images/invnt/", "images/invnt_item/")
         photos = [photo] if photo else []
 
         # QB account
@@ -608,9 +610,10 @@ def migrate_invnt_po(supabase, gc):
             arrival = parse_date(r.get("ArrivalDate", ""))
             if arrival:
                 photo = str(r.get("DeliveryPhoto", "")).strip()
-                # Normalize legacy sheet path to the unified 'images/' bucket layout
+                # Normalize legacy sheet paths to the unified 'images/' bucket layout
                 if photo:
-                    photo = photo.replace("Images/Orders/", "images/po_receiving/")
+                    photo = photo.replace("Images/Orders/", "images/invnt_po_received/")
+                    photo = photo.replace("images/invnt/", "images/invnt_po_received/")
                 recv = {
                     "org_id": ORG_ID,
                     "farm_id": item.get("farm_id"),
@@ -680,12 +683,13 @@ def migrate_invnt_po(supabase, gc):
         status = PROC_STATUS_MAP.get(raw_status, "requested")
 
         # Photos
-        # Normalize legacy sheet path to the unified 'images/' bucket layout
+        # Normalize legacy sheet paths to the unified 'images/' bucket layout
         photos = []
         for col in ["request_image_01_url", "request_image_02_url", "request_image_03_url"]:
             p = str(r.get(col, "")).strip()
             if p:
-                p = p.replace("proc_requests_Images/", "images/procurement/")
+                p = p.replace("proc_requests_Images/", "images/invnt_po/")
+                p = p.replace("images/invnt/", "images/invnt_po/")
                 photos.append(p)
 
         # UOMs: non-inventory items use "each", inventory items use item UOMs

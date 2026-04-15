@@ -540,12 +540,13 @@ def build_rows(sheet_row, known_sites, cuke_list, lettuce_by_base):
             "updated_by": reporter,
         })
 
-    # Photos
+    # Photos — normalize legacy sheet path to the unified 'images/' bucket layout
     photos = []
     for col in ("Photo01", "Photo02"):
         url = str(sheet_row.get(col, "")).strip()
         if not url:
             continue
+        url = url.replace("images/grow_chem/", "images/grow_task/monitoring/")
         photos.append({
             "org_id": ORG_ID,
             "farm_id": farm_raw,

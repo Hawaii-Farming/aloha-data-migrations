@@ -311,7 +311,7 @@ def migrate(supabase, gc, email_map, stub_cache):
         photo_raw = str(r.get("Photo", "")).strip()
         # Normalize legacy sheet path to the unified 'images/' bucket layout
         if photo_raw:
-            photo_raw = photo_raw.replace("fsafe_log_pest_Images/", "images/fsafe_pest/")
+            photo_raw = photo_raw.replace("fsafe_log_pest_Images/", "images/fsafe_pest_result/")
 
         # Resolve to canonical pest_type enum
         if activity and pest_type_raw == "mouse":

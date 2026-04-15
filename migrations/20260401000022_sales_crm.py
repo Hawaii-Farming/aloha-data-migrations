@@ -254,6 +254,8 @@ def migrate_visits(supabase, gc):
         for col in ["Photo01", "Photo02", "Photo03"]:
             url = str(r.get(col, "")).strip()
             if url:
+                # Normalize legacy 'images/sales_ext/' -> 'images/sales_crm_store_visit/'
+                url = url.replace("images/sales_ext/", "images/sales_crm_store_visit/")
                 photo_rows.append({
                     "org_id": ORG_ID,
                     "sales_crm_store_visit_id": visit_uuid,

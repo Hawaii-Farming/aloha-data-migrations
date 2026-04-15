@@ -290,7 +290,7 @@ def migrate_hr_employee(supabase, records, app_users):
             "gender": gender,
             "date_of_birth": parse_date(r.get("DateOfBirth", "")),
             "is_minority": parse_bool(r.get("IsMinority", False)),
-            "profile_photo_url": str(r.get("Photograph", "")).strip() or None,
+            "profile_photo_url": (str(r.get("Photograph", "")).strip().replace("images/hr_photo/", "images/hr_employee/") or None),
             "phone": str(r.get("Phone", "")).strip() or None,
             "company_email": email or None,
             "is_primary_org": True,

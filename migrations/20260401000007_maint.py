@@ -695,11 +695,12 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
                     "updated_by": req_email or AUDIT_USER,
                 }))
 
-        # Photos — before
+        # Photos — before (normalize legacy 'images/maint/' -> 'images/maint_request/')
         for col in ["BeforePhoto01", "BeforePhoto02", "BeforePhoto03",
                      "BeforePhoto04", "BeforePhoto05", "BeforePhoto06"]:
             url = str(r.get(col, "")).strip()
             if url:
+                url = url.replace("images/maint/", "images/maint_request/")
                 photo_rows.append((req_index, {
                     "org_id": ORG_ID,
                     "photo_type": "before",
@@ -708,11 +709,12 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
                     "updated_by": req_email or AUDIT_USER,
                 }))
 
-        # Photos — after
+        # Photos — after (normalize legacy 'images/maint/' -> 'images/maint_request/')
         for col in ["AfterPhoto01", "AfterPhoto02", "AfterPhoto03",
                      "AfterPhoto04", "AfterPhoto05", "AfterPhoto06"]:
             url = str(r.get(col, "")).strip()
             if url:
+                url = url.replace("images/maint/", "images/maint_request/")
                 photo_rows.append((req_index, {
                     "org_id": ORG_ID,
                     "photo_type": "after",

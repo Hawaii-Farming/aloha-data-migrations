@@ -410,7 +410,7 @@ def build_results_and_photos(observation_records, trackers_by_id, existing_pest_
             if not url:
                 continue
             # Normalize legacy sheet path to the unified 'images/' bucket layout
-            url = url.replace("grow_scouting_observations_Images/", "images/grow_scouting/")
+            url = url.replace("grow_scouting_observations_Images/", "images/grow_task/scouting/")
             photos.append({
                 "org_id": ORG_ID,
                 "farm_id": tracker["farm_id"],

@@ -787,10 +787,12 @@ def migrate_foreign_material(supabase, gc, fm_question_id, email_map, stub_cache
         reported_by = reported_by_raw.lower() if "@" in reported_by_raw else AUDIT_USER
 
         # Collect photo URLs from this row (1-3 columns)
+        # Normalize legacy 'images/fsafe_foreign_material/' -> 'images/ops_template_result/'
         photo_urls = []
         for col in ("Foreign Material Photo 01", "Foreign Material Photo 02", "Foreign Material Photo 03"):
             v = str(r.get(col, "")).strip()
             if v:
+                v = v.replace("images/fsafe_foreign_material/", "images/ops_template_result/")
                 photo_urls.append(v)
 
         # Split material types on '&'
