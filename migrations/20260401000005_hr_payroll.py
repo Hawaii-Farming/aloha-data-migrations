@@ -188,9 +188,24 @@ def ensure_missing_employees(supabase, data, emp_by_pid, emp_by_name):
 # ─────────────────────────────────────────────────────────────
 
 def migrate_payroll(supabase, gc):
-    """Migrate hr_ee_payroll → hr_payroll."""
+    """Migrate hr_ee_payroll → hr_payroll.
+
+    Uses UNFORMATTED_VALUE so numeric cells come through at full precision.
+    gspread's default get_all_records() returns display values which round
+    decimals like total_hours=118.36 down to 118 when the column is formatted
+    as an integer, silently corrupting downstream ratio math.
+    """
     wb = gc.open_by_key(HR_SHEET_ID)
-    data = wb.worksheet("hr_ee_payroll").get_all_records()
+    ws = wb.worksheet("hr_ee_payroll")
+    # date_time_render_option keeps date cells as their formatted string so
+    # parse_date can read them as "M/D/YYYY"; UNFORMATTED_VALUE only changes
+    # how numeric cells are returned.
+    raw = ws.get_all_values(
+        value_render_option="UNFORMATTED_VALUE",
+        date_time_render_option="FORMATTED_STRING",
+    )
+    headers = raw[0]
+    data = [dict(zip(headers, row)) for row in raw[1:]]
 
     print(f"\nProcessing {len(data)} payroll rows...")
 
@@ -285,21 +300,17 @@ def migrate_payroll(supabase, gc):
             else:
                 continue
 
-        # Pay period dates from y1/m1/d1 and y2/m2/d2 (parsed early so we
-        # can fall back to pay_period_end when check_date is missing)
-        y1 = str(r.get("y1", "")).strip()
-        m1 = str(r.get("m1", "")).strip()
-        d1 = str(r.get("d1", "")).strip()
-        y2 = str(r.get("y2", "")).strip()
-        m2 = str(r.get("m2", "")).strip()
-        d2 = str(r.get("d2", "")).strip()
-
+        # Pay period comes as a single string "M/D/YYYY - M/D/YYYY" in the
+        # legacy sheet. The y1/m1/d1/y2/m2/d2 columns are *not* start/end
+        # dates — they're month-split day counts used by legacy reporting —
+        # so parse the pay_period string directly.
+        pay_period_str = str(r.get("pay_period", "")).strip()
         pay_period_start = None
         pay_period_end = None
-        if y1 and m1 and d1:
-            pay_period_start = parse_date(f"{m1}/{d1}/{y1}")
-        if y2 and m2 and d2:
-            pay_period_end = parse_date(f"{m2}/{d2}/{y2}")
+        if " - " in pay_period_str:
+            start_str, end_str = pay_period_str.split(" - ", 1)
+            pay_period_start = parse_date(start_str.strip())
+            pay_period_end = parse_date(end_str.strip())
 
         # check_date is NOT NULL on hr_payroll, so we need a value. Try the
         # sheet's check_date first, then fall back to pay_period_end, then
@@ -354,12 +365,14 @@ def migrate_payroll(supabase, gc):
             # Hours
             "regular_hours": safe_numeric(r.get("regular_hours")),
             "overtime_hours": safe_numeric(r.get("overtime_hours")),
+            "discretionary_overtime_hours": safe_numeric(r.get("discretionary_overtime_hours")),
             "pto_hours": safe_numeric(r.get("pto_hours_taken")),
             "total_hours": safe_numeric(r.get("total_hours")),
             "pto_hours_accrued": safe_numeric(r.get("pto_hours_accrued")),
             # Earnings
             "regular_pay": safe_numeric(r.get("regular_pay")),
             "overtime_pay": safe_numeric(r.get("overtime_pay")),
+            "discretionary_overtime_pay": safe_numeric(r.get("discretionary_overtime_pay")),
             "pto_pay": safe_numeric(r.get("pto_pay")),
             "other_pay": safe_numeric(r.get("other_pay")),
             "bonus_pay": safe_numeric(r.get("bonus_pay")),

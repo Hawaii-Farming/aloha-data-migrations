@@ -1,19 +1,18 @@
 """
 Migrate HR Daily Schedule
 ==========================
-Migrates hr_ee_sched_daily from legacy Google Sheets to ops_task_schedule
-as planned schedule entries (ops_task_tracker_id = null).
-
-Also creates additional ops_task records for legacy task types not yet
-provisioned (service, tearout, maintenance, corporate, other).
+Seeds ops_task rows from the hr_ee_tasks tab (granular legacy task names
+with QuickBooks accounts) and migrates hr_ee_sched_daily rows to
+ops_task_schedule planned entries (ops_task_tracker_id = null).
 
 Source: https://docs.google.com/spreadsheets/d/13DUQTQyZf0CW07xv4FJ4ukP2x3Yoz8PyAw3Z2SwNsts
+  - hr_ee_tasks:       23 rows → ops_task (seed, upsert)
   - hr_ee_sched_daily: 22473 rows → ops_task_schedule (planned mode)
 
 Usage:
     python scripts/migrations/20260401000004_hr_schedule.py
 
-Rerunnable: clears and reinserts all data on each run.
+Rerunnable: clears planned schedule entries and reseeds tasks on each run.
 """
 
 import os
@@ -41,42 +40,8 @@ ORG_ID = "hawaii_farming"
 
 HR_SHEET_ID = "13DUQTQyZf0CW07xv4FJ4ukP2x3Yoz8PyAw3Z2SwNsts"
 
-# Legacy task → (ops_task_id, farm_id)
-# Tasks like PTO, Request Off, Sick Leave are time-off — skipped
-TASK_MAP = {
-    "cuke harvest":         ("harvesting", "cuke"),
-    "harvest supervisor":   ("harvesting", "cuke"),
-    "cuke ph":              ("packing", "cuke"),
-    "cuke service":         ("service", "cuke"),
-    "cuke service a":       ("service", "cuke"),
-    "cuke service b":       ("service", "cuke"),
-    "cuke service c":       ("service", "cuke"),
-    "service supervisor":   ("service", "cuke"),
-    "cuke tearout":         ("tearout", "cuke"),
-    "cuke tearout a":       ("tearout", "cuke"),
-    "cuke tearout b":       ("tearout", "cuke"),
-    "cuke tearout c":       ("tearout", "cuke"),
-    "tearout supervisor":   ("tearout", "cuke"),
-    "cuke supervisor":      ("supervisor", "cuke"),
-    "cukes supervisor":     ("supervisor", "cuke"),
-    "lettuce gh":           ("harvesting", "lettuce"),
-    "lettuce ph":           ("packing", "lettuce"),
-    "maintenance":          ("maintenance", None),
-    "corp":                 ("corporate", None),
-    "other":                ("other", None),
-}
-
-# Additional ops_task records needed for legacy data
-ADDITIONAL_TASKS = [
-    ("service", "Service", "Greenhouse crop service and maintenance activities"),
-    ("tearout", "Tearout", "Removing spent crops and preparing beds for replanting"),
-    ("supervisor", "Supervisor", "Supervisory oversight of farm operations"),
-    ("maintenance", "Maintenance", "Facility and equipment maintenance"),
-    ("corporate", "Corporate", "Administrative and corporate activities"),
-    ("other", "Other", "Miscellaneous tasks not classified elsewhere"),
-]
-
-# Time-off tasks — skipped from schedule migration
+# Time-off tasks — still seeded as ops_task rows, but never inserted into
+# ops_task_schedule (they're not labor to schedule).
 SKIP_TASKS = {"pto", "request off", "sick leave"}
 
 
@@ -145,73 +110,106 @@ def get_sheets():
 # OPS TASK PROVISIONING
 # ─────────────────────────────────────────────────────────────
 
-def ensure_additional_tasks(supabase):
-    """Create ops_task records for legacy task types not in the default provisioning."""
-    existing = supabase.table("ops_task").select("id").execute()
-    existing_ids = {t["id"] for t in existing.data}
+def derive_farm_id(task_name: str) -> str | None:
+    """Infer farm_id from a task name prefix.
+
+    "Cuke *" → "cuke", "Lettuce *" → "lettuce", else None.
+    """
+    key = task_name.strip().lower()
+    if key.startswith("cuke"):
+        return "cuke"
+    if key.startswith("lettuce"):
+        return "lettuce"
+    return None
+
+
+def seed_tasks_from_sheet(supabase, gc) -> dict:
+    """Seed ops_task rows from the hr_ee_tasks tab.
+
+    Tab columns: Task, QuickBooksAccount. Each row becomes one ops_task row:
+      id         = slugified Task (e.g. "Cuke Service A" → "cuke_service_a")
+      name       = Task as-is (display)
+      qb_account = QuickBooksAccount (empty string → None)
+      farm_id    = derived from name prefix (Cuke/Lettuce), else None
+
+    Uses upsert so the seed can overlay rows already created by org.py defaults
+    (e.g. "maintenance") without conflict. Returns a lookup map used by the
+    schedule migration to resolve task names.
+
+    Returns: {task_name.lower(): (ops_task_id, farm_id)}
+    """
+    ws = gc.open_by_key(HR_SHEET_ID).worksheet("hr_ee_tasks")
+    raw = ws.get_all_records()
 
     rows = []
-    for task_id, name, desc in ADDITIONAL_TASKS:
-        if task_id not in existing_ids:
-            rows.append(audit({
-                "id": task_id,
-                "org_id": ORG_ID,
-                "name": name,
-                "description": desc,
-            }))
+    task_map = {}
+    for r in raw:
+        task_name = str(r.get("Task", "")).strip()
+        if not task_name:
+            continue
+        qb_account = str(r.get("QuickBooksAccount", "")).strip() or None
+        task_id = to_id(task_name)
+        farm_id = derive_farm_id(task_name)
 
-    if rows:
-        insert_rows(supabase, "ops_task", rows)
-    else:
-        print("  All additional tasks already exist")
+        rows.append({
+            "id": task_id,
+            "org_id": ORG_ID,
+            "name": task_name,
+            "qb_account": qb_account,
+            "farm_id": farm_id,
+            "created_by": AUDIT_USER,
+            "updated_by": AUDIT_USER,
+        })
+        task_map[task_name.lower()] = (task_id, farm_id)
+
+    print("\n--- ops_task (seed from hr_ee_tasks tab) ---")
+    for row in rows:
+        supabase.table("ops_task").upsert(row).execute()
+    print(f"  Upserted {len(rows)} rows")
+
+    return task_map
 
 
 # ─────────────────────────────────────────────────────────────
 # SCHEDULE MIGRATION
 # ─────────────────────────────────────────────────────────────
 
-def _resolve_or_create_task(supabase, task_name: str, task_cache: dict) -> tuple[str, str | None]:
+def _resolve_or_create_task(
+    supabase, task_name: str, task_map: dict, task_cache: dict
+) -> tuple[str, str | None]:
     """Resolve a sheet task name to (ops_task_id, farm_id).
 
-    Falls back to creating a new ops_task row when the task isn't in TASK_MAP
-    or task_cache. The new task is created with a derived id, the original
-    task name as the display name, and farm_id=None (since we don't know it).
-
-    task_cache is a per-run map of {task_name_lower: (ops_task_id, farm_id)}
-    that's mutated to record auto-created tasks.
+    task_map is the tab-sourced seed (authoritative). task_cache tracks
+    auto-created tasks discovered in this run to avoid duplicate upserts.
+    Falls back to creating a new ops_task row when the name isn't in either.
     """
     key = task_name.lower()
+    if key in task_map:
+        return task_map[key]
     if key in task_cache:
         return task_cache[key]
 
-    mapping = TASK_MAP.get(key)
-    if mapping:
-        task_cache[key] = mapping
-        return mapping
-
-    # Auto-create
     new_id = to_id(task_name)
     if not new_id:
-        # Empty derived id — fall back to a sentinel; this should be unreachable
-        # because callers check for empty task_name before calling.
         new_id = "unknown_task"
+    farm_id = derive_farm_id(task_name)
     try:
         supabase.table("ops_task").upsert({
             "id": new_id,
             "org_id": ORG_ID,
             "name": task_name,
+            "farm_id": farm_id,
             "description": f"Auto-created from legacy schedule (task name: {task_name!r})",
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
         }).execute()
     except Exception as e:
         print(f"  WARN failed to auto-create ops_task {new_id!r}: {type(e).__name__}: {e}")
-        # Fall back to 'other' so the row still inserts
         task_cache[key] = ("other", None)
         return task_cache[key]
 
     print(f"  Auto-created ops_task: {new_id!r} (from legacy task name {task_name!r})")
-    task_cache[key] = (new_id, None)
+    task_cache[key] = (new_id, farm_id)
     return task_cache[key]
 
 
@@ -270,12 +268,14 @@ def proper_case(val):
     return str(val).strip().title()
 
 
-def migrate_schedule(supabase, gc):
+def migrate_schedule(supabase, gc, task_map: dict):
     """Migrate hr_ee_sched_daily → ops_task_schedule (planned mode).
 
-    Auto-creates missing ops_task records and inactive hr_employee stubs
-    inline rather than dropping rows. Time-off rows (PTO/Request Off/Sick
-    Leave) and rows with unparseable dates are still skipped.
+    task_map is the tab-sourced {task_name_lower: (ops_task_id, farm_id)}
+    from seed_tasks_from_sheet. Auto-creates missing ops_task records and
+    inactive hr_employee stubs inline rather than dropping rows. Time-off
+    rows (PTO/Request Off/Sick Leave) and rows with unparseable dates are
+    still skipped.
     """
     wb = gc.open_by_key(HR_SHEET_ID)
     data = wb.worksheet("hr_ee_sched_daily").get_all_records()
@@ -291,7 +291,7 @@ def migrate_schedule(supabase, gc):
         # Also try last_name only for partial matches
         emp_by_name[e["last_name"].upper()] = e["id"]
 
-    task_cache = {}  # task_name.lower() -> (ops_task_id, farm_id)
+    task_cache = {}  # task_name.lower() -> (ops_task_id, farm_id)  [auto-created only]
     dedup_map = {}   # (ops_task_id, emp_id, start_time) → row
     skipped_timeoff = 0
     skipped_no_date = 0
@@ -310,8 +310,9 @@ def migrate_schedule(supabase, gc):
             continue
 
         # Resolve task (auto-create if unmapped)
-        was_known = task_name.lower() in task_cache or task_name.lower() in TASK_MAP
-        ops_task_id, farm_id = _resolve_or_create_task(supabase, task_name, task_cache)
+        key = task_name.lower()
+        was_known = key in task_map or key in task_cache
+        ops_task_id, farm_id = _resolve_or_create_task(supabase, task_name, task_map, task_cache)
         if not was_known:
             auto_created_tasks.add(ops_task_id)
 
@@ -384,12 +385,12 @@ def main():
     supabase.table("ops_task_schedule").delete().is_("ops_task_tracker_id", "null").execute()
     print("  Cleared")
 
-    # Step 1: Ensure additional ops_task records exist
-    print("\nChecking additional task records...")
-    ensure_additional_tasks(supabase)
+    # Step 1: Seed ops_task from hr_ee_tasks tab (authoritative source)
+    print("\nSeeding ops_task from hr_ee_tasks tab...")
+    task_map = seed_tasks_from_sheet(supabase, gc)
 
     # Step 2: Migrate daily schedule
-    migrate_schedule(supabase, gc)
+    migrate_schedule(supabase, gc, task_map)
 
     print("\n" + "=" * 60)
     print("DONE")

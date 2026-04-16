@@ -24,25 +24,20 @@ CREATE TABLE IF NOT EXISTS hr_payroll (
     -- Hours
     regular_hours               NUMERIC NOT NULL DEFAULT 0,
     overtime_hours              NUMERIC NOT NULL DEFAULT 0,
-    holiday_hours               NUMERIC NOT NULL DEFAULT 0,
+    discretionary_overtime_hours NUMERIC NOT NULL DEFAULT 0,
     pto_hours                   NUMERIC NOT NULL DEFAULT 0,
-    sick_hours                  NUMERIC NOT NULL DEFAULT 0,
-    funeral_hours               NUMERIC NOT NULL DEFAULT 0,
     total_hours                 NUMERIC NOT NULL DEFAULT 0,
     pto_hours_accrued           NUMERIC NOT NULL DEFAULT 0,
 
     -- Earnings
     regular_pay                 NUMERIC NOT NULL DEFAULT 0,
     overtime_pay                NUMERIC NOT NULL DEFAULT 0,
-    holiday_pay                 NUMERIC NOT NULL DEFAULT 0,
+    discretionary_overtime_pay  NUMERIC NOT NULL DEFAULT 0,
     pto_pay                     NUMERIC NOT NULL DEFAULT 0,
-    sick_pay                    NUMERIC NOT NULL DEFAULT 0,
-    funeral_pay                 NUMERIC NOT NULL DEFAULT 0,
     other_pay                   NUMERIC NOT NULL DEFAULT 0,
     bonus_pay                   NUMERIC NOT NULL DEFAULT 0,
     auto_allowance              NUMERIC NOT NULL DEFAULT 0,
     per_diem                    NUMERIC NOT NULL DEFAULT 0,
-    salary                      NUMERIC NOT NULL DEFAULT 0,
     gross_wage                  NUMERIC NOT NULL DEFAULT 0,
 
     -- Employee deductions
@@ -89,6 +84,8 @@ COMMENT ON COLUMN hr_payroll.wc IS 'Snapshot from hr_employee.wc at time of impo
 COMMENT ON COLUMN hr_payroll.pay_structure IS 'Snapshot from hr_employee.pay_structure at time of import';
 COMMENT ON COLUMN hr_payroll.hourly_rate IS 'Snapshot from payroll processor NetPay data';
 COMMENT ON COLUMN hr_payroll.overtime_threshold IS 'Snapshot from hr_employee.overtime_threshold at time of import';
+COMMENT ON COLUMN hr_payroll.discretionary_overtime_hours IS 'Hours worked above overtime_threshold, computed at import as GREATEST(total_hours - overtime_threshold, 0). Distinct from overtime_hours which comes from the payroll processor.';
+COMMENT ON COLUMN hr_payroll.discretionary_overtime_pay IS 'Pay attributed to the discretionary overtime portion, computed at import as (discretionary_overtime_hours / overtime_hours) * overtime_pay.';
 COMMENT ON COLUMN hr_payroll.fit IS 'Federal Income Tax withheld';
 COMMENT ON COLUMN hr_payroll.sit IS 'State Income Tax withheld';
 COMMENT ON COLUMN hr_payroll.hawaii_get IS 'Hawaii General Excise Tax';
