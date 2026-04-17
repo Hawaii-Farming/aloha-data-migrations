@@ -271,8 +271,15 @@ def upload_one(file_meta, dest_subpath, stats, stats_lock):
             if stats["uploaded"] % 100 == 0:
                 print(f"    ... {stats['uploaded']} uploaded")
     except Exception as e:
+        msg = str(e)
         with stats_lock:
-            stats["failed"].append((name, str(e)[:120]))
+            # 413 = Supabase bucket per-object size limit. Not a retryable
+            # failure; the file is permanently too large for this bucket.
+            # Bucket these separately so they don't pollute the failure list.
+            if "'statusCode': 413" in msg or "Payload too large" in msg:
+                stats["oversized"].append(name)
+            else:
+                stats["failed"].append((name, msg[:120]))
 
 
 def process_folder(drive, sb, drive_folder_id, dest_subpath, router=None, label=None):
@@ -313,7 +320,7 @@ def process_folder(drive, sb, drive_folder_id, dest_subpath, router=None, label=
             total_skipped += skipped
             continue
 
-        stats = {"uploaded": 0, "failed": []}
+        stats = {"uploaded": 0, "failed": [], "oversized": []}
         stats_lock = threading.Lock()
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
             futures = [
@@ -323,7 +330,12 @@ def process_folder(drive, sb, drive_folder_id, dest_subpath, router=None, label=
             for _ in as_completed(futures):
                 pass
 
-        print(f"  -> {dest}: {stats['uploaded']} uploaded, {len(stats['failed'])} failed")
+        parts = [f"{stats['uploaded']} uploaded"]
+        if stats["oversized"]:
+            parts.append(f"{len(stats['oversized'])} oversized (>bucket limit)")
+        if stats["failed"]:
+            parts.append(f"{len(stats['failed'])} failed")
+        print(f"  -> {dest}: " + ", ".join(parts))
         total_uploaded += stats["uploaded"]
         total_skipped += skipped
         total_failed.extend([(dest, *err) for err in stats["failed"]])
@@ -413,6 +425,13 @@ def main():
     grand_uploaded = 0
     grand_skipped = 0
     for drive_id, dest, router, label in tasks:
+        # Build fresh main-thread clients for each folder. The drive client's
+        # httplib2 socket can be closed by Google after long idle periods
+        # while workers are uploading (a folder with thousands of images can
+        # hold the main thread off a drive call for many minutes). Rebuilding
+        # is cheap (~200ms) and avoids BrokenPipe/SSL errors mid-run.
+        drive = get_drive_service()
+        sb = get_sb()
         uploaded, skipped = process_folder(drive, sb, drive_id, dest, router=router, label=label)
         grand_uploaded += uploaded
         grand_skipped += skipped
