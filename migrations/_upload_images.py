@@ -121,6 +121,30 @@ def get_sb():
     return create_client(SUPABASE_URL, require_supabase_key())
 
 
+# ---------------------------------------------------------------------------
+# Thread-local client cache
+# ---------------------------------------------------------------------------
+# googleapiclient.build() returns a Resource that wraps an httplib2.Http
+# instance, which is NOT thread-safe. Sharing one across ThreadPoolExecutor
+# workers causes native segfaults on Linux (we hit this in the nightly).
+# supabase-py's Client is also not documented as thread-safe for uploads.
+# Give each worker thread its own clients via threading.local().
+
+_thread_local = threading.local()
+
+
+def get_thread_drive():
+    if not hasattr(_thread_local, "drive"):
+        _thread_local.drive = get_drive_service()
+    return _thread_local.drive
+
+
+def get_thread_sb():
+    if not hasattr(_thread_local, "sb"):
+        _thread_local.sb = get_sb()
+    return _thread_local.sb
+
+
 def list_drive_folder(drive, folder_id):
     """Return list of {id, name, mimeType, size} for all files (paginated)."""
     files = []
@@ -219,8 +243,15 @@ def build_invnt_router(conn):
     return filenames
 
 
-def upload_one(drive, sb, file_meta, dest_subpath, stats, stats_lock):
-    """Download one file from Drive and upload to Supabase."""
+def upload_one(file_meta, dest_subpath, stats, stats_lock):
+    """Download one file from Drive and upload to Supabase.
+
+    Resolves drive + supabase clients from thread-local storage so each
+    worker thread gets its own instance — sharing one googleapiclient
+    Resource across threads segfaults.
+    """
+    drive = get_thread_drive()
+    sb = get_thread_sb()
     name = file_meta["name"]
     content_type = file_meta.get("mimeType") or "image/jpeg"
     try:
@@ -245,7 +276,12 @@ def upload_one(drive, sb, file_meta, dest_subpath, stats, stats_lock):
 
 
 def process_folder(drive, sb, drive_folder_id, dest_subpath, router=None, label=None):
-    """Process one Drive folder -> one (or many, via router) bucket subpath(s)."""
+    """Process one Drive folder -> one (or many, via router) bucket subpath(s).
+
+    The `drive` and `sb` passed in are used only on the main thread for the
+    serial listing calls. Workers inside the ThreadPoolExecutor resolve their
+    own thread-local clients via get_thread_drive() / get_thread_sb().
+    """
     label = label or dest_subpath or "(router)"
     print(f"\n--- {label} ---")
     files = list_drive_folder(drive, drive_folder_id)
@@ -281,7 +317,7 @@ def process_folder(drive, sb, drive_folder_id, dest_subpath, router=None, label=
         stats_lock = threading.Lock()
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
             futures = [
-                pool.submit(upload_one, drive, sb, f, dest, stats, stats_lock)
+                pool.submit(upload_one, f, dest, stats, stats_lock)
                 for f in to_upload
             ]
             for _ in as_completed(futures):
