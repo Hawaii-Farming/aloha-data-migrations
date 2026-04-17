@@ -1081,11 +1081,15 @@ def main():
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
     client = get_sheets()
 
-    # Clear in reverse FK order
+    # Clear in reverse FK order. NOTE: ops_task is intentionally NOT cleared.
+    # Other migrations (fsafe, grow_*, pack_productivity) reference task IDs
+    # like food_safety_log / pest_trap_inspection / packing that are seeded in
+    # org.py. In nightly runs org.py does not run, so clearing ops_task here
+    # leaves downstream migrations with dangling FKs. The house_inspection
+    # upsert below handles its own row idempotently without a pre-clear.
     print("Clearing tables...")
     for t in ["ops_template_result_photo", "ops_template_result", "ops_task_tracker",
               "ops_task_template", "ops_template_question", "ops_template",
-              "ops_task",
               "maint_request_photo", "maint_request_invnt_item", "maint_request"]:
         try:
             supabase.table(t).delete().neq("org_id", "___never___").execute()
