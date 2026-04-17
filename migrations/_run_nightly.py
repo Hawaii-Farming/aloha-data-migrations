@@ -78,12 +78,22 @@ def discover_scripts():
 
 
 def run_one(prefix, path):
-    """Run a single migration script. Returns (ok, duration_seconds)."""
+    """Run a single migration script. Returns (ok, duration_seconds).
+
+    Preloads _config before running the script so every migration picks up
+    the postgrest retry patch defined there — even the older migrations
+    that don't import _config themselves.
+    """
     print(f"\n{'=' * 70}")
     print(f"[{prefix}] {path.name}")
     print('=' * 70)
     t0 = time.time()
-    result = subprocess.run([sys.executable, str(path)])
+    bootstrap = (
+        f"import sys; sys.path.insert(0, {str(path.parent)!r}); "
+        f"import _config; "
+        f"import runpy; runpy.run_path({str(path)!r}, run_name='__main__')"
+    )
+    result = subprocess.run([sys.executable, "-c", bootstrap])
     dur = time.time() - t0
     ok = result.returncode == 0
     print(f"\n[{prefix}] {'OK' if ok else 'FAIL'} ({dur:.1f}s)")
