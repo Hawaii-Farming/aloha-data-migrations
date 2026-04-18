@@ -58,9 +58,10 @@ DEFAULT_SET = [
     "031",  # grow_spray_pre_check
     "032",  # grow_monitoring
     "033",  # business_rule
+    "034",  # fin_expense + sales_invoice (nightly QB sheet sync)
 ]
 
-ALL_SET = [f"{i:03d}" for i in range(1, 34)]
+ALL_SET = [f"{i:03d}" for i in range(1, 35)]
 
 
 def discover_scripts():
