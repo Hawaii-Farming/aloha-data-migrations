@@ -78,7 +78,11 @@ TABLES = [
     "grow_lettuce_seed_batch",
     "grow_seed_mix_item",
     "grow_seed_mix",
-    "grow_trial_type",
+    # grow_trial_type excluded — reference data upserted idempotently by
+    # its own migrations, and truncating it CASCADE-wipes grow_cuke_seed_batch
+    # via the trial_type FK. Retired 024 was the only thing reseeding
+    # 'legacy_trial'; with 024 gone, truncating leaves the 13 historical
+    # cuke trial batches orphaned. Treat as static reference data.
     "grow_cycle_pattern",
     "grow_monitoring_metric",
     "maint_request_photo",
