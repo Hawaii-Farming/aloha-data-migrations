@@ -68,8 +68,13 @@ TABLES = [
     "sales_customer_group",
     "sales_fob",
     "grow_spray_compliance",
-    "grow_cuke_gh_row_planting",
-    "grow_cuke_seed_batch",
+    # grow_cuke_gh_row_planting and grow_cuke_seed_batch are intentionally
+    # excluded — both are static/forward-planned tables populated by the
+    # one-time 20260417000001_cuke_plantmap.py seeder (and recoverable via
+    # 20260418000001_rebuild_cuke_seed_batch_and_planting.py). No nightly
+    # re-populator exists for them, so truncating them here leaves the
+    # plant-map empty and breaks 025's batch lookup. Do not re-add without
+    # a repopulator.
     "grow_lettuce_seed_batch",
     "grow_seed_mix_item",
     "grow_seed_mix",
