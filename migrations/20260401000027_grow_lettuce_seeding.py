@@ -20,9 +20,9 @@ Per-row inserts:
     Uses grow_seed_mix_id when seedname matches a mix (e.g. "Mixed Version 2.0")
     Otherwise uses invnt_item_id. CHECK constraint enforces XOR.
   - grow_harvest_weight: one per harvested row (harvestdate AND
-    greenhousenetweight both populated). number_of_containers=boardsperpond
-    (actual count of boards in the cycle, needed by dashboards to compute
-    lb/board). gross_weight=net_weight (tare is 0 for the board container).
+    greenhousenetweight both populated). number_of_containers=1
+    (representative weigh-in of one board); gross_weight=net_weight
+    (tare is 0 for the board container).
 
 Rerunnable: identifies our rows via the notes marker
 "Legacy lettuce migration" and deletes them before reinsert.
@@ -501,12 +501,9 @@ def build_rows(
         "_entryid": entryid,
     }
 
-    # Build harvest_weight only if the cycle is actually harvested. Use
-    # boardsperpond from the sheet so number_of_containers reflects reality
-    # — dashboards divide net_weight by number_of_containers to get lb/board.
+    # Build harvest_weight only if the cycle is actually harvested
     harvest_date = parse_date(sheet_row.get("harvestdate"))
     net_weight = parse_numeric(sheet_row.get("greenhousenetweight"))
-    boards = parse_int(sheet_row.get("boardsperpond"), default=0)
     harvest_weight = None
     if harvest_date and net_weight is not None and net_weight > 0:
         harvest_weight = {
@@ -518,7 +515,7 @@ def build_rows(
             "grow_grade_id": None,
             "harvest_date": harvest_date.isoformat(),
             "grow_harvest_container_id": CONTAINER_ID,
-            "number_of_containers": boards if boards and boards > 0 else 1,
+            "number_of_containers": 1,
             "weight_uom": "pound",
             "gross_weight": net_weight,
             "net_weight": net_weight,
