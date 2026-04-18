@@ -18,4 +18,6 @@ The nightly migration failed for some tables. Part was my own issues — fixed, 
 
 2. **Nightly fail-fast turns one bug into a full grow wipe.** Pre-existing in `_run_nightly.py`. When one migration fails, every downstream one is skipped entirely — today that meant a bug in 032 (monitoring) prevented 033 and 034 from ever running. Consider `--continue-on-error` as default, or splitting cuke-dependent from lettuce-only migrations so a cuke issue doesn't take down lettuce data.
 
-3. **Migration code duplication between `aloha-data-migrations` and `aloha-app`.** I emailed you and Jean earlier — following up here. In the Claude-first workflow, the migration code should have one home so Claude isn't confused by two sources of truth.
+3. **`grow_harvest_container` definition.** Currently hardcoded pallet types (`pallet_k1`, `pallet_j2`, etc.) per variety+grade combo. Why aren't we carrying `# boards` (or the cuke-side equivalent) as first-class data on each harvest row? What's the rationale for the current shape?
+
+4. **Migration code duplication between `aloha-data-migrations` and `aloha-app`.** I emailed you and Jean earlier — following up here. In the Claude-first workflow, the migration code should have one home so Claude isn't confused by two sources of truth.
