@@ -70,7 +70,7 @@ from _config import (
     SUPABASE_URL,
     require_supabase_key,
 )
-from _pg import get_pg_conn, paginate_select, pg_bulk_insert
+from _pg import get_pg_conn, paginate_select, pg_bulk_insert, pg_select_all
 
 GROW_SHEET_ID = SHEET_IDS.get("grow") or "1VtEecYn-W1pbnIU1hRHfxIpkH2DtK7hj0CpcpiLoziM"
 FARM_ID = "cuke"
