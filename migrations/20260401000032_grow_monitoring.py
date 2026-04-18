@@ -389,15 +389,18 @@ def build_batch_lookups(supabase):
     """
     from collections import defaultdict
 
-    all_batches = paginate_select(
-        supabase, "grow_seed_batch", "id,batch_code,farm_id",
+    # grow_cuke_seed_batch has no batch_code column — linkage by prefix no
+    # longer works for cuke. We still load cuke rows so the caller has a
+    # non-empty list, but all cuke monitoring records end up unlinked below.
+    cuke_codes = paginate_select(
+        supabase, "grow_cuke_seed_batch", "id,farm_id",
     )
-    cuke_codes = [b for b in all_batches if b["farm_id"] == "cuke"]
-    lettuce_codes = [b for b in all_batches if b["farm_id"] == "lettuce"]
+    lettuce_codes = paginate_select(
+        supabase, "grow_lettuce_seed_batch", "id,batch_code,farm_id",
+    )
 
-    # Cuke: build a dict keyed by batch_code, plus a sorted list for
-    # prefix matching.
-    cuke_list = sorted((b["batch_code"], b["id"]) for b in cuke_codes)
+    # Cuke: no batch_code to match against — empty list disables the lookup.
+    cuke_list = []
 
     # Lettuce: both the original batch_code and disambiguated variants
     # index to the same row in DB (different id per disambiguated row).
@@ -566,14 +569,18 @@ def build_rows(sheet_row, known_sites, cuke_list, lettuce_by_base):
 
     seed_batch_links = []
     for batch_id in batch_ids:
-        seed_batch_links.append({
+        row = {
             "org_id": ORG_ID,
             "farm_id": farm_raw,
             "ops_task_tracker_id": tracker_id,
-            "grow_seed_batch_id": batch_id,
             "created_by": reporter,
             "updated_by": reporter,
-        })
+        }
+        if farm_raw == "cuke":
+            row["grow_cuke_seed_batch_id"] = batch_id
+        else:
+            row["grow_lettuce_seed_batch_id"] = batch_id
+        seed_batch_links.append(row)
 
     return {
         "tracker": tracker,

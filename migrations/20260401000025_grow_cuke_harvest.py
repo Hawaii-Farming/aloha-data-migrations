@@ -1,4 +1,12 @@
 """
+[RETIRED — retained for reference only]
+----------------------------------------
+As of 2026-04-17 this script is no longer part of the nightly run. It
+relied on matching sheet rows to grow_seed_batch via batch_code, which
+no longer exists on the new grow_cuke_seed_batch table. Cuke harvest
+data already migrated to grow_harvest_weight with grow_cuke_seed_batch_id
+populated by 20260417000007 and ...008 SQL migrations.
+
 Migrate Cuke Harvest Data
 =========================
 Migrates grow_C_harvest into grow_harvest_weight with one row per

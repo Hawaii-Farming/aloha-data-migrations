@@ -224,7 +224,7 @@ RULES = [
         "Site dropdown filtered by farm_id then by subcategory IN (greenhouse, pond, nursery). "
         "Parent sites, growing_room, growing_other excluded.",
         None,
-        '["grow_seed_batch.site_id"]',
+        '["grow_lettuce_seed_batch.site_id", "grow_cuke_seed_batch.site_id"]',
         18,
     ),
     rule(
@@ -233,7 +233,7 @@ RULES = [
         "planned -> seeded -> transplanted -> harvesting -> harvested. "
         "Nursery: available for activities at 'seeded'. Greenhouse/pond: at 'transplanted' or 'harvesting'.",
         None,
-        '["grow_seed_batch.status"]',
+        '["grow_lettuce_seed_batch.status", "grow_cuke_seed_batch.status"]',
         19,
     ),
     rule(
@@ -242,7 +242,7 @@ RULES = [
         "Labels show site+side, S#/B#, three MMdd dates (S/P/H), variety:seed. "
         "Boards > 90 split into balanced chunks. Color: blue Fri/Sun, yellow Sat/Mon.",
         None,
-        '["grow_seed_batch"]',
+        '["grow_lettuce_seed_batch", "grow_cuke_seed_batch"]',
         20,
     ),
     rule(

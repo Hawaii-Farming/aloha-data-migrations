@@ -47,9 +47,10 @@ DEFAULT_SET = [
     "019",  # ops_training
     "020",  # fsafe_corrective_actions
     "021", "022", "023",  # sales
-    "024",  # grow_cuke_seeding
-    "025",  # grow_cuke_harvest
-    "026",  # grow_cuke_harvest_sched
+    # Cuke scripts 024/025/026 retired: cuke seed batches moved to
+    # grow_cuke_seed_batch via one-time 20260417000001_cuke_plantmap.py and
+    # are now static. 025/026 also relied on batch_code which no longer exists
+    # on the cuke seed batch table.
     "027",  # grow_lettuce_seeding
     "028",  # grow_fertigation
     "029",  # grow_spraying

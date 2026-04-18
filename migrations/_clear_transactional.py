@@ -2,7 +2,7 @@
 TRUNCATE all transactional tables in reverse FK dependency order.
 
 Used before a full re-run of migrations 004-033 to avoid cross-migration
-FK violations (e.g. clearing grow_seed_batch while grow_harvest_weight
+FK violations (e.g. clearing grow_lettuce_seed_batch while grow_harvest_weight
 still references it).
 
 Does NOT touch reference / seed tables that multiple migrations upsert
@@ -68,7 +68,9 @@ TABLES = [
     "sales_customer_group",
     "sales_fob",
     "grow_spray_compliance",
-    "grow_seed_batch",
+    "grow_cuke_gh_row_planting",
+    "grow_cuke_seed_batch",
+    "grow_lettuce_seed_batch",
     "grow_seed_mix_item",
     "grow_seed_mix",
     "grow_trial_type",

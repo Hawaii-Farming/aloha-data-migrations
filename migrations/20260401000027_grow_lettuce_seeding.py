@@ -1,7 +1,7 @@
 """
 Migrate Lettuce Seeding + Harvest Data
 =======================================
-Migrates grow_L_seeding into grow_seed_batch and grow_harvest_weight.
+Migrates grow_L_seeding into grow_lettuce_seed_batch and grow_harvest_weight.
 Each sheet row contains a complete cycle (seeding + harvest) so we
 insert one seed_batch and (when harvested) one harvest_weight per row.
 
@@ -16,7 +16,7 @@ Setup (upserted):
   - invnt_lot auto-created for each unique (seedname, seedlot) pair
 
 Per-row inserts:
-  - grow_seed_batch: one per sheet row (batch_code = seedingcycle verbatim)
+  - grow_lettuce_seed_batch: one per sheet row (batch_code = seedingcycle verbatim)
     Uses grow_seed_mix_id when seedname matches a mix (e.g. "Mixed Version 2.0")
     Otherwise uses invnt_item_id. CHECK constraint enforces XOR.
   - grow_harvest_weight: one per harvested row (harvestdate AND
@@ -388,8 +388,8 @@ def clear_existing():
             cur.execute(
                 """
                 DELETE FROM grow_harvest_weight
-                WHERE grow_seed_batch_id IN (
-                    SELECT id FROM grow_seed_batch
+                WHERE grow_lettuce_seed_batch_id IN (
+                    SELECT id FROM grow_lettuce_seed_batch
                     WHERE farm_id = %s AND notes LIKE %s
                 )
                 """,
@@ -398,7 +398,7 @@ def clear_existing():
             deleted_weights = cur.rowcount
             cur.execute(
                 """
-                DELETE FROM grow_seed_batch
+                DELETE FROM grow_lettuce_seed_batch
                 WHERE farm_id = %s AND notes LIKE %s
                 """,
                 (FARM_ID, f"%{NOTES_MARKER}%"),
@@ -406,7 +406,7 @@ def clear_existing():
             deleted_batches = cur.rowcount
         conn.commit()
     print(f"  Deleted {deleted_weights} grow_harvest_weight rows")
-    print(f"  Deleted {deleted_batches} grow_seed_batch rows")
+    print(f"  Deleted {deleted_batches} grow_lettuce_seed_batch rows")
 
 
 # ---------------------------------------------------------------------------
@@ -511,7 +511,7 @@ def build_rows(
             "farm_id": FARM_ID,
             "site_id": pond_raw,
             "ops_task_tracker_id": None,
-            "grow_seed_batch_id": batch_id,
+            "grow_lettuce_seed_batch_id": batch_id,
             "grow_grade_id": None,
             "harvest_date": harvest_date.isoformat(),
             "grow_harvest_container_id": CONTAINER_ID,
@@ -625,9 +625,9 @@ def main():
         return
 
     # Bulk insert via psycopg2 in a single transaction
-    print(f"\n--- grow_seed_batch ---")
+    print(f"\n--- grow_lettuce_seed_batch ---")
     with get_pg_conn() as conn:
-        pg_bulk_insert(conn, "grow_seed_batch", seed_batches)
+        pg_bulk_insert(conn, "grow_lettuce_seed_batch", seed_batches)
         print(f"  Inserted {len(seed_batches)} rows")
         if harvest_weights:
             print(f"\n--- grow_harvest_weight ---")

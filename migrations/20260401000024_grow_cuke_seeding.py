@@ -1,4 +1,12 @@
 """
+[RETIRED — retained for reference only]
+----------------------------------------
+As of 2026-04-17 this script is no longer part of the nightly run. Cuke
+seed batches migrated to the new grow_cuke_seed_batch table (see
+20260417000001_cuke_plantmap.py) and that table is now static. The
+grow_C_seeding Google Sheet is frozen. Running this script will fail
+because grow_seed_batch has been renamed to grow_lettuce_seed_batch.
+
 Migrate Cuke Seeding Data
 ==========================
 Migrates grow_C_seeding into grow_seed_batch with one batch row per
