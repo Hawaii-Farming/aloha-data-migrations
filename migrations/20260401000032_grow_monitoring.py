@@ -579,6 +579,8 @@ def build_rows(sheet_row, known_sites, cuke_list, lettuce_by_base):
 
     seed_batch_links = []
     for batch_id in batch_ids:
+        if batch_id is None:
+            continue  # skip unmatched — chk_grow_task_seed_batch_exactly_one requires one id
         row = {
             "org_id": ORG_ID,
             "farm_id": farm_raw,
