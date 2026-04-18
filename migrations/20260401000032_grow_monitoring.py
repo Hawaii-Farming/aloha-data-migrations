@@ -389,18 +389,28 @@ def build_batch_lookups(supabase):
     """
     from collections import defaultdict
 
-    # grow_cuke_seed_batch has no batch_code column — linkage by prefix no
-    # longer works for cuke. We still load cuke rows so the caller has a
-    # non-empty list, but all cuke monitoring records end up unlinked below.
-    cuke_codes = paginate_select(
-        supabase, "grow_cuke_seed_batch", "id,farm_id",
-    )
+    # grow_cuke_seed_batch has no batch_code. Derive the cycle prefix on
+    # the fly from (seeding_date, site_id): {YY}{MM}{GH}. The sheet's
+    # SeedingCycle value (e.g. "2603HI", "260406") is a startswith-match
+    # against these derived prefixes.
+    from _pg import get_pg_conn, pg_select_all
+    with get_pg_conn() as conn:
+        cuke_rows = pg_select_all(conn, """
+            SELECT id, seeding_date, site_id
+            FROM grow_cuke_seed_batch
+            WHERE is_deleted = false
+        """)
+    cuke_list = []
+    for b in cuke_rows:
+        sd = b["seeding_date"]
+        if not sd:
+            continue
+        prefix = f"{sd.year % 100:02d}{sd.month:02d}{str(b['site_id'] or '').upper()}"
+        cuke_list.append((prefix, b["id"]))
+
     lettuce_codes = paginate_select(
         supabase, "grow_lettuce_seed_batch", "id,batch_code,farm_id",
     )
-
-    # Cuke: no batch_code to match against — empty list disables the lookup.
-    cuke_list = []
 
     # Lettuce: both the original batch_code and disambiguated variants
     # index to the same row in DB (different id per disambiguated row).
@@ -414,7 +424,7 @@ def build_batch_lookups(supabase):
         if code != base:
             lettuce_by_base[code].append(b["id"])
 
-    print(f"  Loaded {len(cuke_codes)} cuke + {len(lettuce_codes)} lettuce batches")
+    print(f"  Loaded {len(cuke_list)} cuke + {len(lettuce_codes)} lettuce batches")
     return cuke_list, lettuce_by_base
 
 

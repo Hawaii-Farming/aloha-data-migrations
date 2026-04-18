@@ -80,10 +80,17 @@ GH_NAME_TO_SITE_ID = {
     "GH5": "05", "GH6": "06", "GH7": "07", "GH8": "08",
     "Kona":    "ko",
     "Hamakua": "hk",
-    "Kohala":  "hk",   # shares 'hk' with Hamakua; Kohala rows are skipped below
+    "Kohala":  "hk",   # shares 'hk' with Hamakua; distinguished via block name
     "Waimea":  "wa",
     "Hilo":    "hi",
 }
+
+# HK is one org_site with two physical structures (Hamakua + Kohala). To
+# store both under site_id='hk' without row_num collisions, Kohala's sheet
+# row_nums are offset by this many when written to org_site_gh_row. The
+# plant-map UI reads org_site_gh_block.name to render each structure as a
+# separate section and subtracts the offset for display.
+KOHALA_ROW_OFFSET = 100
 
 GH_CONFIG = {
     # name: (vert, sidewalk, farm_section, blocks_vertical, align_top, merge,
@@ -258,25 +265,30 @@ def read_plantmap(gc):
 # Step 2: org_site_gh_row
 # ---------------------------------------------------------------------------
 
+def _effective_row_num(gh, sheet_row_num):
+    """Map a sheet row_num to the org_site_gh_row row_num. Kohala rows are
+    offset so they don't collide with Hamakua rows in the shared 'hk' site."""
+    if gh == "Kohala":
+        return sheet_row_num + KOHALA_ROW_OFFSET
+    return sheet_row_num
+
+
 def seed_org_site_gh_row(supabase, records):
-    """One row per physical GH row. Kohala rows are skipped because the DB
-    models Hamakua+Kohala as a single 'hk' site with overlapping row numbers.
-    """
+    """One row per physical GH row. Hamakua and Kohala both write to 'hk'
+    but Kohala's row_nums are offset (+KOHALA_ROW_OFFSET) to avoid
+    collisions on the unique (site_id, row_num) constraint."""
     print("\n=== Step 2: org_site_gh_row ===")
     rows = []
     seen = set()
-    skipped_kohala = 0
     for r in records:
         gh = str(r.get("Greenhouse", "")).strip()
         site_id = GH_NAME_TO_SITE_ID.get(gh)
         if not site_id:
             continue
-        if gh == "Kohala":
-            skipped_kohala += 1
+        sheet_row_num = parse_int(r.get("Row"))
+        if sheet_row_num is None:
             continue
-        row_num = parse_int(r.get("Row"))
-        if row_num is None:
-            continue
+        row_num = _effective_row_num(gh, sheet_row_num)
         key = (site_id, row_num)
         if key in seen:
             continue
@@ -284,13 +296,11 @@ def seed_org_site_gh_row(supabase, records):
 
         bags1 = parse_int(r.get("Bags_per_row"), 0)
         bags2 = parse_int(r.get("Bags_per_row2"), 0)
-        # Physical capacity = the sum of both scenarios' bags? No — pick current
-        # as the canonical capacity. If the two differ we flag it.
         capacity = bags1
         if bags2 and bags2 != bags1:
             print(
-                f"  NOTE {gh} row {row_num}: current bags {bags1} != planned {bags2}; "
-                f"using current as capacity"
+                f"  NOTE {gh} sheet-row {sheet_row_num}: current bags {bags1} "
+                f"!= planned {bags2}; using current as capacity"
             )
 
         rows.append(audit({
@@ -301,11 +311,6 @@ def seed_org_site_gh_row(supabase, records):
             "num_bags_capacity": capacity,
         }))
 
-    if skipped_kohala:
-        print(
-            f"  WARNING: skipped {skipped_kohala} Kohala sheet rows — DB models "
-            f"Hamakua+Kohala as one 'hk' site. Resolve per Question for Michael #3."
-        )
     return insert_rows(supabase, "org_site_gh_row", rows)
 
 
@@ -316,54 +321,57 @@ def seed_org_site_gh_row(supabase, records):
 def seed_org_site_gh_block(supabase, records, inserted_rows):
     """Group sheet rows by (Greenhouse, Side), then derive block metadata.
 
-    block_num is assigned by the order sides first appear per GH.
-    direction = forward if the sheet's Order column ascends with row_num,
-    reverse otherwise.
-    """
+    For HK (Hamakua + Kohala), each GH name becomes its own block with
+    `name` set to the GH name. For other multi-side GHs (GH4, GH5, GH6),
+    block name = the sheet's Side value. Single-block GHs get name 'Main'.
+
+    Block num is assigned by the order of first appearance. Row numbers
+    use the effective row_num (Kohala offset applied)."""
     print("\n=== Step 3: org_site_gh_block ===")
 
-    # Group rows by (gh_name, side)
+    # Group rows by (site_id, block_label) where block_label is 'Hamakua'/
+    # 'Kohala' for the HK pair, otherwise the sheet's Side (or 'Main').
     groups = {}
     for r in records:
         gh = str(r.get("Greenhouse", "")).strip()
         site_id = GH_NAME_TO_SITE_ID.get(gh)
-        if not site_id or gh == "Kohala":
+        if not site_id:
             continue
-        side = str(r.get("Side", "")).strip() or "Main"
-        row_num = parse_int(r.get("Row"))
+        sheet_row_num = parse_int(r.get("Row"))
         order = parse_int(r.get("Order"))
-        if row_num is None or order is None:
+        if sheet_row_num is None or order is None:
             continue
-        groups.setdefault((site_id, gh, side), []).append((order, row_num))
+        row_num = _effective_row_num(gh, sheet_row_num)
+        if gh in ("Hamakua", "Kohala"):
+            block_label = gh
+        else:
+            block_label = str(r.get("Side", "")).strip() or "Main"
+        groups.setdefault((site_id, block_label), []).append((order, row_num))
 
-    # Assign block_num per site by first appearance of each side within that site
+    # Assign block_num per site — preserve the block_label order of first
+    # appearance seen while iterating the sheet.
     block_nums_per_site = {}
+    for (site_id, block_label), _ in groups.items():
+        nums = block_nums_per_site.setdefault(site_id, {})
+        if block_label not in nums:
+            nums[block_label] = len(nums) + 1
+
     rows = []
-    for (site_id, gh, side), pairs in groups.items():
-        pairs.sort()  # by order first, then row_num
-        orders = [p[0] for p in pairs]
+    for (site_id, block_label), pairs in groups.items():
+        pairs.sort()
         row_nums = [p[1] for p in pairs]
         row_from, row_to = min(row_nums), max(row_nums)
 
-        # Direction: compare whether row_num ascends or descends as order ascends
-        ascending_diffs = sum(
-            1 for a, b in zip(row_nums, row_nums[1:]) if b > a
-        )
-        descending_diffs = sum(
-            1 for a, b in zip(row_nums, row_nums[1:]) if b < a
-        )
+        ascending_diffs = sum(1 for a, b in zip(row_nums, row_nums[1:]) if b > a)
+        descending_diffs = sum(1 for a, b in zip(row_nums, row_nums[1:]) if b < a)
         direction = "forward" if ascending_diffs >= descending_diffs else "reverse"
-
-        nums = block_nums_per_site.setdefault(site_id, {})
-        if side not in nums:
-            nums[side] = len(nums) + 1
-        block_num = nums[side]
 
         rows.append(audit({
             "org_id":        ORG_ID,
             "farm_id":       FARM_ID,
             "site_id":       site_id,
-            "block_num":     block_num,
+            "block_num":     block_nums_per_site[site_id][block_label],
+            "name":          block_label,
             "row_num_from":  row_from,
             "row_num_to":    row_to,
             "direction":     direction,
@@ -414,11 +422,12 @@ def seed_grow_cuke_gh_row_planting(supabase, records):
     for rec in records:
         gh = str(rec.get("Greenhouse", "")).strip()
         site_id = GH_NAME_TO_SITE_ID.get(gh)
-        if not site_id or gh == "Kohala":
+        if not site_id:
             continue
-        row_num = parse_int(rec.get("Row"))
-        if row_num is None:
+        sheet_row_num = parse_int(rec.get("Row"))
+        if sheet_row_num is None:
             continue
+        row_num = _effective_row_num(gh, sheet_row_num)
         row_id = row_id_by_site_row.get((site_id, row_num))
         if not row_id:
             skipped_unmatched += 1
