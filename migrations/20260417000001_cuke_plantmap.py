@@ -294,21 +294,13 @@ def seed_org_site_gh_row(supabase, records):
             continue
         seen.add(key)
 
-        bags1 = parse_int(r.get("Bags_per_row"), 0)
-        bags2 = parse_int(r.get("Bags_per_row2"), 0)
-        capacity = bags1
-        if bags2 and bags2 != bags1:
-            print(
-                f"  NOTE {gh} sheet-row {sheet_row_num}: current bags {bags1} "
-                f"!= planned {bags2}; using current as capacity"
-            )
-
+        # Bag counts live on grow_cuke_gh_row_planting per scenario, not on
+        # the physical row — this table is pure identity (site_id, row_num).
         rows.append(audit({
             "org_id":            ORG_ID,
             "farm_id":           FARM_ID,
             "site_id":           site_id,
             "row_num":           row_num,
-            "num_bags_capacity": capacity,
         }))
 
     return insert_rows(supabase, "org_site_gh_row", rows)
@@ -433,6 +425,9 @@ def seed_grow_cuke_gh_row_planting(supabase, records):
             skipped_unmatched += 1
             continue
 
+        bags1 = parse_int(rec.get("Bags_per_row"), 0)
+        bags2 = parse_int(rec.get("Bags_per_row2"), 0) or bags1
+
         # Current scenario
         v1_primary, v1_secondary = _parse_variety_cell(rec.get("Variety"))
         ppb1 = parse_int(rec.get("Plants_per_Bag"))
@@ -445,6 +440,7 @@ def seed_grow_cuke_gh_row_planting(supabase, records):
                 "grow_variety_id":    v1_primary,
                 "grow_variety_id_2":  v1_secondary,
                 "plants_per_bag":     ppb1,
+                "num_bags":           bags1,
             }))
 
         # Planned scenario — only insert if different from current
@@ -459,6 +455,7 @@ def seed_grow_cuke_gh_row_planting(supabase, records):
                 "grow_variety_id":    v2_primary,
                 "grow_variety_id_2":  v2_secondary,
                 "plants_per_bag":     ppb2,
+                "num_bags":           bags2,
             }))
 
     if skipped_unmatched:
