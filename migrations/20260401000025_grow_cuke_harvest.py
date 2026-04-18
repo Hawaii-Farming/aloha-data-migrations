@@ -359,10 +359,10 @@ def build_harvest_row(sheet_row, batch_lookup, known_sites):
         return {"_skip": "no_cycle"}
 
     is_trial = str(sheet_row.get("is_trial", "")).strip().upper() == "TRUE"
-    variety_lower = VARIETY_MAP[variety]
-    # Derive the same code shape the lookup uses: {cycle}{VARIETY}.
-    # cycle from the sheet is already YY+MM+GH (the sheet format).
-    lookup_code = f"{cycle}{variety_lower.upper()}"
+    # Harvest-sheet SeedingCycle is the full YYMM{GH}{V} key (e.g. "2602HKJ"),
+    # already matching the derive_cycle_code() shape used by build_batch_lookup.
+    # Don't append variety — the sheet already carries it in the cycle string.
+    lookup_code = cycle.upper()
     candidates = batch_lookup.get((lookup_code, is_trial), [])
     if not candidates:
         return {"_skip": "unmatched_batch", "_detail": f"{lookup_code} (trial={is_trial})"}
