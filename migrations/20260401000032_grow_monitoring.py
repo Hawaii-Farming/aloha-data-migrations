@@ -581,17 +581,19 @@ def build_rows(sheet_row, known_sites, cuke_list, lettuce_by_base):
     for batch_id in batch_ids:
         if batch_id is None:
             continue  # skip unmatched — chk_grow_task_seed_batch_exactly_one requires one id
+        # Both FK columns must be present on every row (even as None) because
+        # pg_bulk_insert derives its column list from the first row's keys.
+        # Omitting one crop's column means the other crop's rows get inserted
+        # with that column defaulting to NULL at the DB level.
         row = {
             "org_id": ORG_ID,
             "farm_id": farm_raw,
             "ops_task_tracker_id": tracker_id,
+            "grow_cuke_seed_batch_id": batch_id if farm_raw == "cuke" else None,
+            "grow_lettuce_seed_batch_id": batch_id if farm_raw == "lettuce" else None,
             "created_by": reporter,
             "updated_by": reporter,
         }
-        if farm_raw == "cuke":
-            row["grow_cuke_seed_batch_id"] = batch_id
-        else:
-            row["grow_lettuce_seed_batch_id"] = batch_id
         seed_batch_links.append(row)
 
     return {
