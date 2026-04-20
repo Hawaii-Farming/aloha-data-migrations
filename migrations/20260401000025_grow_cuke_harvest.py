@@ -372,7 +372,7 @@ def build_harvest_row(sheet_row, batch_lookup, known_sites):
 
     gross_weight = parse_numeric(sheet_row.get("PalletWeight"), default=-1)
 
-    container_id = f"pallet_{variety_lower}{grade}"
+    container_id = f"pallet_{variety.lower()}{grade}"
     grade_id = GRADE_MAP[grade]
 
     reported_by_raw = str(sheet_row.get("ReportedBy", "")).strip().lower()
