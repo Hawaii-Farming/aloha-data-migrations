@@ -341,7 +341,7 @@ def process_folder(drive, sb, drive_folder_id, dest_subpath, router=None, label=
         total_failed.extend([(dest, *err) for err in stats["failed"]])
 
     if total_failed:
-        print(f"  ⚠ {len(total_failed)} failures:")
+        print(f"  ! {len(total_failed)} failures:")
         for err in total_failed[:5]:
             print(f"      {err}")
     return total_uploaded, total_skipped

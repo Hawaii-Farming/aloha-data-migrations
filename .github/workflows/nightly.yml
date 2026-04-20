@@ -20,11 +20,6 @@ on:
         required: false
         default: false
         type: boolean
-      skip_images:
-        description: 'Skip the Drive → Supabase image upload step'
-        required: false
-        default: false
-        type: boolean
 
 jobs:
   migrate:
@@ -79,10 +74,6 @@ jobs:
       - name: Run migrations (grow only)
         if: ${{ inputs.mode == 'grow_only' }}
         run: python migrations/_run_nightly.py --only 024,025,026,027,028,029,030,031,032
-
-      - name: Upload images (Drive → Supabase storage)
-        if: ${{ inputs.skip_images != true }}
-        run: python migrations/_upload_images.py
 
       - name: Cleanup credentials on failure
         if: ${{ always() }}
