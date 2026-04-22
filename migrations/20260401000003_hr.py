@@ -17,9 +17,15 @@ Rerunnable: clears and reinserts all data on each run.
 
 import os
 import re
+import sys
+from pathlib import Path
+
 import gspread
 from google.oauth2.service_account import Credentials
 from supabase import create_client
+
+sys.path.insert(0, str(Path(__file__).parent))
+from _pg import get_pg_conn  # noqa: E402
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://kfwqtaazdankxmdlqdak.supabase.co")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
@@ -311,8 +317,11 @@ def migrate_hr_employee(supabase, records, app_users):
         }
         employees.append(audit(emp))
 
-    # Insert employees (without team_lead/comp_manager — self-referencing)
-    insert_rows(supabase, "hr_employee", employees, upsert=True)
+    # Insert employees (without team_lead/comp_manager — self-referencing).
+    # Pure INSERT: _clear_transactional.py has already truncated hr_employee
+    # and its FK chain, so there's nothing to upsert against. Using upsert
+    # here would re-introduce the legacy id-drift collision on uq_hr_employee_name.
+    insert_rows(supabase, "hr_employee", employees, upsert=False)
 
     # Second pass: update team_lead_id and compensation_manager_id
     print("  Resolving team_lead_id and compensation_manager_id...")
@@ -521,6 +530,30 @@ def migrate_hr_travel_request(supabase, gc, emp_records):
     insert_rows(supabase, "hr_travel_request", rows)
 
 
+def relink_auth_users(supabase):
+    """Restore hr_employee.user_id from auth.users.email.
+
+    _clear_transactional.py truncates hr_employee nightly, which wipes the
+    user_id column set by the handle_new_auth_user() trigger at signup.
+    Without this re-link, every logged-in user loses RLS access until they
+    re-sign-in (and the trigger only fires on new auth.users rows, not
+    on sign-in). Match by lowercased email — both columns are email-keyed.
+    """
+    print("\n--- auth re-link ---")
+    with get_pg_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE hr_employee he
+                SET user_id = au.id
+                FROM auth.users au
+                WHERE lower(he.company_email) = lower(au.email)
+                  AND he.user_id IS DISTINCT FROM au.id
+            """)
+            linked = cur.rowcount
+        conn.commit()
+    print(f"  Re-linked {linked} hr_employee.user_id values from auth.users")
+
+
 def main():
     if not SUPABASE_KEY:
         print("ERROR: Set SUPABASE_SERVICE_KEY in .env or environment")
@@ -537,16 +570,9 @@ def main():
     app_users = get_app_users(gc)
     print(f"  {len(app_users)} app users loaded")
 
-    # Clear in reverse FK order — try/except for tables referenced by downstream modules
-    print("\nClearing tables...")
-    for t in ["hr_travel_request", "hr_time_off_request", "hr_module_access",
-              "hr_employee", "hr_title", "hr_work_authorization", "hr_department"]:
-        try:
-            supabase.table(t).delete().neq("id" if t in ("hr_employee", "hr_title",
-                "hr_work_authorization", "hr_department") else "org_id", "___never___").execute()
-        except Exception:
-            pass  # May fail if referenced by downstream modules; will be upserted
-    print("  Cleared")
+    # Pre-clear is handled by _clear_transactional.py before this migration
+    # runs in the nightly workflow. If running locally without that step,
+    # invoke `python migrations/_clear_transactional.py` first.
 
     migrate_hr_department(supabase, records)
     migrate_hr_work_authorization(supabase, records)
@@ -556,6 +582,8 @@ def main():
     migrate_hr_module_access(supabase, employees, user_lookup, module_map)
     migrate_hr_time_off_request(supabase, gc, records)
     migrate_hr_travel_request(supabase, gc, records)
+
+    relink_auth_users(supabase)
 
     print("\nHR data migrated successfully")
 

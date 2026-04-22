@@ -1,15 +1,24 @@
 """
 TRUNCATE all transactional tables in reverse FK dependency order.
 
-Used before a full re-run of migrations 004-033 to avoid cross-migration
+Used before a full re-run of migrations 003-034 to avoid cross-migration
 FK violations (e.g. clearing grow_lettuce_seed_batch while grow_harvest_weight
 still references it).
 
-Does NOT touch reference / seed tables that multiple migrations upsert
-into (sys_uom, org, org_farm, org_site, hr_employee, invnt_item,
-invnt_vendor, invnt_category, grow_variety, grow_grade, grow_pest,
-grow_disease, ops_task, etc.). Those are upserted idempotently by
-migrations 001-006.
+HR reference tables (hr_employee + its descendants) ARE truncated here
+because the HR module must be fully refreshed nightly from the source
+sheet — legacy id drift between runs would otherwise accumulate and
+block re-inserts via unique-name constraints. Migration 003 is
+responsible for re-linking auth.users → hr_employee.user_id after the
+truncate-and-reinsert, so the RLS chain stays intact.
+
+Does NOT touch the remaining reference / seed tables (sys_uom, org,
+org_farm, org_site, invnt_item, invnt_vendor, invnt_category,
+grow_variety, grow_grade, grow_pest, grow_disease, ops_task, etc.) —
+those are upserted idempotently by migrations 001-002 and 006, and
+CASCADE-wiping them would also wipe the static cuke_plantmap-seeded
+tables (grow_cuke_seed_batch, grow_cuke_gh_row_planting, org_site_gh*)
+which have no nightly re-populator.
 
 Usage:
     python migrations/_clear_transactional.py
@@ -101,7 +110,19 @@ TABLES = [
     "invnt_lot",
     "fsafe_lab_test",
     "fsafe_lab",
+    # HR reference chain — truncate in reverse FK order. Migration 003 is
+    # responsible for re-linking auth.users → hr_employee.user_id after
+    # reinserting hr_employee rows.
+    "hr_disciplinary_warning",
+    "hr_employee_review",
+    "hr_module_access",
+    "hr_time_off_request",
+    "hr_travel_request",
     "hr_payroll",
+    "hr_employee",
+    "hr_title",
+    "hr_work_authorization",
+    "hr_department",
     "org_business_rule",
 ]
 
