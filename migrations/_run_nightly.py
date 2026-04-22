@@ -29,13 +29,14 @@ SCRIPT_GLOB = "20260401*.py"
 # Exclude helper/utility modules
 HELPERS = {"_config", "_pg", "_clear_transactional", "_run_nightly", "_upload_images"}
 
-# Default set for nightly runs. Excludes 001-004 and 006 (foundation/reference
+# Default set for nightly runs. Excludes 001-003 and 006 (foundation/reference
 # data that changes rarely and is upserted idempotently). Users who want those
 # too can pass --all or edit this list.
-# 005 (hr_payroll) is included because payroll must never fall out of sync —
-# relying on someone to trigger it manually after each pay period has burned
-# us before.
+# 004 (hr_schedule) and 005 (hr_payroll) are included because schedules +
+# payroll must never fall out of sync — and _clear_transactional wipes
+# ops_task_schedule every night, so 004 is required to repopulate it.
 DEFAULT_SET = [
+    "004",  # hr_schedule (ops_task_schedule planned entries)
     "005",  # hr_payroll
     "007",  # maint
     "008",  # fsafe (lab, lab_test)
