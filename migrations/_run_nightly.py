@@ -29,13 +29,14 @@ SCRIPT_GLOB = "20260401*.py"
 # Exclude helper/utility modules
 HELPERS = {"_config", "_pg", "_clear_transactional", "_run_nightly", "_upload_images"}
 
-# Default set for nightly runs. Excludes 001-003 and 006 (foundation/reference
+# Default set for nightly runs. Excludes 001-002 and 006 (foundation/reference
 # data that changes rarely and is upserted idempotently). Users who want those
 # too can pass --all or edit this list.
-# 004 (hr_schedule) and 005 (hr_payroll) are included because schedules +
-# payroll must never fall out of sync — and _clear_transactional wipes
-# ops_task_schedule every night, so 004 is required to repopulate it.
+# All HR migrations (003-005) run nightly — HR is the first module under test,
+# so schedules, payroll, and employee records must stay in sync. 003 uses
+# upsert on hr_employee, so the auth user_id link is preserved.
 DEFAULT_SET = [
+    "003",  # hr (hr_employee, hr_title, hr_department, etc.)
     "004",  # hr_schedule (ops_task_schedule planned entries)
     "005",  # hr_payroll
     "007",  # maint
