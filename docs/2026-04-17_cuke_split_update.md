@@ -30,7 +30,7 @@ hold it.
 |---|---|---|
 | `org_site_gh` | Per-greenhouse display config (orientation, sidewalk side, where on the dashboard grid it lives). One row per physical GH | 12 |
 | `org_site_gh_block` | How a greenhouse is divided into visible blocks (North/Middle/South, Hamakua/Kohala, etc.). Holds row-range + display name per block | 23 |
-| `org_site_gh_row` | Every physical GH row with its bag capacity. Crop-agnostic — any row-level activity (scouting, spraying, monitoring) can reference it by UUID | 660 |
+| `org_site_gh_row` | Every physical GH row — pure identity (site_id, row_num). Crop-agnostic and rendering-agnostic; any row-level activity (scouting, spraying, monitoring) can reference it by UUID. Bag count now lives on `grow_cuke_gh_row_planting` (per scenario) | 660 |
 | `grow_cuke_seed_batch` | Cuke seeding events — replaces the cuke subset of `grow_seed_batch`. Holds both historical cycles and forward plans | 660 historical + 159 forward = 819 |
 | `grow_cuke_gh_row_planting` | What variety is planted in each physical row. Two scenarios per row: `current` (live layout the transplant crew follows) and `planned` (proposed future layout) | 1,320 (660 current + 660 planned) |
 

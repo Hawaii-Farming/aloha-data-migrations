@@ -39,7 +39,6 @@ sys.path.insert(0, str(Path(__file__).parent))
 from supabase import create_client
 
 from _config import AUDIT_USER, ORG_ID, SUPABASE_URL, require_supabase_key
-from _pg import get_pg_conn, pg_bulk_insert
 
 
 SHEET_ID = "124y8JdWXmbf_hb1vfimHmGaKLVXrRHybw02w_ozCExE"
@@ -58,6 +57,32 @@ def audit(row: dict) -> dict:
     row["created_by"] = AUDIT_USER
     row["updated_by"] = AUDIT_USER
     return row
+
+
+def insert_rows(supabase, table: str, rows: list, batch_size: int = 500):
+    """Bulk-insert via PostgREST in batches. ~1-2 min for 40k rows total."""
+    if not rows:
+        print(f"  {table}: no rows")
+        return
+    total_batches = (len(rows) + batch_size - 1) // batch_size
+    inserted = 0
+    for i in range(0, len(rows), batch_size):
+        batch = rows[i:i + batch_size]
+        batch_num = (i // batch_size) + 1
+        try:
+            supabase.table(table).insert(batch).execute()
+            inserted += len(batch)
+        except Exception as e:
+            print(
+                f"  ERROR on batch {batch_num}/{total_batches} "
+                f"(rows {i + 1}-{i + len(batch)}): {type(e).__name__}: {e}"
+            )
+            print(f"  {inserted} rows committed before failure")
+            print(f"  Re-run the script to retry — it is idempotent.")
+            raise
+        if batch_num % 10 == 0 or batch_num == total_batches:
+            print(f"  {table}: batch {batch_num}/{total_batches} ({inserted} rows)")
+    print(f"  {table}: inserted {inserted} rows")
 
 
 def fetch_gviz_csv(sheet_id: str, tab: str) -> list[dict]:
@@ -232,17 +257,11 @@ def main():
     invoice_rows = sync_invoices()
     expense_rows = sync_expenses()
 
-    print(f"\nBulk-inserting {len(invoice_rows)} invoices...")
-    with get_pg_conn() as conn:
-        pg_bulk_insert(conn, "sales_invoice", invoice_rows)
-        conn.commit()
-    print(f"  Inserted {len(invoice_rows)} sales_invoice rows")
+    print(f"\nInserting {len(invoice_rows)} invoices via PostgREST...")
+    insert_rows(supabase, "sales_invoice", invoice_rows)
 
-    print(f"\nBulk-inserting {len(expense_rows)} expenses...")
-    with get_pg_conn() as conn:
-        pg_bulk_insert(conn, "fin_expense", expense_rows)
-        conn.commit()
-    print(f"  Inserted {len(expense_rows)} fin_expense rows")
+    print(f"\nInserting {len(expense_rows)} expenses via PostgREST...")
+    insert_rows(supabase, "fin_expense", expense_rows)
 
     print("\n" + "=" * 60)
     print("DONE")
