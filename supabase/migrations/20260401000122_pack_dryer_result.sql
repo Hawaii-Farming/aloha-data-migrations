@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS pack_dryer_result (
     org_id                          TEXT NOT NULL REFERENCES org(id),
     farm_id                         TEXT NOT NULL REFERENCES org_farm(id),
     site_id                         TEXT NOT NULL REFERENCES org_site(id),
-    grow_seed_batch_id              UUID REFERENCES grow_seed_batch(id),
+    grow_lettuce_seed_batch_id      UUID REFERENCES grow_lettuce_seed_batch(id),
     invnt_item_id                   TEXT REFERENCES invnt_item(id),
 
     check_at                        TIMESTAMPTZ NOT NULL,
@@ -34,6 +34,6 @@ COMMENT ON COLUMN pack_dryer_result.pack_dryer_result_id_original IS 'Self-refer
 
 CREATE INDEX idx_pack_dryer_result_org    ON pack_dryer_result (org_id);
 CREATE INDEX idx_pack_dryer_result_farm   ON pack_dryer_result (farm_id);
-CREATE INDEX idx_pack_dryer_result_batch  ON pack_dryer_result (grow_seed_batch_id);
+CREATE INDEX idx_pack_dryer_result_batch  ON pack_dryer_result (grow_lettuce_seed_batch_id);
 CREATE INDEX idx_pack_dryer_result_date     ON pack_dryer_result (check_at);
 CREATE INDEX idx_pack_dryer_result_original ON pack_dryer_result (pack_dryer_result_id_original);

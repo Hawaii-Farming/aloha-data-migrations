@@ -3,10 +3,13 @@ CREATE TABLE IF NOT EXISTS grow_cuke_seed_batch (
     org_id                  TEXT NOT NULL REFERENCES org(id),
     farm_id                 TEXT NOT NULL REFERENCES org_farm(id),
     site_id                 TEXT REFERENCES org_site(id),
-    ops_task_tracker_id     UUID REFERENCES ops_task_tracker(id),
+    -- ops_task_tracker_id and invnt_lot_id intentionally carry no FK: both
+    -- parent tables are TRUNCATEd nightly and CASCADE would wipe this
+    -- static/forward-planned plant-map table with no nightly re-populator.
+    ops_task_tracker_id     UUID,
     grow_trial_type_id      TEXT REFERENCES grow_trial_type(id),
     invnt_item_id           TEXT REFERENCES invnt_item(id),
-    invnt_lot_id            TEXT REFERENCES invnt_lot(id),
+    invnt_lot_id            TEXT,
     seeding_date            DATE NOT NULL,
     transplant_date         DATE NOT NULL,
     next_bag_change_date    DATE,

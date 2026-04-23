@@ -14,6 +14,9 @@ CREATE TABLE IF NOT EXISTS org_site (
     -- Food safety details (shown for food safety child sites)
     zone                    TEXT CHECK (zone IN ('zone_1', 'zone_2', 'zone_3', 'zone_4', 'water')),
 
+    -- Housing details (shown for housing sites)
+    max_beds                INTEGER,
+
     -- Geo coordinates
     latitude                NUMERIC,
     longitude               NUMERIC,
@@ -53,3 +56,4 @@ COMMENT ON COLUMN org_site.org_site_subcategory_id IS 'References org_site_categ
 COMMENT ON COLUMN org_site.site_id_parent IS 'Null for top-level sites; set for child locations within a parent site (e.g. food safety surfaces, pest traps, housing rooms)';
 COMMENT ON COLUMN org_site.acres IS 'Only for growing sites with no subcategory, or subcategory greenhouse, pond, nursery; null for all other site types';
 COMMENT ON COLUMN org_site.zone IS 'zone_1 (food contact surface), zone_2, zone_3, zone_4, water; available on all sites regardless of category';
+COMMENT ON COLUMN org_site.max_beds IS 'Maximum bed capacity for housing sites; NULL for non-housing sites';

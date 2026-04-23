@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS ops_task_schedule (
 
     -- NOTE: units_completed was removed because the unit type varies by task (boards for seeding,
     -- totes for harvesting, acres for spraying) and the totals are already captured in the
-    -- domain-specific tables (grow_seed_batch, grow_harvest_weight, etc.). Individual employee
+    -- domain-specific tables (grow_lettuce_seed_batch, grow_cuke_seed_batch, grow_harvest_weight, etc.). Individual employee
     -- contribution to the total is not yet tracked — this may be revisited with a per-employee
     -- breakdown table in the future.
 
