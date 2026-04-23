@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS org_site_cuke_gh_block (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id          TEXT NOT NULL REFERENCES org(id),
     farm_id         TEXT NOT NULL REFERENCES org_farm(id),
-    site_id         TEXT NOT NULL REFERENCES org_site(id),
+    site_id         TEXT NOT NULL REFERENCES org_site_cuke_gh(site_id),
     block_num       INTEGER NOT NULL,
     name            TEXT NOT NULL,
     row_num_from    INTEGER NOT NULL,
