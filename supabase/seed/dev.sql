@@ -1,0 +1,13 @@
+-- Seed Data: LOCAL DEVELOPMENT
+--
+-- This file is intentionally empty. This project does not use local Supabase
+-- for development — the hosted Supabase project at kfwqtaazdankxmdlqdak is
+-- the dev database. See README.md for the development workflow.
+--
+-- If you ever need to seed a fresh local instance, the Python migration
+-- scripts that originally populated the data live in the separate
+-- aloha-data-migrations repo (a sibling directory). Run them in numbered
+-- order from that repo against the local Supabase URL.
+--
+-- The auto-link trigger (20260401000141_auth_auto_link_employee.sql)
+-- will connect auth.users to hr_employee on first sign-in.

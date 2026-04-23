@@ -1,23 +1,20 @@
 # aloha-data-migrations
 
-Standalone Python tooling for one-time data imports and ongoing data processes
-that populate the Aloha agricultural ERP's Supabase database.
-
-This repo was extracted from `aloha-app` so the TypeScript app and the Python
-data tooling can evolve independently. The two repos share a Supabase project
-but no code.
+Owns both the **database schema** and the **Python data migration scripts** for
+the Aloha agricultural ERP's Supabase project. `aloha-app` consumes this
+database but no longer carries any schema of its own.
 
 ## What's in here
 
 | Folder | Purpose |
 |---|---|
-| `migrations/` | One-time ETL scripts that imported legacy data from Google Sheets into Supabase. Already executed. Re-run only when seeding a fresh tenant or rebuilding from scratch. |
+| `supabase/migrations/` | **Authoritative DDL.** Tables, RLS policies, functions, triggers, views, seeds — every change to the database goes through here. CI auto-applies on merge to `main` (`.github/workflows/deploy-schema.yml`). |
+| `supabase/config.toml`, `supabase/seed/`, `supabase/templates/` | Supabase CLI config, local-dev seeds, and auth email templates. |
+| `migrations/` | Python ETL scripts that pull data from Google Sheets into Supabase nightly. See `_run_nightly.py`. |
 | `processes/` | Ongoing operational workflows (e.g. payroll). Run on a schedule or on-demand. |
 | `python/` | Older one-off process scripts. Kept for reference. |
-| `sql/` | One-shot SQL deploys (view contracts, test data seeding) run via Supabase SQL Editor. |
-| `schema-reference/` | Read-only snapshot of the schema from `aloha-app` (10 markdown module docs + 102 SQL migrations). Browse here when writing a new migration script — no need to switch repos. |
-| `MIGRATION_CONVENTIONS.md` | The rules every script in this repo must follow. |
-| `sync-schema-reference.sh` | Pulls the latest schema docs and SQL from the sibling `aloha-app` repo into `schema-reference/`. Run whenever the schema changes upstream. |
+| `sql/` | One-shot SQL deploys (view contracts, test data seeding) run ad-hoc via Supabase SQL Editor. Not part of the migration history. |
+| `MIGRATION_CONVENTIONS.md` | The rules every Python data-migration script must follow. |
 
 ## Setup
 
@@ -53,7 +50,8 @@ running anything:
 
 ## Schema coupling
 
-The tables these scripts populate are defined in the `aloha-app` repo at
-`supabase/migrations/`. **When the schema changes there, scripts here may
-need updating.** There is no automatic sync — coordinate schema changes
-across both repos.
+Schema and data migrations live side-by-side in this repo. When a Python
+data-migration script needs a schema change, add the `.sql` file to
+`supabase/migrations/` in the same PR — CI applies it on merge, and the
+Python script that depends on it runs against the updated schema on the
+next nightly.
