@@ -20,3 +20,8 @@ COMMENT ON COLUMN org_module.display_name IS 'Pre-filled from sys_module.name at
 COMMENT ON COLUMN org_module.is_enabled IS 'Auto-set to true when provisioned; toggled by org admins to enable/disable the module';
 
 CREATE INDEX idx_org_module_org ON org_module (org_id);
+
+-- --------------------------------------------------------------------
+-- Grants for authenticated role (workspace shell / sys_navigation view)
+-- --------------------------------------------------------------------
+GRANT SELECT ON public.org_module TO authenticated;

@@ -93,3 +93,25 @@ COMMENT ON COLUMN hr_employee.overtime_threshold IS 'Hours per week before overt
 COMMENT ON COLUMN hr_employee.pay_structure IS 'hourly, salary';
 COMMENT ON COLUMN hr_employee.wc IS 'Workers compensation code identifying the compensation plan or pay grade';
 COMMENT ON COLUMN hr_employee.site_id IS 'Filtered to org_site where category = housing; the employee assigned housing site';
+
+-- --------------------------------------------------------------------
+-- RLS: authenticated users can read all employees in their own org(s).
+-- Used by the workspace shell so managers/admins see the full roster.
+-- Mutation policy: there are intentionally NO INSERT/UPDATE/DELETE
+-- policies here (or on org). All writes go through the service_role
+-- key in server-side route actions, and authorization is enforced in
+-- the app layer via hr_module_access (can_edit / can_delete /
+-- can_verify) before the mutation is issued. Direct PostgREST writes
+-- from the browser session client are blocked because no policy
+-- permits them.
+-- get_user_org_ids() is defined in 20260401000142_sys_navigation.sql.
+-- --------------------------------------------------------------------
+GRANT SELECT ON public.hr_employee TO authenticated;
+
+ALTER TABLE public.hr_employee ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "hr_employee_read" ON public.hr_employee;
+
+CREATE POLICY "hr_employee_read" ON public.hr_employee
+  FOR SELECT TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));

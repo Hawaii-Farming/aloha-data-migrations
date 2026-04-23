@@ -12,3 +12,18 @@ CREATE TABLE IF NOT EXISTS org (
 );
 
 COMMENT ON TABLE org IS 'Root entity for multi-org support. Every org-scoped table references this. Stores org-level settings such as default currency.';
+
+-- --------------------------------------------------------------------
+-- RLS: authenticated users can read orgs they belong to.
+-- Membership is resolved via get_user_org_ids() (defined in
+-- 20260401000142_sys_navigation.sql). Mutations are service-role only.
+-- --------------------------------------------------------------------
+GRANT SELECT ON public.org TO authenticated;
+
+ALTER TABLE public.org ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "org_read" ON public.org;
+
+CREATE POLICY "org_read" ON public.org
+  FOR SELECT TO authenticated
+  USING (id IN (SELECT public.get_user_org_ids()));

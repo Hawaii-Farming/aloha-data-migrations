@@ -25,3 +25,12 @@ COMMENT ON COLUMN hr_module_access.can_verify IS 'Auto-set to false when provisi
 
 CREATE INDEX idx_hr_module_access_employee ON hr_module_access (hr_employee_id);
 CREATE INDEX idx_hr_module_access_module ON hr_module_access (org_module_id);
+
+-- --------------------------------------------------------------------
+-- Grants + composite index for the sys_navigation view join
+-- (defined in 20260401000142_sys_navigation.sql).
+-- --------------------------------------------------------------------
+GRANT SELECT ON public.hr_module_access TO authenticated;
+
+CREATE INDEX IF NOT EXISTS idx_hr_module_access_employee_module
+  ON public.hr_module_access(hr_employee_id, org_module_id);

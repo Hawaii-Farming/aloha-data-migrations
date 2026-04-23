@@ -1,11 +1,14 @@
 name: Deploy Supabase Schema
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'supabase/migrations/**'
-      - 'supabase/config.toml'
+  # Auto-deploy on push is temporarily disabled while the schema is being
+  # refactored (file renames + ALTER/CREATE consolidation). Re-enable by
+  # restoring the `push:` block below after the refactor is cut over.
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - 'supabase/migrations/**'
+  #     - 'supabase/config.toml'
   workflow_dispatch:
 
 jobs:

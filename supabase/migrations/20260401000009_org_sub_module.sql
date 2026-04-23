@@ -25,3 +25,8 @@ COMMENT ON COLUMN org_sub_module.is_enabled IS 'Auto-set to true when provisione
 
 CREATE INDEX idx_org_sub_module_org ON org_sub_module (org_id);
 CREATE INDEX idx_org_sub_module_module ON org_sub_module (sys_module_id);
+
+-- --------------------------------------------------------------------
+-- Grants for authenticated role (workspace shell / sys_navigation view)
+-- --------------------------------------------------------------------
+GRANT SELECT ON public.org_sub_module TO authenticated;
