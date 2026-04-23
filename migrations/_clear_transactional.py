@@ -17,7 +17,7 @@ org_farm, org_site, invnt_item, invnt_vendor, invnt_category,
 grow_variety, grow_grade, grow_pest, grow_disease, ops_task, etc.) —
 those are upserted idempotently by migrations 001-002 and 006, and
 CASCADE-wiping them would also wipe the static cuke_plantmap-seeded
-tables (grow_cuke_seed_batch, grow_cuke_gh_row_planting, org_site_gh*)
+tables (grow_cuke_seed_batch, grow_cuke_gh_row_planting, org_site_cuke_gh*)
 which have no nightly re-populator.
 
 Usage:

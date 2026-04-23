@@ -257,7 +257,7 @@ def rebuild_plantings(supabase, plant_map_records):
     page = 0
     while True:
         page_rows = (
-            supabase.table("org_site_gh_row")
+            supabase.table("org_site_cuke_gh_row")
             .select("id,site_id,row_num")
             .range(page * 1000, (page + 1) * 1000 - 1)
             .execute().data
@@ -308,7 +308,7 @@ def rebuild_plantings(supabase, plant_map_records):
             rows_out.append(audit({
                 "org_id": ORG_ID,
                 "farm_id": FARM_ID,
-                "org_site_gh_row_id": row_id,
+                "org_site_cuke_gh_row_id": row_id,
                 "scenario": "current",
                 "grow_variety_id": v1a,
                 "grow_variety_id_2": v1b,
@@ -322,7 +322,7 @@ def rebuild_plantings(supabase, plant_map_records):
             rows_out.append(audit({
                 "org_id": ORG_ID,
                 "farm_id": FARM_ID,
-                "org_site_gh_row_id": row_id,
+                "org_site_cuke_gh_row_id": row_id,
                 "scenario": "planned",
                 "grow_variety_id": v2a,
                 "grow_variety_id_2": v2b,
@@ -331,7 +331,7 @@ def rebuild_plantings(supabase, plant_map_records):
             }))
 
     if skipped:
-        print(f"  WARNING: skipped {skipped} sheet rows with no matching org_site_gh_row")
+        print(f"  WARNING: skipped {skipped} sheet rows with no matching org_site_cuke_gh_row")
 
     batched_insert(supabase, "grow_cuke_gh_row_planting", rows_out, "plantings")
     print(f"  Done: {len(rows_out)} rows inserted")

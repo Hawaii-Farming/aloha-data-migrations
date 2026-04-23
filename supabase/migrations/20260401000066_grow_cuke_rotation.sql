@@ -4,7 +4,7 @@
 -- memory.
 --
 -- HK pair (Hamakua + Kohala) rotates together as ONE slot (site_id='hk').
--- The plant-map UI distinguishes Hamakua vs Kohala via org_site_gh_block.name.
+-- The plant-map UI distinguishes Hamakua vs Kohala via org_site_cuke_gh_block.name.
 --
 -- Exactly one row must have is_anchor=true; anchor_week_start defines the
 -- calendar date when that slot is in its seeding week. All other slots are

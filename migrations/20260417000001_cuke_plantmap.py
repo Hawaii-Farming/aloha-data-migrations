@@ -9,10 +9,10 @@ is retired — cuke seed batches become static with no ongoing nightly
 rebuild.
 
 Tables populated:
-  - org_site_gh               (~12 rows, from GH_CONFIG mirror below)
-  - org_site_gh_block         (~25 rows, derived from plant-map sheet
+  - org_site_cuke_gh               (~12 rows, from GH_CONFIG mirror below)
+  - org_site_cuke_gh_block         (~25 rows, derived from plant-map sheet
                                Greenhouse + Side groupings)
-  - org_site_gh_row           (~660 rows, one per physical GH row)
+  - org_site_cuke_gh_row           (~660 rows, one per physical GH row)
   - grow_cuke_gh_row_planting (~1320 rows, current + planned per row)
   - grow_cuke_seed_batch      (660 rows, copied from grow_lettuce_seed_batch
                                with preserved UUIDs)
@@ -87,8 +87,8 @@ GH_NAME_TO_SITE_ID = {
 
 # HK is one org_site with two physical structures (Hamakua + Kohala). To
 # store both under site_id='hk' without row_num collisions, Kohala's sheet
-# row_nums are offset by this many when written to org_site_gh_row. The
-# plant-map UI reads org_site_gh_block.name to render each structure as a
+# row_nums are offset by this many when written to org_site_cuke_gh_row. The
+# plant-map UI reads org_site_cuke_gh_block.name to render each structure as a
 # separate section and subtracts the offset for display.
 KOHALA_ROW_OFFSET = 100
 
@@ -203,23 +203,23 @@ def clear_existing(supabase):
     print("\nClearing layout tables for rerun...")
     for table in (
         "grow_cuke_gh_row_planting",
-        "org_site_gh_block",
-        "org_site_gh_row",
-        "org_site_gh",
+        "org_site_cuke_gh_block",
+        "org_site_cuke_gh_row",
+        "org_site_cuke_gh",
     ):
         supabase.table(table).delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
         print(f"  Cleared {table}")
 
 
 # ---------------------------------------------------------------------------
-# Step 1: org_site_gh from GH_CONFIG
+# Step 1: org_site_cuke_gh from GH_CONFIG
 # ---------------------------------------------------------------------------
 
-def seed_org_site_gh(supabase):
+def seed_org_site_cuke_gh(supabase):
     """One row per distinct site_id in GH_CONFIG. Hamakua and Kohala both map
     to 'hk'; the first encountered wins (Hamakua — it comes first alpha).
     """
-    print("\n=== Step 1: org_site_gh ===")
+    print("\n=== Step 1: org_site_cuke_gh ===")
     rows = []
     seen_sites = set()
     for gh_name, cfg in GH_CONFIG.items():
@@ -246,7 +246,7 @@ def seed_org_site_gh(supabase):
             "layout_stack_pos":  layout_stack_pos,
         }))
 
-    return insert_rows(supabase, "org_site_gh", rows)
+    return insert_rows(supabase, "org_site_cuke_gh", rows)
 
 
 # ---------------------------------------------------------------------------
@@ -262,22 +262,22 @@ def read_plantmap(gc):
 
 
 # ---------------------------------------------------------------------------
-# Step 2: org_site_gh_row
+# Step 2: org_site_cuke_gh_row
 # ---------------------------------------------------------------------------
 
 def _effective_row_num(gh, sheet_row_num):
-    """Map a sheet row_num to the org_site_gh_row row_num. Kohala rows are
+    """Map a sheet row_num to the org_site_cuke_gh_row row_num. Kohala rows are
     offset so they don't collide with Hamakua rows in the shared 'hk' site."""
     if gh == "Kohala":
         return sheet_row_num + KOHALA_ROW_OFFSET
     return sheet_row_num
 
 
-def seed_org_site_gh_row(supabase, records):
+def seed_org_site_cuke_gh_row(supabase, records):
     """One row per physical GH row. Hamakua and Kohala both write to 'hk'
     but Kohala's row_nums are offset (+KOHALA_ROW_OFFSET) to avoid
     collisions on the unique (site_id, row_num) constraint."""
-    print("\n=== Step 2: org_site_gh_row ===")
+    print("\n=== Step 2: org_site_cuke_gh_row ===")
     rows = []
     seen = set()
     for r in records:
@@ -303,14 +303,14 @@ def seed_org_site_gh_row(supabase, records):
             "row_num":           row_num,
         }))
 
-    return insert_rows(supabase, "org_site_gh_row", rows)
+    return insert_rows(supabase, "org_site_cuke_gh_row", rows)
 
 
 # ---------------------------------------------------------------------------
-# Step 3: org_site_gh_block
+# Step 3: org_site_cuke_gh_block
 # ---------------------------------------------------------------------------
 
-def seed_org_site_gh_block(supabase, records, inserted_rows):
+def seed_org_site_cuke_gh_block(supabase, records, inserted_rows):
     """Group sheet rows by (Greenhouse, Side), then derive block metadata.
 
     For HK (Hamakua + Kohala), each GH name becomes its own block with
@@ -319,7 +319,7 @@ def seed_org_site_gh_block(supabase, records, inserted_rows):
 
     Block num is assigned by the order of first appearance. Row numbers
     use the effective row_num (Kohala offset applied)."""
-    print("\n=== Step 3: org_site_gh_block ===")
+    print("\n=== Step 3: org_site_cuke_gh_block ===")
 
     # Group rows by (site_id, block_label) where block_label is 'Hamakua'/
     # 'Kohala' for the HK pair, otherwise the sheet's Side (or 'Main').
@@ -369,7 +369,7 @@ def seed_org_site_gh_block(supabase, records, inserted_rows):
             "direction":     direction,
         }))
 
-    return insert_rows(supabase, "org_site_gh_block", rows)
+    return insert_rows(supabase, "org_site_cuke_gh_block", rows)
 
 
 # ---------------------------------------------------------------------------
@@ -400,13 +400,13 @@ def _parse_variety_cell(val):
 def seed_grow_cuke_gh_row_planting(supabase, records):
     """One planting row per (physical row, scenario). Skips Kohala.
 
-    Before inserting we fetch the UUIDs for every inserted org_site_gh_row
+    Before inserting we fetch the UUIDs for every inserted org_site_cuke_gh_row
     so the planting FK can resolve.
     """
     print("\n=== Step 4: grow_cuke_gh_row_planting ===")
 
     row_id_by_site_row = {}
-    for r in supabase.table("org_site_gh_row").select("id,site_id,row_num").execute().data:
+    for r in supabase.table("org_site_cuke_gh_row").select("id,site_id,row_num").execute().data:
         row_id_by_site_row[(r["site_id"], r["row_num"])] = r["id"]
 
     rows = []
@@ -435,7 +435,7 @@ def seed_grow_cuke_gh_row_planting(supabase, records):
             rows.append(audit({
                 "org_id":             ORG_ID,
                 "farm_id":            FARM_ID,
-                "org_site_gh_row_id": row_id,
+                "org_site_cuke_gh_row_id": row_id,
                 "scenario":           "current",
                 "grow_variety_id":    v1_primary,
                 "grow_variety_id_2":  v1_secondary,
@@ -450,7 +450,7 @@ def seed_grow_cuke_gh_row_planting(supabase, records):
             rows.append(audit({
                 "org_id":             ORG_ID,
                 "farm_id":            FARM_ID,
-                "org_site_gh_row_id": row_id,
+                "org_site_cuke_gh_row_id": row_id,
                 "scenario":           "planned",
                 "grow_variety_id":    v2_primary,
                 "grow_variety_id_2":  v2_secondary,
@@ -459,7 +459,7 @@ def seed_grow_cuke_gh_row_planting(supabase, records):
             }))
 
     if skipped_unmatched:
-        print(f"  WARNING: skipped {skipped_unmatched} rows — no matching org_site_gh_row")
+        print(f"  WARNING: skipped {skipped_unmatched} rows — no matching org_site_cuke_gh_row")
 
     return insert_rows(supabase, "grow_cuke_gh_row_planting", rows)
 
@@ -553,11 +553,11 @@ def main():
 
     clear_existing(supabase)
 
-    seed_org_site_gh(supabase)
+    seed_org_site_cuke_gh(supabase)
 
     records = read_plantmap(gc)
-    inserted_rows = seed_org_site_gh_row(supabase, records)
-    seed_org_site_gh_block(supabase, records, inserted_rows)
+    inserted_rows = seed_org_site_cuke_gh_row(supabase, records)
+    seed_org_site_cuke_gh_block(supabase, records, inserted_rows)
     seed_grow_cuke_gh_row_planting(supabase, records)
 
     migrate_cuke_seed_batches(supabase)
