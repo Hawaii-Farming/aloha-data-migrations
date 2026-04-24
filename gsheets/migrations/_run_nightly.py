@@ -63,7 +63,11 @@ DEFAULT_SET = [
     "034",  # fin_expense + sales_invoice (nightly QB sheet sync)
 ]
 
-ALL_SET = [f"{i:03d}" for i in range(1, 35)]
+# 024 (grow_cuke_seeding) is retired — its target table was renamed to
+# grow_lettuce_seed_batch and the cuke seed batches are now static,
+# populated once by 20260417000001_cuke_plantmap.py.
+RETIRED = {"024"}
+ALL_SET = [f"{i:03d}" for i in range(1, 35) if f"{i:03d}" not in RETIRED]
 
 
 def discover_scripts():
