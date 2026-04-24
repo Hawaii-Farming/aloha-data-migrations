@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS hr_payroll (
     -- Hours
     regular_hours               NUMERIC NOT NULL DEFAULT 0,
     overtime_hours              NUMERIC NOT NULL DEFAULT 0,
+    discretionary_overtime_hours NUMERIC NOT NULL DEFAULT 0,
     holiday_hours               NUMERIC NOT NULL DEFAULT 0,
     pto_hours                   NUMERIC NOT NULL DEFAULT 0,
     sick_hours                  NUMERIC NOT NULL DEFAULT 0,
@@ -34,6 +35,7 @@ CREATE TABLE IF NOT EXISTS hr_payroll (
     -- Earnings
     regular_pay                 NUMERIC NOT NULL DEFAULT 0,
     overtime_pay                NUMERIC NOT NULL DEFAULT 0,
+    discretionary_overtime_pay  NUMERIC NOT NULL DEFAULT 0,
     holiday_pay                 NUMERIC NOT NULL DEFAULT 0,
     pto_pay                     NUMERIC NOT NULL DEFAULT 0,
     sick_pay                    NUMERIC NOT NULL DEFAULT 0,
@@ -89,6 +91,8 @@ COMMENT ON COLUMN hr_payroll.wc IS 'Snapshot from hr_employee.wc at time of impo
 COMMENT ON COLUMN hr_payroll.pay_structure IS 'Snapshot from hr_employee.pay_structure at time of import';
 COMMENT ON COLUMN hr_payroll.hourly_rate IS 'Snapshot from payroll processor NetPay data';
 COMMENT ON COLUMN hr_payroll.overtime_threshold IS 'Snapshot from hr_employee.overtime_threshold at time of import';
+COMMENT ON COLUMN hr_payroll.discretionary_overtime_hours IS 'Premium OT hours paid at employer discretion above statutory OT threshold; distinct from overtime_hours which covers legally-mandated OT';
+COMMENT ON COLUMN hr_payroll.discretionary_overtime_pay IS 'Pay amount corresponding to discretionary_overtime_hours';
 COMMENT ON COLUMN hr_payroll.fit IS 'Federal Income Tax withheld';
 COMMENT ON COLUMN hr_payroll.sit IS 'State Income Tax withheld';
 COMMENT ON COLUMN hr_payroll.hawaii_get IS 'Hawaii General Excise Tax';
