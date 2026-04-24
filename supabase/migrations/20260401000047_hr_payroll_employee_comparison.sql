@@ -41,14 +41,6 @@ previous_p AS (
     SELECT v.*
     FROM hr_payroll_by_task v, periods p
     WHERE v.check_date = p.prev_date
-),
-pto_current AS (
-    SELECT hr_employee_id, SUM(pto_hours_accrued) AS pto_hours_accrued
-    FROM hr_payroll p, periods pr
-    WHERE p.check_date = pr.cur_date
-      AND p.payroll_processor = 'HRB'
-      AND NOT p.is_deleted
-    GROUP BY hr_employee_id
 )
 SELECT
     COALESCE(c.org_id, pr.org_id)                                        AS org_id,
@@ -61,12 +53,11 @@ SELECT
 
     -- Current period values
     COALESCE(c.scheduled_hours, 0)                                       AS scheduled_hours,
-    COALESCE(c.total_hours, 0)                                           AS hours,
+    COALESCE(c.total_hours, 0)                                           AS total_hours,
     COALESCE(c.total_cost, 0)                                            AS total_cost,
     COALESCE(c.regular_pay, 0)                                           AS regular_pay,
     COALESCE(c.discretionary_overtime_hours, 0)                          AS discretionary_overtime_hours,
     COALESCE(c.discretionary_overtime_pay, 0)                            AS discretionary_overtime_pay,
-    pt.pto_hours_accrued                                                 AS pto_hours_accrued,
 
     -- Deltas (current - previous)
     COALESCE(c.total_hours, 0)                  - COALESCE(pr.total_hours, 0)                  AS hours_delta,
@@ -80,9 +71,7 @@ SELECT
 FROM current_p c
 FULL OUTER JOIN previous_p pr
     ON pr.hr_employee_id = c.hr_employee_id
-   AND pr.task = c.task
-LEFT JOIN pto_current pt
-    ON pt.hr_employee_id = COALESCE(c.hr_employee_id, pr.hr_employee_id);
+   AND pr.task = c.task;
 
 GRANT SELECT ON hr_payroll_employee_comparison TO authenticated;
 
