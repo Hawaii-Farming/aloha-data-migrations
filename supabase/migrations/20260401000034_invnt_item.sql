@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS invnt_item (
 
     -- Site references
     site_id              TEXT REFERENCES org_site(id),
-    equipment_id   TEXT REFERENCES org_equipment(id),
+    equipment_name   TEXT REFERENCES org_equipment(name),
 
     -- Item details
     invnt_vendor_id          TEXT REFERENCES invnt_vendor(id),
@@ -67,7 +67,7 @@ CREATE INDEX idx_invnt_item_vendor      ON invnt_item (invnt_vendor_id);
 CREATE INDEX idx_invnt_item_category    ON invnt_item (invnt_category_id);
 CREATE INDEX idx_invnt_item_subcategory ON invnt_item (invnt_subcategory_id);
 CREATE INDEX idx_invnt_item_site ON invnt_item (site_id);
-CREATE INDEX idx_invnt_item_equipment ON invnt_item (equipment_id);
+CREATE INDEX idx_invnt_item_equipment ON invnt_item (equipment_name);
 
 COMMENT ON COLUMN invnt_item.invnt_category_id IS 'References invnt_category rows where sub_category_name IS NULL';
 COMMENT ON COLUMN invnt_item.invnt_subcategory_id IS 'References invnt_category rows where sub_category_name IS NOT NULL';

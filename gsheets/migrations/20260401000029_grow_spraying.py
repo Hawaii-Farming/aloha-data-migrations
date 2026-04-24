@@ -23,7 +23,7 @@ Per sheet row:
   - 1 ops_task_tracker (ops_task_name=spraying)
   - 1-3 grow_spray_input rows (one per non-blank Product01/02/03)
   - 0-N grow_spray_equipment rows:
-      - Sprayer blank + WaterGallons > 0 -> 1 row with equipment_id=NULL
+      - Sprayer blank + WaterGallons > 0 -> 1 row with equipment_name=NULL
       - Sprayer set (may contain + for multiple) -> fan out, WaterGallons
         split evenly across equipment
 
@@ -74,7 +74,7 @@ UOM_MAP = {
     "milliliter": "milliliter", "milliliters": "milliliter", "ml": "milliliter",
 }
 
-# Sprayer name (lowercase) -> (equipment_id suffix, org_equipment.type)
+# Sprayer name (lowercase) -> (equipment_name suffix, org_equipment.type)
 SPRAYER_MAP = {
     "fogger": ("fogger", "fogger"),
     "fogger 1": ("fogger_1", "fogger"),
@@ -200,7 +200,7 @@ def split_sprayers(raw: str) -> list[str]:
 
 
 def sprayer_equipment_id(farm: str, sprayer_name: str) -> tuple[str | None, str | None]:
-    """Returns (equipment_id, type) for a sprayer name. None, None if unknown."""
+    """Returns (equipment_name, type) for a sprayer name. None, None if unknown."""
     key = sprayer_name.strip().lower()
     if key in SPRAYER_MAP:
         suffix, eq_type = SPRAYER_MAP[key]
@@ -301,7 +301,7 @@ def build_item_lookup(supabase, sheet_records):
 
 def ensure_sprayer_equipment(supabase, sheet_records):
     """Upsert org_equipment rows for every (farm, sprayer) pair in sheet."""
-    needed = {}  # equipment_id -> {farm, name, type}
+    needed = {}  # equipment_name -> {farm, name, type}
     for r in sheet_records:
         farm = resolve_farm(r.get("Farm", ""))
         if not farm:
@@ -576,12 +576,12 @@ def build_event_rows(
         for sname in sprayers:
             eid, _ = sprayer_equipment_id(farm, sname)
             if not eid:
-                # Unknown sprayer name — fall back to equipment_id=NULL
+                # Unknown sprayer name — fall back to equipment_name=NULL
                 equipment_rows.append({
                     "org_id": ORG_ID,
                     "farm_name": farm,
                     "ops_task_tracker_id": tracker_id,
-                    "equipment_id": None,
+                    "equipment_name": None,
                     "water_uom": "gallon",
                     "water_quantity": water_per,
                     "created_by": created_by,
@@ -592,7 +592,7 @@ def build_event_rows(
                     "org_id": ORG_ID,
                     "farm_name": farm,
                     "ops_task_tracker_id": tracker_id,
-                    "equipment_id": eid,
+                    "equipment_name": eid,
                     "water_uom": "gallon",
                     "water_quantity": water_per,
                     "created_by": created_by,
@@ -604,7 +604,7 @@ def build_event_rows(
             "org_id": ORG_ID,
             "farm_name": farm,
             "ops_task_tracker_id": tracker_id,
-            "equipment_id": None,
+            "equipment_name": None,
             "water_uom": "gallon",
             "water_quantity": water_total,
             "created_by": created_by,

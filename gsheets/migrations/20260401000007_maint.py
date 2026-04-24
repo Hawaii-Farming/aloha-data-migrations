@@ -302,7 +302,7 @@ def migrate_maint_sites(supabase):
     # =====================================================================
     # EQUIPMENT MAP — these go into org_equipment, not org_site
     # =====================================================================
-    # Format: "Legacy SiteName" → (equipment_id, type, farm_name)
+    # Format: "Legacy SiteName" → (equipment_name, type, farm_name)
     #   type: vehicle, tool, machine, ppe, bag_pack_sprayer, fogger, tank
     # =====================================================================
 
@@ -505,21 +505,22 @@ def migrate_maint_sites(supabase):
         insert_rows(supabase, "org_site", child_rows)
 
     # Create org_equipment records
-    existing_equip = supabase.table("org_equipment").select("id").execute()
-    existing_equip_ids = {e["id"] for e in existing_equip.data}
+    existing_equip = supabase.table("org_equipment").select("name").execute()
+    existing_equip_names = {e["name"] for e in existing_equip.data}
 
     equip_rows = []
     seen_equip = set()
-    for equip_name, (equip_id, equip_type, farm_name) in EQUIPMENT_MAP.items():
-        if equip_id in existing_equip_ids or equip_id in seen_equip:
+    for equip_name, (_legacy_id, equip_type, farm_name) in EQUIPMENT_MAP.items():
+        # Use the map key verbatim as the PK (preserves "Lettuce GH Fans" as-is
+        # instead of letting proper_case turn it into "Lettuce Gh Fans").
+        if equip_name in existing_equip_names or equip_name in seen_equip:
             continue
-        seen_equip.add(equip_id)
+        seen_equip.add(equip_name)
         equip_rows.append({
-            "id": equip_id,
             "org_id": ORG_ID,
             "farm_name": farm_name,
             "type": equip_type,
-            "name": proper_case(equip_name),
+            "name": equip_name,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
         })
@@ -549,19 +550,19 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
         if s.get("farm_name"):
             site_farm[s["id"]] = s["farm_name"]
     equip_farm = {}
-    for eq in supabase.table("org_equipment").select("id, farm_name").execute().data:
+    for eq in supabase.table("org_equipment").select("name, farm_name").execute().data:
         if eq.get("farm_name"):
-            equip_farm[eq["id"]] = eq["farm_name"]
+            equip_farm[eq["name"]] = eq["farm_name"]
 
     # Build site lookup from SITE_MAP: legacy name → org_site_id
     site_by_name = {}
     for legacy_name, (site_id, _cat, _sub) in site_map.items():
         site_by_name[legacy_name.lower()] = site_id
 
-    # Build equipment lookup from EQUIPMENT_MAP: legacy name → org_equipment_id
+    # Build equipment lookup from EQUIPMENT_MAP: legacy name → org_equipment.name
     equip_by_name = {}
-    for legacy_name, (equip_id, _type, _farm) in equipment_map.items():
-        equip_by_name[legacy_name.lower()] = equip_id
+    for legacy_name, (_slug, _type, _farm) in equipment_map.items():
+        equip_by_name[legacy_name.lower()] = legacy_name
 
     # Build item name -> id lookup
     item_result = supabase.table("invnt_item").select("id, name, burn_uom").execute()
@@ -618,8 +619,8 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
 
         # Site or Equipment — check equipment first, then site
         site_name = str(r.get("SiteName", "")).strip()
-        equipment_id = equip_by_name.get(site_name.lower())
-        site_id = None if equipment_id else (site_by_name.get(site_name.lower()) or site_by_name.get(to_id(site_name)))
+        equipment_name = equip_by_name.get(site_name.lower())
+        site_id = None if equipment_name else (site_by_name.get(site_name.lower()) or site_by_name.get(to_id(site_name)))
 
         # Status
         raw_status = str(r.get("Status", "")).strip().lower()
@@ -650,18 +651,18 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
         farm_name = None
         if site_id:
             farm_name = site_farm.get(site_id)
-        if not farm_name and equipment_id:
-            farm_name = equip_farm.get(equipment_id)
+        if not farm_name and equipment_name:
+            farm_name = equip_farm.get(equipment_name)
 
         # Skip rows where neither site nor equipment is set (XOR constraint)
-        if not site_id and not equipment_id:
+        if not site_id and not equipment_name:
             continue
 
         req = {
             "org_id": ORG_ID,
             "farm_name": farm_name,
             "site_id": site_id,
-            "equipment_id": equipment_id,
+            "equipment_name": equipment_name,
             "status": status,
             "request_description": description or None,
             "recurring_frequency": recurring,
@@ -1097,7 +1098,7 @@ def main():
             pass
     # Clear equipment created by this script
     try:
-        supabase.table("org_equipment").delete().neq("id", "___never___").execute()
+        supabase.table("org_equipment").delete().neq("name", "___never___").execute()
     except Exception:
         pass
     print("  All cleared")

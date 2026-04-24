@@ -14,7 +14,7 @@ Setup (upserted):
 Recipes (from grow_fert_recipe_mix + any orphan recipe names in sched):
   - grow_fertigation_recipe: one per unique RecipeName (farm determined by sched usage)
   - grow_fertigation_recipe_item: one per recipe_mix row
-      equipment_id = {farm}_tank_{letter} from sheet Tank (NULL for water recipes with blank Tank)
+      equipment_name = {farm}_tank_{letter} from sheet Tank (NULL for water recipes with blank Tank)
 
 Applications (from grow_fert_sched):
   Each row fans out over concatenated sites (P2+P3+P4 -> 3 trackers).
@@ -390,7 +390,7 @@ def build_recipe_items(recipe_mix_records, recipe_id_by_name, recipe_farm, item_
 
         tank_letter = str(r.get("Tank", "")).strip()
         farm = recipe_farm[recipe_name]
-        equipment_id = tank_equipment_id(farm, tank_letter)
+        equipment_name = tank_equipment_id(farm, tank_letter)
         invnt_item_id = item_by_name_lower.get(fert_name.lower())
         notes = str(r.get("Notes", "")).strip() or None
 
@@ -398,7 +398,7 @@ def build_recipe_items(recipe_mix_records, recipe_id_by_name, recipe_farm, item_
             "org_id": ORG_ID,
             "farm_name": farm,
             "grow_fertigation_recipe_id": recipe_id_by_name[recipe_name],
-            "equipment_id": equipment_id,
+            "equipment_name": equipment_name,
             "invnt_item_id": invnt_item_id,
             "item_name": fert_name,
             "application_uom": uom,
@@ -525,21 +525,21 @@ def build_events(sched_records, recipe_id_by_name, known_sites):
                     "farm_name": farm,
                     "ops_task_tracker_id": tracker_id,
                     "grow_fertigation_recipe_id": recipe_id,
-                    "equipment_id": tank_equipment_id(farm, letter),
+                    "equipment_name": tank_equipment_id(farm, letter),
                     "volume_uom": "gallon",
                     "volume_applied": gallons,
                     "created_by": reporter,
                     "updated_by": reporter,
                 })
 
-            # Water add-ons (always equipment_id = NULL, separate recipes)
+            # Water add-ons (always equipment_name = NULL, separate recipes)
             if top_up_hours and top_up_hours > 0 and top_up_recipe_id:
                 fertigations.append({
                     "org_id": ORG_ID,
                     "farm_name": farm,
                     "ops_task_tracker_id": tracker_id,
                     "grow_fertigation_recipe_id": top_up_recipe_id,
-                    "equipment_id": None,
+                    "equipment_name": None,
                     "volume_uom": "hour",
                     "volume_applied": top_up_hours,
                     "created_by": reporter,
@@ -551,7 +551,7 @@ def build_events(sched_records, recipe_id_by_name, known_sites):
                     "farm_name": farm,
                     "ops_task_tracker_id": tracker_id,
                     "grow_fertigation_recipe_id": flush_recipe_id,
-                    "equipment_id": None,
+                    "equipment_name": None,
                     "volume_uom": "gallon",
                     "volume_applied": flush_gallons,
                     "created_by": reporter,

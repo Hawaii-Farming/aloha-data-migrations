@@ -436,7 +436,7 @@ def migrate_farm(supabase, farm, all_records, q_map, email_map, stub_cache):
     print(f"  {len(records)} sheet rows")
 
     trackers = []
-    pending = []  # (tracker_idx, q_id, equipment_id, value_kind, raw_value)
+    pending = []  # (tracker_idx, q_id, equipment_name, value_kind, raw_value)
     skipped_missing_date = 0
 
     for r in records:
@@ -470,8 +470,8 @@ def migrate_farm(supabase, farm, all_records, q_map, email_map, stub_cache):
             q_id = q_map.get((template_id, q_text))
             if not q_id:
                 continue
-            equipment_id = f"{farm_name}_{eq_suffix}"
-            pending.append((tracker_idx, q_id, equipment_id, value_kind, r.get(sheet_col)))
+            equipment_name = f"{farm_name}_{eq_suffix}"
+            pending.append((tracker_idx, q_id, equipment_name, value_kind, r.get(sheet_col)))
 
     print(f"  Building {len(trackers)} trackers")
     if skipped_missing_date:
@@ -483,7 +483,7 @@ def migrate_farm(supabase, farm, all_records, q_map, email_map, stub_cache):
     inserted_trackers = insert_rows(supabase, "ops_task_tracker", trackers)
 
     result_rows = []
-    for tracker_idx, q_id, equipment_id, value_kind, raw in pending:
+    for tracker_idx, q_id, equipment_name, value_kind, raw in pending:
         tracker = inserted_trackers[tracker_idx]
         row = {
             "org_id": ORG_ID,
@@ -492,7 +492,7 @@ def migrate_farm(supabase, farm, all_records, q_map, email_map, stub_cache):
             "ops_template_id": template_id,
             "ops_template_question_id": q_id,
             "site_id": None,         # equipment-scoped
-            "equipment_id": equipment_id,
+            "equipment_name": equipment_name,
             "created_by": tracker["created_by"],
             "updated_by": tracker["updated_by"],
         }

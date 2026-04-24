@@ -25,7 +25,7 @@ Per sheet row:
   - N * 6 ops_template_result rows where N = tanks in SiteName:
     - Split SiteName on '+' (e.g. "Tank 3+Tank 1" -> 2 tanks)
     - Resolve each to cuke_spray_tank_{n}
-    - Create 6 results per tank, each scoped by equipment_id
+    - Create 6 results per tank, each scoped by equipment_name
 
 Distinguishing pre-check trackers from real spray trackers
 (both have ops_task_name='spraying'):
@@ -304,7 +304,7 @@ def build_rows(sheet_row):
                 "ops_template_id": TEMPLATE_ID,
                 "ops_template_question_id": question_uuid(qtext),
                 "site_id": None,
-                "equipment_id": tank_id,
+                "equipment_name": tank_id,
                 "response_boolean": None,
                 "response_numeric": None,
                 "response_enum": None,

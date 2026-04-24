@@ -3,8 +3,8 @@ CREATE TABLE IF NOT EXISTS maint_request (
     id                        UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     farm_name                   TEXT        REFERENCES org_farm(name),
     site_id                   TEXT        REFERENCES org_site(id),
-    equipment_id              TEXT        REFERENCES org_equipment(id),
-    CHECK ((site_id IS NOT NULL AND equipment_id IS NULL) OR (site_id IS NULL AND equipment_id IS NOT NULL)),
+    equipment_name              TEXT        REFERENCES org_equipment(name),
+    CHECK ((site_id IS NOT NULL AND equipment_name IS NULL) OR (site_id IS NULL AND equipment_name IS NOT NULL)),
 
     status                    TEXT        NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'pending', 'priority', 'done')),
     request_description       TEXT,
@@ -38,6 +38,6 @@ CREATE INDEX idx_maint_request_fixer   ON maint_request (fixer_id);
 CREATE INDEX idx_maint_request_due     ON maint_request (org_id, due_date);
 
 COMMENT ON COLUMN maint_request.site_id IS 'Any org_site regardless of category; set for site-specific requests, null for equipment requests';
-COMMENT ON COLUMN maint_request.equipment_id IS 'The equipment needing maintenance; set for equipment requests, null for site requests';
+COMMENT ON COLUMN maint_request.equipment_name IS 'The equipment needing maintenance; set for equipment requests, null for site requests';
 COMMENT ON COLUMN maint_request.status IS 'new, pending, priority, done';
 COMMENT ON COLUMN maint_request.recurring_frequency IS 'daily, weekly, monthly, quarterly, semi_annually, annually; null means not recurring; non-null implies preventive maintenance; auto-creates a new request after status is marked done';

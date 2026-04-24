@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS grow_spray_equipment (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     farm_name             TEXT NOT NULL REFERENCES org_farm(name),
     ops_task_tracker_id    UUID NOT NULL REFERENCES ops_task_tracker(id),
-    equipment_id        TEXT NOT NULL REFERENCES org_equipment(id),
+    equipment_name        TEXT NOT NULL REFERENCES org_equipment(name),
     water_uom           TEXT NOT NULL REFERENCES sys_uom(code),
     water_quantity      NUMERIC NOT NULL,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -11,13 +11,13 @@ CREATE TABLE IF NOT EXISTS grow_spray_equipment (
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by          TEXT,
     is_deleted          BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT uq_grow_spray_equipment UNIQUE (ops_task_tracker_id, equipment_id)
+    CONSTRAINT uq_grow_spray_equipment UNIQUE (ops_task_tracker_id, equipment_name)
 );
 
 COMMENT ON TABLE grow_spray_equipment IS 'Equipment used during a spraying event with the water quantity per piece of equipment.';
 
-COMMENT ON COLUMN grow_spray_equipment.equipment_id IS 'Filtered to org_equipment where type IN (fogger, bag_pack_sprayer)';
+COMMENT ON COLUMN grow_spray_equipment.equipment_name IS 'Filtered to org_equipment where type IN (fogger, bag_pack_sprayer)';
 
 
 CREATE INDEX idx_grow_spray_equipment_spraying ON grow_spray_equipment (ops_task_tracker_id);
-CREATE INDEX idx_grow_spray_equipment_equip ON grow_spray_equipment (equipment_id);
+CREATE INDEX idx_grow_spray_equipment_equip ON grow_spray_equipment (equipment_name);
