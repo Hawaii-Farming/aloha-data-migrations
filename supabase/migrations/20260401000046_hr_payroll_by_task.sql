@@ -41,6 +41,10 @@ WITH payroll_agg AS (
     FROM hr_payroll p
     WHERE NOT p.is_deleted
       AND p.check_date >= DATE '2025-01-01'
+      -- Only actual payroll-processed employees. The 'HF' processor covers
+      -- reimbursements to owners/vendors (Bruce Wilkins, Childers Minor,
+      -- Food Ventures etc.) which the legacy GAS output excluded.
+      AND p.payroll_processor = 'HRB'
     GROUP BY 1,2,3,4,5,6,7,8
 ),
 sched_by_acct AS (
