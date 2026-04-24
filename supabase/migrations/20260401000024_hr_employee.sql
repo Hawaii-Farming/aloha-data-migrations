@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS hr_employee (
     preferred_name               TEXT,
     gender                       TEXT CHECK (gender IN ('male', 'female')),
     date_of_birth                DATE,
-    ethnicity                    TEXT CHECK (ethnicity IN ('Caucasian', 'Non-Caucasian')),
+    ethnicity                    TEXT DEFAULT 'Non-Caucasian' CHECK (ethnicity IN ('Caucasian', 'Non-Caucasian')),
     profile_photo_url            TEXT,
 
     -- =============================================
