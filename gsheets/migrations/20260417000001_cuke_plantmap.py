@@ -55,13 +55,13 @@ import gspread
 from google.oauth2.service_account import Credentials
 from supabase import create_client
 
-from gsheets.migrations._config import (
+from _config import (
     AUDIT_USER,
     ORG_ID,
     SUPABASE_URL,
     require_supabase_key,
 )
-from gsheets.migrations._pg import get_pg_conn, pg_bulk_insert, pg_select_all
+from _pg import get_pg_conn, pg_bulk_insert, pg_select_all
 
 
 PLANT_MAP_SHEET_ID = "1ewWyvaXGkRCvZxjUxBOHGY4PKdMHwKeTA5jTIod48LE"

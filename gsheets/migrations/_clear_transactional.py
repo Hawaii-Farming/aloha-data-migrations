@@ -32,7 +32,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import psycopg2
 
-from gsheets.migrations._config import _load_env_file  # noqa: triggers .env load
+from _config import _load_env_file  # noqa: triggers .env load
 
 # In reverse FK dependency order — deepest dependents first so the single
 # TRUNCATE ... CASCADE handles any missed chain.
