@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS sales_customer (
-    id              TEXT PRIMARY KEY,
     org_id          TEXT NOT NULL REFERENCES org(id),
+    id              TEXT PRIMARY KEY,
     sales_customer_group_id   TEXT REFERENCES sales_customer_group(id),
     sales_fob_id          TEXT REFERENCES sales_fob(id),
     qb_account     TEXT,

@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS org_site_category (
-    id                  TEXT PRIMARY KEY,
     org_id              TEXT NOT NULL REFERENCES org(id),
+    id                  TEXT PRIMARY KEY,
     category_name       TEXT NOT NULL,
     sub_category_name   TEXT,
     display_order       INTEGER NOT NULL DEFAULT 0,

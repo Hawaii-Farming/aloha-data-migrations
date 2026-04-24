@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS ops_task_tracker (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id          TEXT NOT NULL REFERENCES org(id),
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     farm_name         TEXT REFERENCES org_farm(name),
     site_id         TEXT REFERENCES org_site(id),
     sales_product_id TEXT REFERENCES sales_product(code),

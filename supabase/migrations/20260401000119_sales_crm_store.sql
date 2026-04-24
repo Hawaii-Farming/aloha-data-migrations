@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS sales_crm_store (
-    id                      TEXT PRIMARY KEY,
     org_id                  TEXT NOT NULL REFERENCES org(id),
+    id                      TEXT PRIMARY KEY,
     sales_customer_id       TEXT REFERENCES sales_customer(id),
     chain                   TEXT,
     name                    TEXT NOT NULL,

@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS grow_lettuce_seed_mix_item (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id          TEXT NOT NULL REFERENCES org(id),
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     farm_name         TEXT NOT NULL REFERENCES org_farm(name),
     grow_lettuce_seed_mix_id TEXT NOT NULL REFERENCES grow_lettuce_seed_mix(id),
     invnt_item_id   TEXT NOT NULL REFERENCES invnt_item(id),

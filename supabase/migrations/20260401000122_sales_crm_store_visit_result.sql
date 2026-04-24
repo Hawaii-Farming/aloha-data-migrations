@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS sales_crm_store_visit_result (
-    id                              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                          TEXT NOT NULL REFERENCES org(id),
+    id                              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     sales_crm_store_visit_id        UUID NOT NULL REFERENCES sales_crm_store_visit(id),
     sales_product_id                TEXT REFERENCES sales_product(code),
     sales_crm_external_product_name   TEXT REFERENCES sales_crm_external_product(name),

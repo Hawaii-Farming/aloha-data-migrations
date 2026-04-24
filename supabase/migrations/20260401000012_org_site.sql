@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS org_site (
-    id                      TEXT PRIMARY KEY,
     org_id                  TEXT NOT NULL REFERENCES org(id),
+    id                      TEXT PRIMARY KEY,
     farm_name                 TEXT REFERENCES org_farm(name),
     name                    TEXT NOT NULL,
     org_site_category_id    TEXT NOT NULL,

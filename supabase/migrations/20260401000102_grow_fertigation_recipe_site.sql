@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS grow_fertigation_recipe_site (
-    id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
+    id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     farm_name                     TEXT NOT NULL REFERENCES org_farm(name),
     grow_fertigation_recipe_id  TEXT NOT NULL REFERENCES grow_fertigation_recipe(id),
     site_id                     TEXT NOT NULL REFERENCES org_site(id),

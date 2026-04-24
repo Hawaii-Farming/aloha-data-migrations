@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS hr_employee (
+    org_id                       TEXT NOT NULL REFERENCES org(id),
 
     -- =============================================
     -- IDENTITY
     -- =============================================
     id                           TEXT PRIMARY KEY,
-    org_id                       TEXT NOT NULL REFERENCES org(id),
 
     -- =============================================
     -- EMPLOYEE PROFILE

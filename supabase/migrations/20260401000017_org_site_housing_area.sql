@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS org_site_housing_area (
-    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id        TEXT NOT NULL REFERENCES org(id),
+    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     housing_name    TEXT NOT NULL REFERENCES org_site_housing(name),
     name          TEXT NOT NULL,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),

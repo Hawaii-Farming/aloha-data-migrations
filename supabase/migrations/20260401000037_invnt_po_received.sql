@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS invnt_po_received (
-    id                     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                 TEXT NOT NULL REFERENCES org(id),
+    id                     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     farm_name                TEXT REFERENCES org_farm(name),
     invnt_po_id            UUID NOT NULL REFERENCES invnt_po(id),
     received_date          DATE NOT NULL,

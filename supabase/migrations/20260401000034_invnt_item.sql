@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS invnt_item (
-    id                       TEXT PRIMARY KEY,
     org_id                   TEXT NOT NULL REFERENCES org(id),
+    id                       TEXT PRIMARY KEY,
     farm_name                  TEXT REFERENCES org_farm(name),
     invnt_category_id        TEXT REFERENCES invnt_category(id),
     invnt_subcategory_id     TEXT REFERENCES invnt_category(id),

@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS sales_po (
-    id                              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                          TEXT NOT NULL REFERENCES org(id),
+    id                              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     sales_customer_group_id         TEXT REFERENCES sales_customer_group(id),
     sales_customer_id               TEXT NOT NULL REFERENCES sales_customer(id),
     sales_fob_id                    TEXT REFERENCES sales_fob(id),

@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS hr_payroll (
-    id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
+    id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     hr_employee_id              TEXT NOT NULL REFERENCES hr_employee(id),
     payroll_id                  TEXT NOT NULL,
 

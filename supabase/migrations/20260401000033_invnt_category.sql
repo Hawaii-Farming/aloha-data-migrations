@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS invnt_category (
-    id                  TEXT PRIMARY KEY,
     org_id              TEXT NOT NULL REFERENCES org(id),
+    id                  TEXT PRIMARY KEY,
     category_name       TEXT NOT NULL,
     sub_category_name   TEXT,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),

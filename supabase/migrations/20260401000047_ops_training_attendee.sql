@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS ops_training_attendee (
-    id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
+    id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     farm_name                     TEXT REFERENCES org_farm(name),
     ops_training_id             UUID NOT NULL REFERENCES ops_training(id),
     hr_employee_id              TEXT NOT NULL REFERENCES hr_employee(id),

@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS invnt_vendor (
-    id             TEXT PRIMARY KEY,
     org_id         TEXT NOT NULL REFERENCES org(id),
+    id             TEXT PRIMARY KEY,
     name           TEXT NOT NULL,
     contact_person TEXT,
     email          TEXT,
