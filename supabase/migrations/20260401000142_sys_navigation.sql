@@ -1,43 +1,17 @@
--- System Navigation
--- ==================
--- Workspace-shell navigation helper + view.
+-- HR Role-Based Access Navigation View
+-- ====================================
+-- Workspace-shell navigation view. Sits at the end of the hr cluster
+-- because it joins seven tables that must exist first (hr_employee,
+-- hr_module_access, sys_access_level, sys_module, sys_sub_module,
+-- org_module, org_sub_module).
 --
--- This file intentionally lives late in the migration chain because the
--- view below joins nine reference tables that must all exist first
--- (hr_employee, sys_access_level, sys_module, sys_sub_module, org_module,
--- org_sub_module, hr_module_access).
---
--- get_user_org_ids() is used by the RLS policies on org and hr_employee
--- (see 20260401000007_org.sql and 20260401000020_hr_employee.sql). It is
--- SECURITY DEFINER so the policy lookup does not recurse on hr_employee's
--- own RLS.
---
--- Three access-control layers combine in app_navigation:
+-- Three access-control layers combine in hr_rba_navigation:
 --   Layer 1 — feature toggle:  org_module.is_enabled / org_sub_module.is_enabled
 --   Layer 2 — RBAC:            employee access_level.level >= sub_module access_level.level
 --   Layer 3 — ABAC:            hr_module_access per-employee per-module permissions
 
 -- ============================================================
--- Helper: resolve the orgs the current auth user belongs to.
--- Used by org_read and hr_employee_read RLS policies.
--- ============================================================
-
-CREATE OR REPLACE FUNCTION public.get_user_org_ids()
-RETURNS SETOF TEXT
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT org_id FROM public.hr_employee
-  WHERE user_id = auth.uid()
-    AND is_deleted = false;
-$$;
-
-GRANT EXECUTE ON FUNCTION public.get_user_org_ids() TO authenticated;
-
--- ============================================================
--- app_navigation
+-- hr_rba_navigation
 -- ============================================================
 -- One row per accessible (org, module, sub_module) for the current user.
 --
@@ -52,7 +26,7 @@ GRANT EXECUTE ON FUNCTION public.get_user_org_ids() TO authenticated;
 -- see one row per (org, module, sub_module) across all orgs they belong to.
 -- Do not remove the auth.uid() filter — it is the entire access control.
 
-CREATE OR REPLACE VIEW public.app_navigation AS
+CREATE OR REPLACE VIEW public.hr_rba_navigation AS
 SELECT
     om.org_id,
     -- Module columns
@@ -89,4 +63,4 @@ WHERE e.user_id = auth.uid()
   AND ma.is_deleted = false
   AND emp_al.level >= req_al.level; -- Layer 2: RBAC tier check
 
-GRANT SELECT ON public.app_navigation TO authenticated;
+GRANT SELECT ON public.hr_rba_navigation TO authenticated;
