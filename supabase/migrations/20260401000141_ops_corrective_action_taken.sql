@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS ops_corrective_action_taken (
     ops_template_id                     TEXT        REFERENCES ops_template(id),
     ops_template_result_id                     UUID        REFERENCES ops_template_result(id),
     fsafe_result_id                 UUID        REFERENCES fsafe_result(id),
+    fsafe_pest_result_id            UUID        REFERENCES fsafe_pest_result(id),
     ops_corrective_action_choice_id     TEXT        REFERENCES ops_corrective_action_choice(id),
 
     other_action        TEXT,
@@ -36,9 +37,11 @@ COMMENT ON TABLE ops_corrective_action_taken IS 'Corrective actions raised again
 CREATE INDEX idx_ops_corrective_action_taken_org_id   ON ops_corrective_action_taken (org_id);
 CREATE INDEX idx_ops_corrective_action_taken_response ON ops_corrective_action_taken (ops_template_result_id);
 CREATE INDEX idx_ops_corrective_action_taken_result   ON ops_corrective_action_taken (fsafe_result_id);
+CREATE INDEX idx_ops_corrective_action_taken_pest_result ON ops_corrective_action_taken (fsafe_pest_result_id);
 CREATE INDEX idx_ops_corrective_action_taken_assigned ON ops_corrective_action_taken (assigned_to);
 CREATE INDEX idx_ops_corrective_action_taken_resolved ON ops_corrective_action_taken (org_id, is_resolved);
 COMMENT ON COLUMN ops_corrective_action_taken.ops_template_id IS 'Inherited from ops_template_result.ops_template_id when sourced from a failing checklist response';
 COMMENT ON COLUMN ops_corrective_action_taken.ops_template_result_id IS 'Sourced from the failing ops_template_result that triggered this corrective action';
 COMMENT ON COLUMN ops_corrective_action_taken.fsafe_result_id IS 'Sourced from the failing fsafe_result that triggered this corrective action';
+COMMENT ON COLUMN ops_corrective_action_taken.fsafe_pest_result_id IS 'Sourced from the pest activity observation that triggered this corrective action';
 
