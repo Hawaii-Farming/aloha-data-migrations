@@ -1,24 +1,20 @@
 -- hr_payroll_employee_comparison
 -- ==============================
--- Port of the legacy `hr_ee_payroll_employee_comparison` sheet tab. One row per
--- (employee, task) comparing the two most recent check_dates in the dataset,
--- with computed deltas for hours, cost, and pay components.
+-- Per-employee per-task snapshot for the most recent is_standard=TRUE
+-- HRB check_date, with deltas vs the prior is_standard=TRUE check_date.
+-- Shows the current period values + deltas only; previous values and
+-- previous check_date are inferable downstream (previous = current - delta,
+-- previous_date = known pay cadence).
 --
--- Current / previous are determined globally (MAX and 2nd-MAX check_date
--- across hr_payroll_by_task) — matching the legacy behaviour where every row
--- in the sheet tab shared the same CheckDateCurrentPeriod / CheckDatePreviousPeriod.
+-- Period anchors use is_standard=TRUE dates only, so off-cycle / adjustment
+-- runs (is_standard=FALSE) don't shift the current period forward.
 --
--- An (employee, task) present in only one of the two periods still appears,
--- with zeros filled in for the missing side so deltas are still meaningful.
---
--- pto_hours_accrued is carried from hr_payroll (employee-level, same value
--- for every task row of a given paycheck).
+-- FULL OUTER JOIN so (employee, task) rows present in only one of the two
+-- periods still appear — previous-only rows carry zeros on the current
+-- side and negative deltas; current-only rows carry positive deltas.
 
 CREATE OR REPLACE VIEW hr_payroll_employee_comparison AS
 WITH standard_dates AS (
-    -- Period boundaries come from is_standard=TRUE check_dates only.
-    -- Off-cycle / adjustment runs (is_standard=FALSE) can land on arbitrary
-    -- dates and must not shift the "current period" anchor.
     SELECT DISTINCT check_date
     FROM hr_payroll
     WHERE is_standard = true
@@ -46,8 +42,6 @@ previous_p AS (
     FROM hr_payroll_by_task v, periods p
     WHERE v.check_date = p.prev_date
 ),
--- Employee-level PTO accrual per paycheck — same value repeats across every
--- task row in the sheet output, so join by (employee, check_date) not task.
 pto_current AS (
     SELECT hr_employee_id, SUM(pto_hours_accrued) AS pto_hours_accrued
     FROM hr_payroll p, periods pr
@@ -63,30 +57,22 @@ SELECT
     COALESCE(c.task, pr.task)                                            AS task,
     COALESCE(c.status, pr.status)                                        AS status,
     COALESCE(c.workers_compensation_code, pr.workers_compensation_code)  AS workers_compensation_code,
+    (SELECT cur_date FROM periods)                                       AS check_date,
 
-    -- Current period
-    (SELECT cur_date FROM periods)                                   AS check_date_current_period,
+    -- Current period values
     COALESCE(c.scheduled_hours, 0)                                       AS scheduled_hours,
-    COALESCE(c.total_hours, 0)                                           AS hours_current_period,
-    COALESCE(c.total_cost, 0)                                            AS total_cost_current_period,
-    COALESCE(c.regular_pay, 0)                                           AS regular_pay_current_period,
-    COALESCE(c.discretionary_overtime_hours, 0)                          AS discretionary_overtime_hours_current_period,
-    COALESCE(c.discretionary_overtime_pay, 0)                            AS discretionary_overtime_pay_current_period,
+    COALESCE(c.total_hours, 0)                                           AS hours,
+    COALESCE(c.total_cost, 0)                                            AS total_cost,
+    COALESCE(c.regular_pay, 0)                                           AS regular_pay,
+    COALESCE(c.discretionary_overtime_hours, 0)                          AS discretionary_overtime_hours,
+    COALESCE(c.discretionary_overtime_pay, 0)                            AS discretionary_overtime_pay,
     pt.pto_hours_accrued                                                 AS pto_hours_accrued,
-
-    -- Previous period
-    (SELECT prev_date FROM periods)                                  AS check_date_previous_period,
-    COALESCE(pr.total_hours, 0)                                          AS hours_previous_period,
-    COALESCE(pr.total_cost, 0)                                           AS total_cost_previous_period,
-    COALESCE(pr.regular_pay, 0)                                          AS regular_pay_previous_period,
-    COALESCE(pr.discretionary_overtime_pay, 0)                           AS discretionary_overtime_pay_previous_period,
 
     -- Deltas (current - previous)
     COALESCE(c.total_hours, 0)                  - COALESCE(pr.total_hours, 0)                  AS hours_delta,
     COALESCE(c.total_cost, 0)                   - COALESCE(pr.total_cost, 0)                   AS total_cost_delta,
     COALESCE(c.regular_pay, 0)                  - COALESCE(pr.regular_pay, 0)                  AS regular_pay_delta,
     COALESCE(c.discretionary_overtime_pay, 0)   - COALESCE(pr.discretionary_overtime_pay, 0)   AS discretionary_overtime_pay_delta,
-    -- Other pay delta = what's left over after regular + discretionary OT
     (COALESCE(c.total_cost, 0) - COALESCE(pr.total_cost, 0))
       - (COALESCE(c.regular_pay, 0) - COALESCE(pr.regular_pay, 0))
       - (COALESCE(c.discretionary_overtime_pay, 0) - COALESCE(pr.discretionary_overtime_pay, 0))
@@ -100,4 +86,4 @@ LEFT JOIN pto_current pt
 
 GRANT SELECT ON hr_payroll_employee_comparison TO authenticated;
 
-COMMENT ON VIEW hr_payroll_employee_comparison IS 'Per-employee per-task comparison of the two most recent check_dates in hr_payroll_by_task. Includes current, previous, and deltas for hours/cost/regular_pay/discretionary_overtime_pay, plus a computed other_pay_delta and the current period pto_hours_accrued.';
+COMMENT ON VIEW hr_payroll_employee_comparison IS 'Per-employee per-task snapshot for the most recent is_standard=TRUE HRB check_date with deltas vs the prior is_standard=TRUE check_date. Previous-period values are inferable as current - delta; previous check_date is known from the pay cadence.';
