@@ -412,27 +412,26 @@ def migrate_org_site(supabase):
             "display_order": order,
         }))
 
-    # -- HOUSING SITES (org-wide, no farm_id) --
+    # -- HOUSING (standalone table, not org_site) --
     housing_sites = [
         "BIP (5)", "Duplex", "JTL (1)", "JTL (2)",
         "Kawano (3)", "Kawano (4)", "Minor's", "Pete's",
         "Todd's", "South Kohala",
     ]
     housing_rows = []
-    for i, name in enumerate(housing_sites):
+    for name in housing_sites:
         housing_rows.append(audit({
-            "id": to_id(name),
+            "id": name,
             "org_id": ORG_ID,
-            "name": name,
-            "org_site_category_id": "housing",
-            "display_order": i + 1,
         }))
 
-    # Insert parents first, then children, then housing
-    insert_rows(supabase, "org_site", cuke_parents + lettuce_parent + housing_rows, upsert=True)
-    print(f"  ({len(cuke_parents + lettuce_parent)} parent + {len(housing_rows)} housing sites)")
+    # Insert parents first, then children. Housing goes to its own table.
+    insert_rows(supabase, "org_site", cuke_parents + lettuce_parent, upsert=True)
+    print(f"  ({len(cuke_parents + lettuce_parent)} parent sites)")
     supabase.table("org_site").upsert(cuke_children + lettuce_children).execute()
     print(f"  Upserted {len(cuke_children + lettuce_children)} child sites")
+    insert_rows(supabase, "org_site_housing", housing_rows, upsert=True)
+    print(f"  ({len(housing_rows)} housing facilities)")
 
 
 def migrate_grow_variety(supabase, gc):
@@ -557,7 +556,7 @@ def main():
             pass  # May fail if referenced by invnt_item etc; will be upserted
     # Clear tables — try/except for tables that may be referenced by downstream modules
     for t in ["hr_time_off_request", "hr_module_access", "hr_employee",
-              "hr_title", "hr_work_authorization", "hr_department",
+              "hr_work_authorization", "hr_department",
               "org_sub_module", "org_module", "org_site", "org_site_category",
               "org_farm", "org"]:
         try:

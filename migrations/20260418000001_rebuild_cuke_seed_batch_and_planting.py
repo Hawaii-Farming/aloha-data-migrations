@@ -258,14 +258,14 @@ def rebuild_plantings(supabase, plant_map_records):
     while True:
         page_rows = (
             supabase.table("org_site_cuke_gh_row")
-            .select("id,site_id,row_num")
+            .select("id,site_id,row_number")
             .range(page * 1000, (page + 1) * 1000 - 1)
             .execute().data
         )
         if not page_rows:
             break
         for r in page_rows:
-            row_id_by_site_row[(r["site_id"], r["row_num"])] = r["id"]
+            row_id_by_site_row[(r["site_id"], r["row_number"])] = r["id"]
         if len(page_rows) < 1000:
             break
         page += 1

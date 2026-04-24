@@ -1,13 +1,12 @@
 """
 Migrate HR Lookup Data
 =======================
-Migrates hr_department, hr_work_authorization, and hr_title from
+Migrates hr_department and hr_work_authorization from
 legacy Google Sheet (hr_ee_register) unique values to Supabase.
 
 Source: https://docs.google.com/spreadsheets/d/13DUQTQyZf0CW07xv4FJ4ukP2x3Yoz8PyAw3Z2SwNsts
   - hr_department: unique values from 'Department' column
   - hr_work_authorization: unique values from 'Status' column
-  - hr_title: unique values from 'Title' column
 
 Usage:
     python scripts/migrations/20260401000003_hr.py
@@ -158,11 +157,10 @@ def migrate_hr_department(supabase, records):
 
     rows = [
         audit({
-            "id": to_id(d),
+            "id": d,
             "org_id": ORG_ID,
-            "name": d,
         })
-        for i, d in enumerate(departments)
+        for d in departments
     ]
     insert_rows(supabase, "hr_department", rows, upsert=True)
 
@@ -177,32 +175,12 @@ def migrate_hr_work_authorization(supabase, records):
 
     rows = [
         audit({
-            "id": to_id(s),
+            "id": s,
             "org_id": ORG_ID,
-            "name": s,
         })
-        for i, s in enumerate(statuses)
+        for s in statuses
     ]
     insert_rows(supabase, "hr_work_authorization", rows, upsert=True)
-
-
-def migrate_hr_title(supabase, records):
-    """Migrate unique titles from hr_ee_register."""
-    titles = sorted(set(
-        str(r.get("Title", "")).strip()
-        for r in records
-        if str(r.get("Title", "")).strip()
-    ))
-
-    rows = [
-        audit({
-            "id": to_id(t),
-            "org_id": ORG_ID,
-            "name": proper_case(t),
-        })
-        for i, t in enumerate(titles)
-    ]
-    insert_rows(supabase, "hr_title", rows, upsert=True)
 
 
 def migrate_hr_employee(supabase, records, app_users):
@@ -225,12 +203,8 @@ def migrate_hr_employee(supabase, records, app_users):
     }
 
     # Housing site ID mapping
-    housing_map = {
-        "BIP (5)": "bip_5", "Duplex": "duplex", "JTL (1)": "jtl_1",
-        "JTL (2)": "jtl_2", "Kawano (3)": "kawano_3", "Kawano (4)": "kawano_4",
-        "Minor's": "minor_s", "Pete's": "pete_s", "Todd's": "todd_s",
-        "South Kohala": "south_kohala",
-    }
+    # Housing site id is the display name verbatim (org_site_housing.id).
+    # Sheet values already match — no transformation needed.
 
     # First pass: build employee rows and name-to-id map
     employees = []
@@ -267,14 +241,12 @@ def migrate_hr_employee(supabase, records, app_users):
         if pay not in ("hourly", "salary"):
             pay = None
 
-        # Housing
-        housing = str(r.get("Housing", "")).strip()
-        site_id = housing_map.get(housing) if housing else None
+        # Housing — sheet value is the org_site_housing.id verbatim
+        site_id = str(r.get("Housing", "")).strip() or None
 
-        # Department / work auth / title (FK lookup)
+        # Department / work auth (FK lookup)
         dept = str(r.get("Department", "")).strip()
         status = str(r.get("Status", "")).strip()
-        title = str(r.get("Title", "")).strip()
 
         # Overtime threshold
         ot = r.get("OvertimeThreshold", "")
@@ -295,15 +267,14 @@ def migrate_hr_employee(supabase, records, app_users):
             "preferred_name": short or None,
             "gender": gender,
             "date_of_birth": parse_date(r.get("DateOfBirth", "")),
-            "is_minority": parse_bool(r.get("IsMinority", False)),
+            "ethnicity": "Non-Caucasian" if parse_bool(r.get("IsMinority", False)) else "Caucasian",
             "profile_photo_url": (str(r.get("Photograph", "")).strip().replace("images/hr_photo/", "images/hr_employee/") or None),
             "phone": str(r.get("Phone", "")).strip() or None,
             "company_email": email or None,
             "is_primary_org": True,
-            "hr_department_id": to_id(dept) if dept else None,
-            "hr_title_id": to_id(title) if title else None,
+            "hr_department_id": dept or None,
             "sys_access_level_id": access_level,
-            "hr_work_authorization_id": to_id(status) if status else None,
+            "hr_work_authorization_id": status or None,
             "start_date": parse_date(r.get("StartDate", "")),
             "end_date": parse_date(r.get("EndDate", "")),
             "payroll_id": str(r.get("employee_id", "")).strip() or None,
@@ -576,7 +547,6 @@ def main():
 
     migrate_hr_department(supabase, records)
     migrate_hr_work_authorization(supabase, records)
-    migrate_hr_title(supabase, records)
 
     employees, user_lookup, module_map = migrate_hr_employee(supabase, records, app_users)
     migrate_hr_module_access(supabase, employees, user_lookup, module_map)

@@ -86,8 +86,8 @@ GH_NAME_TO_SITE_ID = {
 }
 
 # HK is one org_site with two physical structures (Hamakua + Kohala). To
-# store both under site_id='hk' without row_num collisions, Kohala's sheet
-# row_nums are offset by this many when written to org_site_cuke_gh_row. The
+# store both under site_id='hk' without row_number collisions, Kohala's sheet
+# row_numbers are offset by this many when written to org_site_cuke_gh_row. The
 # plant-map UI reads org_site_cuke_gh_block.name to render each structure as a
 # separate section and subtracts the offset for display.
 KOHALA_ROW_OFFSET = 100
@@ -234,7 +234,7 @@ def seed_org_site_cuke_gh(supabase):
          _merge, _side_order, layout_row, layout_col, layout_stack_pos) = cfg
 
         rows.append(audit({
-            "site_id":           site_id,
+            "id":                site_id,
             "org_id":            ORG_ID,
             "farm_id":           FARM_ID,
             "farm_section":      farm_section,
@@ -266,7 +266,7 @@ def read_plantmap(gc):
 # ---------------------------------------------------------------------------
 
 def _effective_row_num(gh, sheet_row_num):
-    """Map a sheet row_num to the org_site_cuke_gh_row row_num. Kohala rows are
+    """Map a sheet row_number to the org_site_cuke_gh_row row_number. Kohala rows are
     offset so they don't collide with Hamakua rows in the shared 'hk' site."""
     if gh == "Kohala":
         return sheet_row_num + KOHALA_ROW_OFFSET
@@ -275,8 +275,8 @@ def _effective_row_num(gh, sheet_row_num):
 
 def seed_org_site_cuke_gh_row(supabase, records):
     """One row per physical GH row. Hamakua and Kohala both write to 'hk'
-    but Kohala's row_nums are offset (+KOHALA_ROW_OFFSET) to avoid
-    collisions on the unique (site_id, row_num) constraint."""
+    but Kohala's row_numbers are offset (+KOHALA_ROW_OFFSET) to avoid
+    collisions on the unique (site_id, row_number) constraint."""
     print("\n=== Step 2: org_site_cuke_gh_row ===")
     rows = []
     seen = set()
@@ -288,19 +288,19 @@ def seed_org_site_cuke_gh_row(supabase, records):
         sheet_row_num = parse_int(r.get("Row"))
         if sheet_row_num is None:
             continue
-        row_num = _effective_row_num(gh, sheet_row_num)
-        key = (site_id, row_num)
+        row_number = _effective_row_num(gh, sheet_row_num)
+        key = (site_id, row_number)
         if key in seen:
             continue
         seen.add(key)
 
         # Bag counts live on grow_cuke_gh_row_planting per scenario, not on
-        # the physical row — this table is pure identity (site_id, row_num).
+        # the physical row — this table is pure identity (site_id, row_number).
         rows.append(audit({
             "org_id":            ORG_ID,
             "farm_id":           FARM_ID,
             "site_id":           site_id,
-            "row_num":           row_num,
+            "row_number":           row_number,
         }))
 
     return insert_rows(supabase, "org_site_cuke_gh_row", rows)
@@ -318,7 +318,7 @@ def seed_org_site_cuke_gh_block(supabase, records, inserted_rows):
     block name = the sheet's Side value. Single-block GHs get name 'Main'.
 
     Block num is assigned by the order of first appearance. Row numbers
-    use the effective row_num (Kohala offset applied)."""
+    use the effective row_number (Kohala offset applied)."""
     print("\n=== Step 3: org_site_cuke_gh_block ===")
 
     # Group rows by (site_id, block_label) where block_label is 'Hamakua'/
@@ -333,14 +333,14 @@ def seed_org_site_cuke_gh_block(supabase, records, inserted_rows):
         order = parse_int(r.get("Order"))
         if sheet_row_num is None or order is None:
             continue
-        row_num = _effective_row_num(gh, sheet_row_num)
+        row_number = _effective_row_num(gh, sheet_row_num)
         if gh in ("Hamakua", "Kohala"):
             block_label = gh
         else:
             block_label = str(r.get("Side", "")).strip() or "Main"
-        groups.setdefault((site_id, block_label), []).append((order, row_num))
+        groups.setdefault((site_id, block_label), []).append((order, row_number))
 
-    # Assign block_num per site — preserve the block_label order of first
+    # Assign block_number per site — preserve the block_label order of first
     # appearance seen while iterating the sheet.
     block_nums_per_site = {}
     for (site_id, block_label), _ in groups.items():
@@ -351,21 +351,21 @@ def seed_org_site_cuke_gh_block(supabase, records, inserted_rows):
     rows = []
     for (site_id, block_label), pairs in groups.items():
         pairs.sort()
-        row_nums = [p[1] for p in pairs]
-        row_from, row_to = min(row_nums), max(row_nums)
+        row_numbers = [p[1] for p in pairs]
+        row_from, row_to = min(row_numbers), max(row_numbers)
 
-        ascending_diffs = sum(1 for a, b in zip(row_nums, row_nums[1:]) if b > a)
-        descending_diffs = sum(1 for a, b in zip(row_nums, row_nums[1:]) if b < a)
+        ascending_diffs = sum(1 for a, b in zip(row_numbers, row_numbers[1:]) if b > a)
+        descending_diffs = sum(1 for a, b in zip(row_numbers, row_numbers[1:]) if b < a)
         direction = "forward" if ascending_diffs >= descending_diffs else "reverse"
 
         rows.append(audit({
             "org_id":        ORG_ID,
             "farm_id":       FARM_ID,
             "site_id":       site_id,
-            "block_num":     block_nums_per_site[site_id][block_label],
+            "block_number":     block_nums_per_site[site_id][block_label],
             "name":          block_label,
-            "row_num_from":  row_from,
-            "row_num_to":    row_to,
+            "row_number_from":  row_from,
+            "row_number_to":    row_to,
             "direction":     direction,
         }))
 
@@ -406,8 +406,8 @@ def seed_grow_cuke_gh_row_planting(supabase, records):
     print("\n=== Step 4: grow_cuke_gh_row_planting ===")
 
     row_id_by_site_row = {}
-    for r in supabase.table("org_site_cuke_gh_row").select("id,site_id,row_num").execute().data:
-        row_id_by_site_row[(r["site_id"], r["row_num"])] = r["id"]
+    for r in supabase.table("org_site_cuke_gh_row").select("id,site_id,row_number").execute().data:
+        row_id_by_site_row[(r["site_id"], r["row_number"])] = r["id"]
 
     rows = []
     skipped_unmatched = 0
@@ -419,8 +419,8 @@ def seed_grow_cuke_gh_row_planting(supabase, records):
         sheet_row_num = parse_int(rec.get("Row"))
         if sheet_row_num is None:
             continue
-        row_num = _effective_row_num(gh, sheet_row_num)
-        row_id = row_id_by_site_row.get((site_id, row_num))
+        row_number = _effective_row_num(gh, sheet_row_num)
+        row_id = row_id_by_site_row.get((site_id, row_number))
         if not row_id:
             skipped_unmatched += 1
             continue
