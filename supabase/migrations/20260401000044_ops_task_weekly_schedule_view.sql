@@ -1,4 +1,5 @@
-CREATE OR REPLACE VIEW ops_task_weekly_schedule AS
+CREATE OR REPLACE VIEW ops_task_weekly_schedule
+WITH (security_invoker = true) AS
 WITH schedule_base AS (
     -- Planned schedule entries only (no tracker linked).
     -- Derives the task date from start_time and the Sunday-anchored week start date.
@@ -9,6 +10,7 @@ WITH schedule_base AS (
         s.farm_id,
         s.start_time                                                        AS schedule_start,
         s.stop_time                                                         AS schedule_stop,
+        s.total_hours                                                       AS schedule_total_hours,
         s.start_time::DATE                                                  AS task_date,
         EXTRACT(DOW FROM s.start_time)::INTEGER                             AS day_of_week,
         (s.start_time::DATE - EXTRACT(DOW FROM s.start_time)::INTEGER)      AS week_start_date
@@ -63,13 +65,17 @@ SELECT
                      THEN ' - ' || TO_CHAR(sb.schedule_stop AT TIME ZONE 'UTC', 'HH24:MI')
                      ELSE '' END END)                                       AS saturday,
 
-    -- Total planned hours for the week (only counts entries with a stop_time)
+    -- Total planned hours for the week — uses ops_task_schedule.total_hours
+    -- (captured from the sheet's daily Hours column which already has the
+    -- 30-min lunch deduction). Falls back to stop-start only when the
+    -- lunch-adjusted value isn't available.
     ROUND(
-        SUM(
+        SUM(COALESCE(
+            sb.schedule_total_hours,
             CASE WHEN sb.schedule_stop IS NOT NULL
                  THEN EXTRACT(EPOCH FROM (sb.schedule_stop - sb.schedule_start)) / 3600.0
                  ELSE 0 END
-        )::NUMERIC, 2
+        ))::NUMERIC, 2
     )                                                                       AS total_hours,
 
     -- Weekly OT threshold — the bi-weekly threshold halved; null if not set on employee
@@ -80,17 +86,18 @@ SELECT
     -- OT flag — true when total planned weekly hours exceed the weekly threshold
     CASE WHEN e.overtime_threshold IS NOT NULL
          THEN ROUND(
-                  SUM(CASE WHEN sb.schedule_stop IS NOT NULL
+                  SUM(COALESCE(
+                      sb.schedule_total_hours,
+                      CASE WHEN sb.schedule_stop IS NOT NULL
                            THEN EXTRACT(EPOCH FROM (sb.schedule_stop - sb.schedule_start)) / 3600.0
                            ELSE 0 END
-                  )::NUMERIC, 2
+                  ))::NUMERIC, 2
               ) > ROUND((e.overtime_threshold / 2.0)::NUMERIC, 2)
          ELSE false END                                                     AS is_over_ot_threshold
 
 FROM schedule_base sb
 JOIN hr_employee e  ON e.id = sb.hr_employee_id
 JOIN ops_task    t  ON t.id = sb.ops_task_id
-WHERE e.is_deleted = false
 GROUP BY
     sb.week_start_date,
     sb.org_id,
