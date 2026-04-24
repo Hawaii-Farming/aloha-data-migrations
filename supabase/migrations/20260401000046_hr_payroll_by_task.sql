@@ -20,7 +20,8 @@
 --
 -- Filter matches the GAS script: check_date >= 2025-01-01.
 
-CREATE OR REPLACE VIEW hr_payroll_by_task AS
+CREATE OR REPLACE VIEW hr_payroll_by_task
+WITH (security_invoker = true) AS
 WITH payroll_agg AS (
     SELECT
         p.org_id,

@@ -13,7 +13,8 @@
 -- periods still appear — previous-only rows carry zeros on the current
 -- side and negative deltas; current-only rows carry positive deltas.
 
-CREATE OR REPLACE VIEW hr_payroll_employee_comparison AS
+CREATE OR REPLACE VIEW hr_payroll_employee_comparison
+WITH (security_invoker = true) AS
 WITH standard_dates AS (
     SELECT DISTINCT check_date
     FROM hr_payroll
