@@ -110,12 +110,8 @@ SELECT
     a.org_id,
     a.hr_employee_id,
     a.check_date,
-    -- Match the legacy sheet display: LASTNAME FIRSTNAME uppercase
-    upper(e.last_name || ' ' || e.first_name)           AS full_name,
     e.is_manager,
     e.compensation_manager_id,
-    -- Sheet stores the comp manager's preferred/first name only
-    COALESCE(cm.preferred_name, cm.first_name)          AS compensation_manager,
     a.hr_work_authorization_id                          AS status,
     a.wc                                                AS workers_compensation_code,
     a.acct                                              AS task,
@@ -162,8 +158,7 @@ SELECT
             ELSE 0
         END::numeric, 2)                                AS discretionary_overtime_pay
 FROM allocated a
-JOIN hr_employee e ON e.id = a.hr_employee_id
-LEFT JOIN hr_employee cm ON cm.id = e.compensation_manager_id;
+JOIN hr_employee e ON e.id = a.hr_employee_id;
 
 GRANT SELECT ON hr_payroll_by_task TO authenticated;
 
