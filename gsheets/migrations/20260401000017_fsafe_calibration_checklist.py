@@ -61,26 +61,26 @@ TASK_ID = "food_safety_log"
 # ---------------------------------------------------------------------------
 # Per-farm config
 # ---------------------------------------------------------------------------
-# (template_id, farm_id, host_site_id, sheet_farm_value)
+# (template_id, farm_name, host_site_id, sheet_farm_value)
 FARMS = [
-    {"farm_id": "Cuke",    "host_site_id": "bip_ph",     "sheet_farm": "Cuke",
+    {"farm_name": "Cuke",    "host_site_id": "bip_ph",     "sheet_farm": "Cuke",
      "template_id": "cuke_calibration",    "template_name": "Calibration"},
-    {"farm_id": "Lettuce", "host_site_id": "lettuce_ph", "sheet_farm": "Lettuce",
+    {"farm_name": "Lettuce", "host_site_id": "lettuce_ph", "sheet_farm": "Lettuce",
      "template_id": "lettuce_calibration", "template_name": "Calibration"},
 ]
 
 # Equipment definitions per farm. id is farm-prefixed; name is unprefixed
-# since farm_id already scopes the row.
-def equipment_for(farm_id, host_site_id):
+# since farm_name already scopes the row.
+def equipment_for(farm_name, host_site_id):
     rows = []
-    rows.append({"id": f"{farm_id}_cooler_1_thermometer", "name": "Cooler 1 Thermometer"})
-    rows.append({"id": f"{farm_id}_cooler_2_thermometer", "name": "Cooler 2 Thermometer"})
-    rows.append({"id": f"{farm_id}_pack_room_thermometer", "name": "Pack Room Thermometer"})
+    rows.append({"id": f"{farm_name}_cooler_1_thermometer", "name": "Cooler 1 Thermometer"})
+    rows.append({"id": f"{farm_name}_cooler_2_thermometer", "name": "Cooler 2 Thermometer"})
+    rows.append({"id": f"{farm_name}_pack_room_thermometer", "name": "Pack Room Thermometer"})
     for n in range(1, 10):
-        rows.append({"id": f"{farm_id}_scale_{n}", "name": f"Scale {n}"})
-    rows.append({"id": f"{farm_id}_luminometer", "name": "Luminometer"})
+        rows.append({"id": f"{farm_name}_scale_{n}", "name": f"Scale {n}"})
+    rows.append({"id": f"{farm_name}_luminometer", "name": "Luminometer"})
     return [
-        {**r, "farm_id": farm_id, "site_id": host_site_id, "type": "tool"}
+        {**r, "farm_name": farm_name, "site_id": host_site_id, "type": "tool"}
         for r in rows
     ]
 
@@ -265,7 +265,7 @@ def create_stub_employee(supabase, email):
         "last_name": last,
         "company_email": email,
         "is_primary_org": True,
-        "sys_access_level_id": "Employee",
+        "sys_access_level_name": "Employee",
         "is_deleted": True,
     })
     try:
@@ -298,11 +298,11 @@ def resolve_verifier(supabase, email, email_map, stub_cache):
 def upsert_equipment(supabase):
     rows = []
     for farm in FARMS:
-        for eq in equipment_for(farm["farm_id"], farm["host_site_id"]):
+        for eq in equipment_for(farm["farm_name"], farm["host_site_id"]):
             rows.append(audit({
                 "id": eq["id"],
                 "org_id": ORG_ID,
-                "farm_id": eq["farm_id"],
+                "farm_name": eq["farm_name"],
                 "site_id": eq["site_id"],
                 "type": eq["type"],
                 "name": eq["name"],
@@ -317,7 +317,7 @@ def upsert_templates(supabase):
         rows.append(audit({
             "id": farm["template_id"],
             "org_id": ORG_ID,
-            "farm_id": farm["farm_id"],
+            "farm_name": farm["farm_name"],
             "name": farm["template_name"],
             "org_module_id": "food_safety",
             "description": (
@@ -344,7 +344,7 @@ def reseed_questions(supabase):
         for order, (q_text, rtype, kw, _eq_suffix, _sheet_col, _vk) in enumerate(QUESTION_DEFS, start=1):
             rows.append(audit({
                 "org_id": ORG_ID,
-                "farm_id": farm["farm_id"],
+                "farm_name": farm["farm_name"],
                 "ops_template_id": farm["template_id"],
                 "question_text": q_text,
                 "response_type": rtype,
@@ -370,14 +370,14 @@ def upsert_task_template_links(supabase):
     for farm in FARMS:
         supabase.table("ops_task_template").delete().eq(
             "ops_template_id", farm["template_id"]
-        ).eq("ops_task_id", TASK_ID).execute()
+        ).eq("ops_task_name", TASK_ID).execute()
 
     rows = []
     for farm in FARMS:
         rows.append(audit({
             "org_id": ORG_ID,
-            "farm_id": farm["farm_id"],
-            "ops_task_id": TASK_ID,
+            "farm_name": farm["farm_name"],
+            "ops_task_name": TASK_ID,
             "ops_template_id": farm["template_id"],
         }))
     insert_rows(supabase, "ops_task_template", rows)
@@ -428,7 +428,7 @@ def clear_existing_data(supabase):
 
 def migrate_farm(supabase, farm, all_records, q_map, email_map, stub_cache):
     template_id = farm["template_id"]
-    farm_id = farm["farm_id"]
+    farm_name = farm["farm_name"]
     sheet_farm = farm["sheet_farm"]
 
     print(f"\n=== {template_id} ({sheet_farm}) ===")
@@ -454,9 +454,9 @@ def migrate_farm(supabase, farm, all_records, q_map, email_map, stub_cache):
         tracker_idx = len(trackers)
         trackers.append({
             "org_id": ORG_ID,
-            "farm_id": farm_id,
+            "farm_name": farm_name,
             "site_id": None,
-            "ops_task_id": TASK_ID,
+            "ops_task_name": TASK_ID,
             "start_time": reported,
             "stop_time": reported,
             "is_completed": True,
@@ -470,7 +470,7 @@ def migrate_farm(supabase, farm, all_records, q_map, email_map, stub_cache):
             q_id = q_map.get((template_id, q_text))
             if not q_id:
                 continue
-            equipment_id = f"{farm_id}_{eq_suffix}"
+            equipment_id = f"{farm_name}_{eq_suffix}"
             pending.append((tracker_idx, q_id, equipment_id, value_kind, r.get(sheet_col)))
 
     print(f"  Building {len(trackers)} trackers")
@@ -487,7 +487,7 @@ def migrate_farm(supabase, farm, all_records, q_map, email_map, stub_cache):
         tracker = inserted_trackers[tracker_idx]
         row = {
             "org_id": ORG_ID,
-            "farm_id": farm_id,
+            "farm_name": farm_name,
             "ops_task_tracker_id": tracker["id"],
             "ops_template_id": template_id,
             "ops_template_question_id": q_id,

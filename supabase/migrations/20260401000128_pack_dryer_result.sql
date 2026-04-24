@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pack_dryer_result (
     id                              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                          TEXT NOT NULL REFERENCES org(id),
-    farm_id                         TEXT NOT NULL REFERENCES org_farm(name),
+    farm_name                         TEXT NOT NULL REFERENCES org_farm(name),
     site_id                         TEXT NOT NULL REFERENCES org_site(id),
     grow_lettuce_seed_batch_id      UUID REFERENCES grow_lettuce_seed_batch(id),
     invnt_item_id                   TEXT REFERENCES invnt_item(id),
@@ -33,7 +33,7 @@ COMMENT ON COLUMN pack_dryer_result.tracking_code IS 'Human-readable code identi
 COMMENT ON COLUMN pack_dryer_result.pack_dryer_result_id_original IS 'Self-referencing FK to the original check when this row is a re-check';
 
 CREATE INDEX idx_pack_dryer_result_org    ON pack_dryer_result (org_id);
-CREATE INDEX idx_pack_dryer_result_farm   ON pack_dryer_result (farm_id);
+CREATE INDEX idx_pack_dryer_result_farm   ON pack_dryer_result (farm_name);
 CREATE INDEX idx_pack_dryer_result_batch  ON pack_dryer_result (grow_lettuce_seed_batch_id);
 CREATE INDEX idx_pack_dryer_result_date     ON pack_dryer_result (check_at);
 CREATE INDEX idx_pack_dryer_result_original ON pack_dryer_result (pack_dryer_result_id_original);

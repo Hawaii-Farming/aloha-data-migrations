@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS ops_task (
     org_id      TEXT NOT NULL REFERENCES org(id),
-    farm_id     TEXT REFERENCES org_farm(name),
+    farm_name     TEXT REFERENCES org_farm(name),
     name       TEXT PRIMARY KEY,
     description TEXT,
     qb_account  TEXT,

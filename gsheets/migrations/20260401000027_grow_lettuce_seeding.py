@@ -149,7 +149,7 @@ def ensure_container(supabase):
     row = {
         "id": CONTAINER_ID,
         "org_id": ORG_ID,
-        "farm_id": FARM_ID,
+        "farm_name": FARM_ID,
         "name": "Board",
         "grow_variety_id": None,
         "grow_grade_id": None,
@@ -184,7 +184,7 @@ def ensure_trial_types(supabase, records):
         rows.append({
             "id": tid,
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
+            "farm_name": FARM_ID,
             "name": name,
             "description": None,
             "created_by": AUDIT_USER,
@@ -213,7 +213,7 @@ def ensure_cycle_patterns(supabase, records):
         rows.append({
             "id": pid,
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
+            "farm_name": FARM_ID,
             "name": name,
             "description": None,
             "created_by": AUDIT_USER,
@@ -234,7 +234,7 @@ def ensure_items(supabase, records, mix_names_lower):
     # Load existing lettuce seed items (paginated — 186 rows today, near cap)
     existing = paginate_select(
         supabase, "invnt_item", "id,name,grow_variety_id",
-        eq_filters={"farm_id": FARM_ID, "invnt_category_id": "seeds"},
+        eq_filters={"farm_name": FARM_ID, "invnt_category_id": "seeds"},
     )
     by_name_lower = {it["name"].lower(): it["id"] for it in existing}
 
@@ -264,7 +264,7 @@ def ensure_items(supabase, records, mix_names_lower):
             rows.append({
                 "id": item_id,
                 "org_id": ORG_ID,
-                "farm_id": FARM_ID,
+                "farm_name": FARM_ID,
                 "invnt_category_id": "seeds",
                 "name": spec["name"],
                 "qb_account": "1. Growing:Seeding",
@@ -334,7 +334,7 @@ def ensure_lots(supabase, records, item_by_name_lower, mix_names_lower):
     # Check which of these already exist in invnt_lot
     existing = paginate_select(
         supabase, "invnt_lot", "id,lot_number,invnt_item_id",
-        eq_filters={"farm_id": FARM_ID},
+        eq_filters={"farm_name": FARM_ID},
     )
     existing_by_key = {(e["invnt_item_id"], e["lot_number"]): e["id"] for e in existing}
 
@@ -350,7 +350,7 @@ def ensure_lots(supabase, records, item_by_name_lower, mix_names_lower):
         rows.append({
             "id": lot_id,
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
+            "farm_name": FARM_ID,
             "invnt_item_id": spec["item_id"],
             "lot_number": sl,
             "created_by": AUDIT_USER,
@@ -371,7 +371,7 @@ def build_mix_lookup(supabase):
     """Build seedname_lower -> grow_lettuce_seed_mix.id lookup for lettuce mixes."""
     mixes = paginate_select(
         supabase, "grow_lettuce_seed_mix", "id,name",
-        eq_filters={"farm_id": FARM_ID},
+        eq_filters={"farm_name": FARM_ID},
     )
     return {m["name"].lower(): m["id"] for m in mixes}
 
@@ -390,7 +390,7 @@ def clear_existing():
                 DELETE FROM grow_harvest_weight
                 WHERE grow_lettuce_seed_batch_id IN (
                     SELECT id FROM grow_lettuce_seed_batch
-                    WHERE farm_id = %s AND notes LIKE %s
+                    WHERE farm_name = %s AND notes LIKE %s
                 )
                 """,
                 (FARM_ID, f"%{NOTES_MARKER}%"),
@@ -399,7 +399,7 @@ def clear_existing():
             cur.execute(
                 """
                 DELETE FROM grow_lettuce_seed_batch
-                WHERE farm_id = %s AND notes LIKE %s
+                WHERE farm_name = %s AND notes LIKE %s
                 """,
                 (FARM_ID, f"%{NOTES_MARKER}%"),
             )
@@ -476,7 +476,7 @@ def build_rows(
     seed_batch = {
         "id": batch_id,
         "org_id": ORG_ID,
-        "farm_id": FARM_ID,
+        "farm_name": FARM_ID,
         "site_id": pond_raw,
         "ops_task_tracker_id": None,
         "batch_code": cycle,
@@ -508,13 +508,13 @@ def build_rows(
     if harvest_date and net_weight is not None and net_weight > 0:
         harvest_weight = {
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
+            "farm_name": FARM_ID,
             "site_id": pond_raw,
             "ops_task_tracker_id": None,
             "grow_lettuce_seed_batch_id": batch_id,
             "grow_grade_id": None,
             "harvest_date": harvest_date.isoformat(),
-            "grow_harvest_container_id": CONTAINER_ID,
+            "grow_harvest_container_name": CONTAINER_ID,
             "number_of_containers": 1,
             "weight_uom": "pound",
             "gross_weight": net_weight,
@@ -543,7 +543,7 @@ def main():
     # Load known lettuce pond site IDs
     sites = paginate_select(
         supabase, "org_site", "id",
-        eq_filters={"farm_id": FARM_ID, "org_site_subcategory_id": "pond"},
+        eq_filters={"farm_name": FARM_ID, "org_site_subcategory_id": "pond"},
     )
     known_sites = {s["id"] for s in sites}
     print(f"\n  Known lettuce ponds: {sorted(known_sites)}")

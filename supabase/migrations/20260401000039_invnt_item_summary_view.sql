@@ -32,7 +32,7 @@ open_orders AS (
 SELECT
     -- Item identification
     i.org_id,
-    i.farm_id,
+    i.farm_name,
     i.id AS invnt_item_id,
     i.invnt_category_id,
     i.invnt_subcategory_id,

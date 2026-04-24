@@ -171,14 +171,14 @@ def migrate_fsafe_sites(supabase, gc):
         farm = str(r.get("Farm", "")).strip().lower()
         building = str(r.get("Building", "")).strip().lower()
         zone = ZONE_MAP.get(str(r.get("Zone", "")).strip().lower())
-        farm_id = farm if farm in ("cuke", "lettuce") else None
+        farm_name = farm if farm in ("cuke", "lettuce") else None
         parent_id = BUILDING_SITE_MAP.get((farm, building))
         site_id = to_id(f"{farm}_{building}_{site_name}")
         if site_id in seen:
             continue
         seen.add(site_id)
         display_name = f"{building.upper()} - {site_name}"
-        rows.append(audit({"id": site_id, "org_id": ORG_ID, "farm_id": farm_id,
+        rows.append(audit({"id": site_id, "org_id": ORG_ID, "farm_name": farm_name,
                            "name": display_name, "org_site_category_id": "food_safety",
                            "site_id_parent": parent_id, "zone": zone}))
 
@@ -198,14 +198,14 @@ def migrate_pest_stations(supabase, gc):
         station = str(r.get("Station", "")).strip()
         if not farm or not site_name or not station:
             continue
-        farm_id = farm if farm in ("cuke", "lettuce") else None
+        farm_name = farm if farm in ("cuke", "lettuce") else None
         parent_id = PEST_SITE_MAP.get((farm, site_name))
         display_name = f"{site_name.upper()} - Trap {station}"
         site_id = to_id(f"{farm}_{site_name}_trap_{station}")
         if site_id in seen:
             continue
         seen.add(site_id)
-        rows.append(audit({"id": site_id, "org_id": ORG_ID, "farm_id": farm_id,
+        rows.append(audit({"id": site_id, "org_id": ORG_ID, "farm_name": farm_name,
                            "name": display_name, "org_site_category_id": "pest_trap",
                            "site_id_parent": parent_id}))
 
@@ -231,7 +231,7 @@ def ensure_foreign_material_template(supabase):
     supabase.table("ops_template").upsert(audit({
         "id": FM_TEMPLATE_ID,
         "org_id": ORG_ID,
-        "farm_id": None,
+        "farm_name": None,
         "name": "Foreign Material Event",
         "org_module_id": "food_safety",
         "description": "Recorded when a foreign material event occurs during packing or food safety inspection",
@@ -266,7 +266,7 @@ def ensure_foreign_material_template(supabase):
     ).execute()
     inserted_q = supabase.table("ops_template_question").insert(audit({
         "org_id": ORG_ID,
-        "farm_id": None,
+        "farm_name": None,
         "ops_template_id": FM_TEMPLATE_ID,
         "question_text": "Type of foreign material",
         "response_type": "enum",
@@ -279,14 +279,14 @@ def ensure_foreign_material_template(supabase):
     })).execute()
     print(f"  Inserted foreign_material_event enum question")
 
-    # Idempotent task->template link (org-scoped, no farm_id)
+    # Idempotent task->template link (org-scoped, no farm_name)
     supabase.table("ops_task_template").delete().eq(
         "ops_template_id", FM_TEMPLATE_ID
-    ).eq("ops_task_id", TASK_ID).execute()
+    ).eq("ops_task_name", TASK_ID).execute()
     supabase.table("ops_task_template").insert(audit({
         "org_id": ORG_ID,
-        "farm_id": None,
-        "ops_task_id": TASK_ID,
+        "farm_name": None,
+        "ops_task_name": TASK_ID,
         "ops_template_id": FM_TEMPLATE_ID,
     })).execute()
     print(f"  Linked template to {TASK_ID}")

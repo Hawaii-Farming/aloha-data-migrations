@@ -219,7 +219,7 @@ def ensure_catch_all_site(supabase):
     row = audit({
         "id": CATCH_ALL_SITE_ID,
         "org_id": ORG_ID,
-        "farm_id": FARM_ID,
+        "farm_name": FARM_ID,
         "name": "Cuke GHs",
         "org_site_category_id": "growing",
         "is_deleted": True,
@@ -234,7 +234,7 @@ def load_known_sites(supabase):
     result = (
         supabase.table("org_site")
         .select("id")
-        .eq("farm_id", FARM_ID)
+        .eq("farm_name", FARM_ID)
         .execute()
     )
     return {r["id"] for r in result.data}
@@ -247,7 +247,7 @@ def upsert_templates(supabase):
         rows.append(audit({
             "id": t["id"],
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
+            "farm_name": FARM_ID,
             "name": t["name"],
             "org_module_id": "food_safety",
             "description": f"Cuke greenhouse {'pre' if 'pre' in t['id'] else 'post'}-operations checklist (migrated from legacy fsafe sheet)",
@@ -273,7 +273,7 @@ def reseed_questions(supabase):
         for order, q_text in enumerate(t["questions"], start=1):
             rows.append(audit({
                 "org_id": ORG_ID,
-                "farm_id": FARM_ID,
+                "farm_name": FARM_ID,
                 "ops_template_id": t["id"],
                 "question_text": q_text,
                 "response_type": "boolean",
@@ -298,14 +298,14 @@ def upsert_task_template_links(supabase):
     for t in TEMPLATES:
         supabase.table("ops_task_template").delete().eq(
             "ops_template_id", t["id"]
-        ).eq("ops_task_id", TASK_ID).execute()
+        ).eq("ops_task_name", TASK_ID).execute()
 
     rows = []
     for t in TEMPLATES:
         rows.append(audit({
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
-            "ops_task_id": TASK_ID,
+            "farm_name": FARM_ID,
+            "ops_task_name": TASK_ID,
             "ops_template_id": t["id"],
         }))
     insert_rows(supabase, "ops_task_template", rows)
@@ -346,7 +346,7 @@ def create_stub_employee(supabase, email):
         "last_name": last,
         "company_email": email,
         "is_primary_org": True,
-        "sys_access_level_id": "Employee",
+        "sys_access_level_name": "Employee",
         "is_deleted": True,
     })
     try:
@@ -381,7 +381,7 @@ def clear_existing_data(supabase):
     print("  Cleared ops_corrective_action_taken (if any)")
 
     # Trackers — scope to cuke food_safety_log task
-    supabase.table("ops_task_tracker").delete().eq("ops_task_id", TASK_ID).eq("farm_id", FARM_ID).execute()
+    supabase.table("ops_task_tracker").delete().eq("ops_task_name", TASK_ID).eq("farm_name", FARM_ID).execute()
     print("  Cleared ops_task_tracker (cuke food_safety_log)")
 
 
@@ -454,9 +454,9 @@ def migrate_template(supabase, gc, template_def, q_map, known_sites, email_map, 
             tracker_idx = len(trackers)
             trackers.append({
                 "org_id": ORG_ID,
-                "farm_id": FARM_ID,
+                "farm_name": FARM_ID,
                 "site_id": site_id,
-                "ops_task_id": TASK_ID,
+                "ops_task_name": TASK_ID,
                 "start_time": reported,
                 "stop_time": reported,
                 "is_completed": True,
@@ -494,7 +494,7 @@ def migrate_template(supabase, gc, template_def, q_map, known_sites, email_map, 
         tracker = inserted_trackers[tracker_idx]
         result_rows.append({
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
+            "farm_name": FARM_ID,
             "ops_task_tracker_id": tracker["id"],
             "ops_template_id": template_id,
             "ops_template_question_id": q_id,

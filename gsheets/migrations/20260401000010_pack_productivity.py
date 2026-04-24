@@ -252,7 +252,7 @@ def migrate_fail_categories(supabase):
         audit({
             "id": cat_id,
             "org_id": ORG_ID,
-            "farm_id": "Lettuce",
+            "farm_name": "Lettuce",
             "name": name,
             "display_order": order,
             "is_active": active,
@@ -304,7 +304,7 @@ def migrate_pack_productivity(supabase, gc):
     supabase.table("pack_productivity_hour").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
     # Clear only packing task trackers created by this migration (loop until empty)
     while True:
-        batch = supabase.table("ops_task_tracker").select("id").eq("ops_task_id", "packing").eq("farm_id", "lettuce").limit(100).execute()
+        batch = supabase.table("ops_task_tracker").select("id").eq("ops_task_name", "packing").eq("farm_name", "lettuce").limit(100).execute()
         if not batch.data:
             break
         supabase.table("ops_task_tracker").delete().in_("id", [t["id"] for t in batch.data]).execute()
@@ -398,9 +398,9 @@ def migrate_pack_productivity(supabase, gc):
 
             tracker = {
                 "org_id": ORG_ID,
-                "farm_id": "Lettuce",
+                "farm_name": "Lettuce",
                 "site_id": "lettuce_ph",
-                "ops_task_id": "Packing",
+                "ops_task_name": "Packing",
                 "sales_product_id": pid,
                 "start_time": start_time,
                 "stop_time": stop_time,
@@ -507,7 +507,7 @@ def migrate_pack_productivity(supabase, gc):
 
                 hour_row = {
                     "org_id": ORG_ID,
-                    "farm_id": "Lettuce",
+                    "farm_name": "Lettuce",
                     "ops_task_tracker_id": tracker_id,
                     "pack_end_hour": pack_end_hour,
                     "catchers": catchers,
@@ -540,9 +540,9 @@ def migrate_pack_productivity(supabase, gc):
         for fcat_id, fcount in fail_info["fail_counts"].items():
             all_fail_rows.append({
                 "org_id": ORG_ID,
-                "farm_id": "Lettuce",
+                "farm_name": "Lettuce",
                 "pack_productivity_hour_id": hour_uuid,
-                "pack_productivity_fail_category_id": fcat_id,
+                "pack_productivity_fail_category_name": fcat_id,
                 "fail_count": fcount,
                 "created_by": fail_info["reported_by"],
                 "updated_by": fail_info["reported_by"],

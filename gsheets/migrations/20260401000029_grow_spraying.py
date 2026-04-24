@@ -20,7 +20,7 @@ Setup (idempotent):
       Backpack Sprayer    -> {farm}_backpack_sprayer (type=bag_pack_sprayer)
 
 Per sheet row:
-  - 1 ops_task_tracker (ops_task_id=spraying)
+  - 1 ops_task_tracker (ops_task_name=spraying)
   - 1-3 grow_spray_input rows (one per non-blank Product01/02/03)
   - 0-N grow_spray_equipment rows:
       - Sprayer blank + WaterGallons > 0 -> 1 row with equipment_id=NULL
@@ -215,10 +215,10 @@ def sprayer_equipment_id(farm: str, sprayer_name: str) -> tuple[str | None, str 
 
 def build_item_lookup(supabase, sheet_records):
     """Return dict (farm, name_lower) -> invnt_item.id. Auto-creates missing."""
-    existing = paginate_select(supabase, "invnt_item", "id,name,farm_id,invnt_category_id")
+    existing = paginate_select(supabase, "invnt_item", "id,name,farm_name,invnt_category_id")
     by_farm_name = {}
     for it in existing:
-        by_farm_name[(it["farm_id"], it["name"].lower())] = it["id"]
+        by_farm_name[(it["farm_name"], it["name"].lower())] = it["id"]
         # Also record farm-agnostic match for lookup flexibility
         by_farm_name.setdefault((None, it["name"].lower()), it["id"])
 
@@ -262,7 +262,7 @@ def build_item_lookup(supabase, sheet_records):
         rows.append({
             "id": final_id,
             "org_id": ORG_ID,
-            "farm_id": farm,
+            "farm_name": farm,
             "invnt_category_id": PESTICIDE_CATEGORY_ID,
             "name": spec["name"],
             "qb_account": "1. Growing:Chemicals/Pesticides",
@@ -328,7 +328,7 @@ def ensure_sprayer_equipment(supabase, sheet_records):
         rows.append({
             "id": eid,
             "org_id": ORG_ID,
-            "farm_id": spec["farm"],
+            "farm_name": spec["farm"],
             "name": spec["name"],
             "type": spec["type"],
             "created_by": AUDIT_USER,
@@ -346,8 +346,8 @@ def ensure_compliance_records(supabase, sheet_records, item_lookup):
     create a row using PHI/REI and target/UOM from the first sheet row where it
     appears.
     """
-    existing = paginate_select(supabase, "grow_spray_compliance", "id,farm_id,invnt_item_id")
-    by_pair = {(c["farm_id"], c["invnt_item_id"]): c["id"] for c in existing}
+    existing = paginate_select(supabase, "grow_spray_compliance", "id,farm_name,invnt_item_id")
+    by_pair = {(c["farm_name"], c["invnt_item_id"]): c["id"] for c in existing}
 
     # For each (farm, item_id) needed, grab PHI/REI/target/uom from first sheet row
     needed = {}  # (farm, item_id) -> defaults
@@ -392,7 +392,7 @@ def ensure_compliance_records(supabase, sheet_records, item_lookup):
         rows.append({
             "id": new_id,
             "org_id": ORG_ID,
-            "farm_id": farm,
+            "farm_name": farm,
             "invnt_item_id": item_id,
             "epa_registration": "LEGACY_UNKNOWN",
             "phi_days": d["phi"],
@@ -434,7 +434,7 @@ def clear_existing():
                 DELETE FROM grow_spray_input
                 WHERE ops_task_tracker_id IN (
                     SELECT id FROM ops_task_tracker
-                    WHERE ops_task_id = %s AND notes LIKE %s
+                    WHERE ops_task_name = %s AND notes LIKE %s
                 )
                 """,
                 (OPS_TASK_ID, f"%{NOTES_MARKER}%"),
@@ -445,7 +445,7 @@ def clear_existing():
                 DELETE FROM grow_spray_equipment
                 WHERE ops_task_tracker_id IN (
                     SELECT id FROM ops_task_tracker
-                    WHERE ops_task_id = %s AND notes LIKE %s
+                    WHERE ops_task_name = %s AND notes LIKE %s
                 )
                 """,
                 (OPS_TASK_ID, f"%{NOTES_MARKER}%"),
@@ -454,7 +454,7 @@ def clear_existing():
             cur.execute(
                 """
                 DELETE FROM ops_task_tracker
-                WHERE ops_task_id = %s AND notes LIKE %s
+                WHERE ops_task_name = %s AND notes LIKE %s
                 """,
                 (OPS_TASK_ID, f"%{NOTES_MARKER}%"),
             )
@@ -520,9 +520,9 @@ def build_event_rows(
     tracker = {
         "id": tracker_id,
         "org_id": ORG_ID,
-        "farm_id": farm,
+        "farm_name": farm,
         "site_id": site_id,
-        "ops_task_id": OPS_TASK_ID,
+        "ops_task_name": OPS_TASK_ID,
         "start_time": start_dt.isoformat(),
         "stop_time": stop_dt.isoformat() if stop_dt else None,
         "is_completed": stop_dt is not None,
@@ -552,7 +552,7 @@ def build_event_rows(
 
         inputs.append({
             "org_id": ORG_ID,
-            "farm_id": farm,
+            "farm_name": farm,
             "ops_task_tracker_id": tracker_id,
             "grow_spray_compliance_id": compliance_id,
             "invnt_item_id": item_id,
@@ -579,7 +579,7 @@ def build_event_rows(
                 # Unknown sprayer name — fall back to equipment_id=NULL
                 equipment_rows.append({
                     "org_id": ORG_ID,
-                    "farm_id": farm,
+                    "farm_name": farm,
                     "ops_task_tracker_id": tracker_id,
                     "equipment_id": None,
                     "water_uom": "gallon",
@@ -590,7 +590,7 @@ def build_event_rows(
             else:
                 equipment_rows.append({
                     "org_id": ORG_ID,
-                    "farm_id": farm,
+                    "farm_name": farm,
                     "ops_task_tracker_id": tracker_id,
                     "equipment_id": eid,
                     "water_uom": "gallon",
@@ -602,7 +602,7 @@ def build_event_rows(
         # Legacy record: water recorded without sprayer — use NULL equipment
         equipment_rows.append({
             "org_id": ORG_ID,
-            "farm_id": farm,
+            "farm_name": farm,
             "ops_task_tracker_id": tracker_id,
             "equipment_id": None,
             "water_uom": "gallon",
@@ -634,10 +634,10 @@ def main():
     clear_existing()
 
     # Load known sites for spraying (all cuke/lettuce sites where plants grow)
-    sites = paginate_select(supabase, "org_site", "id,farm_id,org_site_subcategory_id")
+    sites = paginate_select(supabase, "org_site", "id,farm_name,org_site_subcategory_id")
     known_sites = {
         s["id"] for s in sites
-        if s.get("farm_id") in ("cuke", "lettuce")
+        if s.get("farm_name") in ("cuke", "lettuce")
         and s.get("org_site_subcategory_id") in ("greenhouse", "pond", None)
     }
     print(f"\n  Known cuke/lettuce sites: {len(known_sites)}")

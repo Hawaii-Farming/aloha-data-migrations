@@ -366,7 +366,7 @@ def migrate_visit_results(supabase, gc):
             rows.append({
                 "org_id": ORG_ID,
                 "sales_crm_store_visit_id": visit_id,
-                "sales_crm_external_product_id": ext_id,
+                "sales_crm_external_product_name": ext_id,
                 "shelf_price": price,
                 "best_by_date": best_by,
                 "stock_level": stock,

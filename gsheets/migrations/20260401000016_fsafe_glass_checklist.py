@@ -72,7 +72,7 @@ TEMPLATES = [
     {
         "id": "cuke_glass",
         "name": "Glass Inspection",
-        "farm_id": "Cuke",
+        "farm_name": "Cuke",
         "site_id": "bip_ph",
         "sheet_farm": "Cuke",
         "questions": CUKE_GLASS_QUESTIONS,
@@ -81,7 +81,7 @@ TEMPLATES = [
     {
         "id": "lettuce_glass",
         "name": "Glass Inspection",
-        "farm_id": "Lettuce",
+        "farm_name": "Lettuce",
         "site_id": "lettuce_ph",
         "sheet_farm": "Lettuce",
         "questions": LETTUCE_GLASS_QUESTIONS,
@@ -204,7 +204,7 @@ def create_stub_employee(supabase, email):
         "last_name": last,
         "company_email": email,
         "is_primary_org": True,
-        "sys_access_level_id": "Employee",
+        "sys_access_level_name": "Employee",
         "is_deleted": True,
     })
     try:
@@ -241,7 +241,7 @@ def upsert_templates(supabase):
         rows.append(audit({
             "id": t["id"],
             "org_id": ORG_ID,
-            "farm_id": t["farm_id"],
+            "farm_name": t["farm_name"],
             "name": t["name"],
             "org_module_id": "food_safety",
             "description": t["description"],
@@ -262,7 +262,7 @@ def reseed_questions(supabase):
         for order, (q_text, rtype, kw) in enumerate(t["questions"], start=1):
             rows.append(audit({
                 "org_id": ORG_ID,
-                "farm_id": t["farm_id"],
+                "farm_name": t["farm_name"],
                 "ops_template_id": t["id"],
                 "question_text": q_text,
                 "response_type": rtype,
@@ -288,14 +288,14 @@ def upsert_task_template_links(supabase):
     for t in TEMPLATES:
         supabase.table("ops_task_template").delete().eq(
             "ops_template_id", t["id"]
-        ).eq("ops_task_id", TASK_ID).execute()
+        ).eq("ops_task_name", TASK_ID).execute()
 
     rows = []
     for t in TEMPLATES:
         rows.append(audit({
             "org_id": ORG_ID,
-            "farm_id": t["farm_id"],
-            "ops_task_id": TASK_ID,
+            "farm_name": t["farm_name"],
+            "ops_task_name": TASK_ID,
             "ops_template_id": t["id"],
         }))
     insert_rows(supabase, "ops_task_template", rows)
@@ -347,7 +347,7 @@ def clear_existing_data(supabase):
 
 def migrate_template(supabase, gc, template_def, q_map, all_records, email_map, stub_cache):
     template_id = template_def["id"]
-    farm_id = template_def["farm_id"]
+    farm_name = template_def["farm_name"]
     site_id = template_def["site_id"]
     sheet_farm = template_def["sheet_farm"]
     questions = template_def["questions"]
@@ -376,9 +376,9 @@ def migrate_template(supabase, gc, template_def, q_map, all_records, email_map, 
         tracker_idx = len(trackers)
         trackers.append({
             "org_id": ORG_ID,
-            "farm_id": farm_id,
+            "farm_name": farm_name,
             "site_id": site_id,
-            "ops_task_id": TASK_ID,
+            "ops_task_name": TASK_ID,
             "start_time": reported,
             "stop_time": reported,
             "is_completed": True,
@@ -408,7 +408,7 @@ def migrate_template(supabase, gc, template_def, q_map, all_records, email_map, 
         tracker = inserted_trackers[tracker_idx]
         row = {
             "org_id": ORG_ID,
-            "farm_id": farm_id,
+            "farm_name": farm_name,
             "ops_task_tracker_id": tracker["id"],
             "ops_template_id": template_id,
             "ops_template_question_id": q_id,

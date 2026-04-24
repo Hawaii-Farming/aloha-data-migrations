@@ -148,8 +148,8 @@ def migrate_org_farm(supabase, gc):
         farm_name = farm_name.strip()
         if not farm_name or farm_name == ORG_ID.upper() or farm_name == "HF":
             continue  # skip the org-level entry
-        farm_id = to_id(farm_name)
-        defaults = farm_defaults.get(farm_id, {})
+        farm_name = to_id(farm_name)
+        defaults = farm_defaults.get(farm_name, {})
         rows.append(audit({
             "org_id": ORG_ID,
             "name": proper_case(farm_name),
@@ -223,7 +223,7 @@ def migrate_org_module(supabase):
         rows.append(audit({
             "id": mod["name"],
             "org_id": ORG_ID,
-            "sys_module_id": mod["name"],
+            "sys_module_name": mod["name"],
             "display_name": mod["name"],
             "is_enabled": mod["name"] in ENABLED_MODULES,
             "display_order": mod["display_order"],
@@ -250,7 +250,7 @@ def migrate_org_sub_module(supabase):
     }
 
     result = supabase.table("sys_sub_module").select(
-        "id, sys_module_id, name, sys_access_level_id, display_order"
+        "id, sys_module_name, name, sys_access_level_name, display_order"
     ).order("display_order").execute()
 
     rows = []
@@ -258,9 +258,9 @@ def migrate_org_sub_module(supabase):
         rows.append(audit({
             "id": sub["id"],
             "org_id": ORG_ID,
-            "sys_module_id": sub["sys_module_id"],
+            "sys_module_name": sub["sys_module_name"],
             "sys_sub_module_id": sub["id"],
-            "sys_access_level_id": sub["sys_access_level_id"],
+            "sys_access_level_name": sub["sys_access_level_name"],
             "display_name": proper_case(sub["name"]),
             "is_enabled": sub["id"] in ENABLED_SUB_MODULES,
             "display_order": sub["display_order"],
@@ -277,7 +277,7 @@ def migrate_org_site(supabase):
         audit({
             "id": "jtl",
             "org_id": ORG_ID,
-            "farm_id": "Cuke",
+            "farm_name": "Cuke",
             "name": "JTL",
             "org_site_category_id": "growing",
             "display_order": 1,
@@ -285,7 +285,7 @@ def migrate_org_site(supabase):
         audit({
             "id": "bip",
             "org_id": ORG_ID,
-            "farm_id": "Cuke",
+            "farm_name": "Cuke",
             "name": "BIP",
             "org_site_category_id": "growing",
             "display_order": 2,
@@ -331,7 +331,7 @@ def migrate_org_site(supabase):
         site = {
             "id": code.lower(),
             "org_id": ORG_ID,
-            "farm_id": "Cuke",
+            "farm_name": "Cuke",
             "name": code,
             "org_site_category_id": "growing",
             "org_site_subcategory_id": "greenhouse",
@@ -350,7 +350,7 @@ def migrate_org_site(supabase):
         site = {
             "id": code.lower(),
             "org_id": ORG_ID,
-            "farm_id": "Cuke",
+            "farm_name": "Cuke",
             "name": code,
             "org_site_category_id": "growing",
             "org_site_subcategory_id": "greenhouse",
@@ -367,7 +367,7 @@ def migrate_org_site(supabase):
         cuke_children.append(audit({
             "id": code.lower(),
             "org_id": ORG_ID,
-            "farm_id": "Cuke",
+            "farm_name": "Cuke",
             "name": code,
             "org_site_category_id": "growing",
             "org_site_subcategory_id": "nursery",
@@ -381,7 +381,7 @@ def migrate_org_site(supabase):
         audit({
             "id": "gh",
             "org_id": ORG_ID,
-            "farm_id": "Lettuce",
+            "farm_name": "Lettuce",
             "name": "GH",
             "org_site_category_id": "growing",
             "acres": round(108900 / 43560, 2),
@@ -401,7 +401,7 @@ def migrate_org_site(supabase):
         lettuce_children.append(audit({
             "id": code.lower(),
             "org_id": ORG_ID,
-            "farm_id": "Lettuce",
+            "farm_name": "Lettuce",
             "name": code,
             "org_site_category_id": "growing",
             "org_site_subcategory_id": "pond",
@@ -447,7 +447,7 @@ def migrate_grow_variety(supabase, gc):
             continue
         rows.append(audit({
             "org_id": ORG_ID,
-            "farm_id": to_id(farm),
+            "farm_name": to_id(farm),
             "code": code,
             "name": proper_case(name),
         }))
@@ -460,13 +460,13 @@ def migrate_grow_grade(supabase):
     rows = [
         audit({
             "org_id": ORG_ID,
-            "farm_id": "Cuke",
+            "farm_name": "Cuke",
             "code": "1",
             "name": "On Grade",
         }),
         audit({
             "org_id": ORG_ID,
-            "farm_id": "Cuke",
+            "farm_name": "Cuke",
             "code": "2",
             "name": "Off Grade",
         }),

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pack_lot (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_id         TEXT NOT NULL REFERENCES org_farm(name),
+    farm_name         TEXT NOT NULL REFERENCES org_farm(name),
 
     lot_number      TEXT NOT NULL,
     harvest_date    DATE,
@@ -22,5 +22,5 @@ COMMENT ON COLUMN pack_lot.lot_number IS 'System-generated from pack_date; edita
 COMMENT ON COLUMN pack_lot.harvest_date IS 'Optional; user-selected to track which harvest this lot came from';
 
 CREATE INDEX idx_pack_lot_org_id  ON pack_lot (org_id);
-CREATE INDEX idx_pack_lot_farm_id ON pack_lot (farm_id);
+CREATE INDEX idx_pack_lot_farm_id ON pack_lot (farm_name);
 

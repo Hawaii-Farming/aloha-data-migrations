@@ -139,7 +139,7 @@ TEMPLATES = [
         "name": "PH Pre Ops",
         "tab": "fsafe_log_C_ph_pre",
         "questions": PH_PRE_QUESTIONS,
-        "farm_id": FARM_ID,
+        "farm_name": FARM_ID,
         "description": "Cuke packhouse pre-operations checklist (migrated from legacy fsafe sheet)",
     },
     {
@@ -147,7 +147,7 @@ TEMPLATES = [
         "name": "PH Post Ops",
         "tab": "fsafe_log_C_ph_post",
         "questions": PH_POST_QUESTIONS,
-        "farm_id": FARM_ID,
+        "farm_name": FARM_ID,
         "description": "Cuke packhouse post-operations cleanup checklist (migrated from legacy fsafe sheet)",
     },
 ]
@@ -283,7 +283,7 @@ def create_stub_employee(supabase, email):
         "last_name": last,
         "company_email": email,
         "is_primary_org": True,
-        "sys_access_level_id": "Employee",
+        "sys_access_level_name": "Employee",
         "is_deleted": True,
     })
     try:
@@ -327,7 +327,7 @@ def build_site_matcher(supabase):
     result = (
         supabase.table("org_site")
         .select("id,name,site_id_parent")
-        .eq("farm_id", FARM_ID)
+        .eq("farm_name", FARM_ID)
         .eq("org_site_category_id", "food_safety")
         .execute()
     )
@@ -376,7 +376,7 @@ def auto_create_atp_site(supabase, raw_name, candidates):
     row = audit({
         "id": new_id,
         "org_id": ORG_ID,
-        "farm_id": FARM_ID,
+        "farm_name": FARM_ID,
         "name": display_name,
         "org_site_category_id": "food_safety",
         "site_id_parent": SITE_ID,
@@ -401,7 +401,7 @@ def ensure_atp_lab_test(supabase):
     row = audit({
         "id": ATP_TEST_ID,
         "org_id": ORG_ID,
-        "farm_id": None,
+        "farm_name": None,
         "test_name": "ATP RLU",
         "test_methods": [],
         "test_description": "ATP swab — Relative Light Units. Used to verify cleaning of food contact surfaces.",
@@ -427,7 +427,7 @@ def upsert_templates(supabase):
         rows.append(audit({
             "id": t["id"],
             "org_id": ORG_ID,
-            "farm_id": t["farm_id"],
+            "farm_name": t["farm_name"],
             "name": t["name"],
             "org_module_id": "food_safety",
             "description": t["description"],
@@ -450,7 +450,7 @@ def reseed_questions(supabase):
         for order, (q_text, rtype, kw) in enumerate(t["questions"], start=1):
             row = {
                 "org_id": ORG_ID,
-                "farm_id": t["farm_id"],
+                "farm_name": t["farm_name"],
                 "ops_template_id": t["id"],
                 "question_text": q_text,
                 "response_type": rtype,
@@ -479,14 +479,14 @@ def upsert_task_template_links(supabase):
     for tid in template_ids:
         supabase.table("ops_task_template").delete().eq(
             "ops_template_id", tid
-        ).eq("ops_task_id", TASK_ID).execute()
+        ).eq("ops_task_name", TASK_ID).execute()
 
     rows = []
     for t in TEMPLATES:
         rows.append(audit({
             "org_id": ORG_ID,
-            "farm_id": t["farm_id"],
-            "ops_task_id": TASK_ID,
+            "farm_name": t["farm_name"],
+            "ops_task_name": TASK_ID,
             "ops_template_id": t["id"],
         }))
     insert_rows(supabase, "ops_task_template", rows)
@@ -532,7 +532,7 @@ def clear_existing_data(supabase):
         print(f"  Cleared {len(ids)} cuke PH trackers")
 
     # ATP fsafe_result rows
-    supabase.table("fsafe_result").delete().eq("fsafe_lab_test_id", ATP_TEST_ID).eq("farm_id", FARM_ID).execute()
+    supabase.table("fsafe_result").delete().eq("fsafe_lab_test_id", ATP_TEST_ID).eq("farm_name", FARM_ID).execute()
     print(f"  Cleared fsafe_result (atp_rlu, cuke)")
 
 
@@ -569,9 +569,9 @@ def migrate_template(supabase, gc, template_def, q_map, email_map, stub_cache):
         tracker_idx = len(trackers)
         trackers.append({
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
+            "farm_name": FARM_ID,
             "site_id": SITE_ID,
-            "ops_task_id": TASK_ID,
+            "ops_task_name": TASK_ID,
             "start_time": reported,
             "stop_time": reported,
             "is_completed": True,
@@ -604,7 +604,7 @@ def migrate_template(supabase, gc, template_def, q_map, email_map, stub_cache):
         tracker = inserted_trackers[tracker_idx]
         row = {
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
+            "farm_name": FARM_ID,
             "ops_task_tracker_id": tracker["id"],
             "ops_template_id": template_id,
             "ops_template_question_id": q_id,
@@ -678,9 +678,9 @@ def migrate_atp(supabase, gc, email_map, stub_cache):
 
             rows.append({
                 "org_id": ORG_ID,
-                "farm_id": FARM_ID,
+                "farm_name": FARM_ID,
                 "site_id": site_id,
-                "fsafe_lab_id": ATP_LAB_ID,
+                "fsafe_lab_name": ATP_LAB_ID,
                 "fsafe_lab_test_id": ATP_TEST_ID,
                 "result_numeric": value,
                 "result_pass": result_pass,

@@ -49,7 +49,7 @@ variety+grade) with tare regression formulas from the legacy sheet.
 Usage:
     python migrations/20260401000026_grow_cuke_harvest.py
 
-Rerunnable: deletes all grow_harvest_weight rows for farm_id='cuke',
+Rerunnable: deletes all grow_harvest_weight rows for farm_name='cuke',
 then reinserts.
 """
 
@@ -224,7 +224,7 @@ def ensure_containers(supabase):
         rows.append(audit({
             "id": spec["id"],
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
+            "farm_name": FARM_ID,
             "name": spec["name"],
             "grow_variety_id": spec["grow_variety_id"],
             "grow_grade_id": spec["grow_grade_id"],
@@ -287,11 +287,11 @@ def clear_existing(supabase):
     """Delete all cuke harvest weights and containers so the migration is rerunnable."""
     print("\nClearing existing cuke harvest data...")
     supabase.table("grow_harvest_weight").delete().eq(
-        "farm_id", FARM_ID
+        "farm_name", FARM_ID
     ).execute()
     print("  Cleared grow_harvest_weight")
     supabase.table("grow_harvest_container").delete().eq(
-        "farm_id", FARM_ID
+        "farm_name", FARM_ID
     ).execute()
     print("  Cleared grow_harvest_container")
 
@@ -310,14 +310,14 @@ def ensure_grades(supabase):
         audit({
             "id": "1",
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
+            "farm_name": FARM_ID,
             "code": "1",
             "name": "On Grade",
         }),
         audit({
             "id": "2",
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
+            "farm_name": FARM_ID,
             "code": "2",
             "name": "Off Grade",
         }),
@@ -380,13 +380,13 @@ def build_harvest_row(sheet_row, batch_lookup, known_sites):
 
     return {
         "org_id": ORG_ID,
-        "farm_id": FARM_ID,
+        "farm_name": FARM_ID,
         "site_id": gh,
         "ops_task_tracker_id": None,
         "grow_cuke_seed_batch_id": batch_id,
         "grow_grade_id": grade_id,
         "harvest_date": harvest_date.isoformat(),
-        "grow_harvest_container_id": container_id,
+        "grow_harvest_container_name": container_id,
         "number_of_containers": 1,
         "weight_uom": "pound",
         "gross_weight": gross_weight,
@@ -415,7 +415,7 @@ def main():
     sites = (
         supabase.table("org_site")
         .select("id")
-        .eq("farm_id", FARM_ID)
+        .eq("farm_name", FARM_ID)
         .eq("org_site_subcategory_id", "greenhouse")
         .execute()
         .data

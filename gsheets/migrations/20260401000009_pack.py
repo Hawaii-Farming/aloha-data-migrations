@@ -240,12 +240,12 @@ def migrate_sales_product(supabase, gc):
     # Deduplicate names within the same farm — append code suffix if collision
     farm_names = defaultdict(list)
     for code, base in base_map.items():
-        farm_id = to_id(str(base.get("Farm", "")).strip())
+        farm_name = to_id(str(base.get("Farm", "")).strip())
         name = str(base.get("Description", "")).strip()
-        farm_names[(farm_id, name)].append(code)
+        farm_names[(farm_name, name)].append(code)
 
     name_overrides = {}
-    for (farm_id, name), codes in farm_names.items():
+    for (farm_name, name), codes in farm_names.items():
         if len(codes) > 1:
             for c in codes:
                 name_overrides[c] = f"{name} ({c})"
@@ -265,7 +265,7 @@ def migrate_sales_product(supabase, gc):
     rows = []
     for code, base in base_map.items():
         farm_name = str(base.get("Farm", "")).strip()
-        farm_id = to_id(farm_name)
+        farm_name = to_id(farm_name)
         spec = specs_map.get(code, {})
         meas = meas_map.get(code, {})
         sysco = sysco_map.get(code, {})
@@ -280,7 +280,7 @@ def migrate_sales_product(supabase, gc):
 
         row = {
             "org_id": ORG_ID,
-            "farm_id": farm_id,
+            "farm_name": farm_name,
             "code": code,
             "name": proper_case(name_overrides.get(code, str(base.get("Description", spec.get("ProductName", ""))).strip())),
             "description": build_description(spec),
@@ -370,14 +370,14 @@ def migrate_pack_lettuce(supabase, gc, product_map):
 
     # Clear existing (farm-scoped)
     print("\nClearing pack_lot_item (lettuce)...")
-    existing_lots = supabase.table("pack_lot").select("id").eq("farm_id", "lettuce").execute().data
+    existing_lots = supabase.table("pack_lot").select("id").eq("farm_name", "lettuce").execute().data
     if existing_lots:
         lot_ids = [l["id"] for l in existing_lots]
         for i in range(0, len(lot_ids), 100):
             batch = lot_ids[i:i + 100]
             supabase.table("pack_lot_item").delete().in_("pack_lot_id", batch).execute()
     print("Clearing pack_lot (lettuce)...")
-    supabase.table("pack_lot").delete().eq("farm_id", "lettuce").execute()
+    supabase.table("pack_lot").delete().eq("farm_name", "lettuce").execute()
 
     # Insert lots
     lot_rows = []
@@ -387,7 +387,7 @@ def migrate_pack_lettuce(supabase, gc, product_map):
         reported_by = info["reported_by"] or AUDIT_USER
         lot_rows.append({
             "org_id": ORG_ID,
-            "farm_id": "Lettuce",
+            "farm_name": "Lettuce",
             "lot_number": lot_number,
             "harvest_date": info["harvest_date"],
             "pack_date": info["pack_date"],
@@ -419,7 +419,7 @@ def migrate_pack_lettuce(supabase, gc, product_map):
 
             item_rows.append({
                 "org_id": ORG_ID,
-                "farm_id": "Lettuce",
+                "farm_name": "Lettuce",
                 "pack_lot_id": lot_id,
                 "sales_product_id": product_id,
                 "best_by_date": item_best_by,
@@ -464,14 +464,14 @@ def migrate_pack_cuke(supabase, gc, product_map):
 
     # Clear existing (farm-scoped)
     print("\nClearing pack_lot_item (cuke)...")
-    existing_lots = supabase.table("pack_lot").select("id").eq("farm_id", "cuke").execute().data
+    existing_lots = supabase.table("pack_lot").select("id").eq("farm_name", "cuke").execute().data
     if existing_lots:
         lot_ids = [l["id"] for l in existing_lots]
         for i in range(0, len(lot_ids), 100):
             batch = lot_ids[i:i + 100]
             supabase.table("pack_lot_item").delete().in_("pack_lot_id", batch).execute()
     print("Clearing pack_lot (cuke)...")
-    supabase.table("pack_lot").delete().eq("farm_id", "cuke").execute()
+    supabase.table("pack_lot").delete().eq("farm_name", "cuke").execute()
 
     # Insert lots sorted by date
     lot_rows = []
@@ -480,7 +480,7 @@ def migrate_pack_cuke(supabase, gc, product_map):
         reported_by = date_reporters.get(pack_date) or AUDIT_USER
         lot_rows.append({
             "org_id": ORG_ID,
-            "farm_id": "Cuke",
+            "farm_name": "Cuke",
             "lot_number": pack_date.replace("-", ""),
             "pack_date": pack_date,
             "created_by": reported_by,
@@ -507,7 +507,7 @@ def migrate_pack_cuke(supabase, gc, product_map):
             reported_by = date_reporters.get(pack_date) or AUDIT_USER
             item_rows.append({
                 "org_id": ORG_ID,
-                "farm_id": "Cuke",
+                "farm_name": "Cuke",
                 "pack_lot_id": lot_id,
                 "sales_product_id": product_id,
                 "best_by_date": best_by,
@@ -606,7 +606,7 @@ def migrate_shelf_life_metrics(supabase):
         rows.append(audit({
             "id": m["id"],
             "org_id": ORG_ID,
-            "farm_id": "Lettuce",
+            "farm_name": "Lettuce",
             "name": m["name"],
             "response_type": m["response_type"],
             "enum_options": m["enum_options"],
@@ -635,7 +635,7 @@ def migrate_shelf_life(supabase, gc):
     print(f"  {len(obsv_data)} observations, {len(photo_data)} photos")
 
     # --- Build pack_lot lookup by date ---
-    lots = supabase.table("pack_lot").select("id, pack_date").eq("farm_id", "lettuce").execute()
+    lots = supabase.table("pack_lot").select("id, pack_date").eq("farm_name", "lettuce").execute()
     lot_by_date = {}
     for l in lots.data:
         lot_by_date.setdefault(l["pack_date"], l["id"])
@@ -690,7 +690,7 @@ def migrate_shelf_life(supabase, gc):
 
         trial_rows.append({
             "org_id": ORG_ID,
-            "farm_id": "Lettuce",
+            "farm_name": "Lettuce",
             "pack_lot_id": pack_lot_id,
             "sales_product_id": sales_product_id,
             "trial_number": safe_int(trial_id),
@@ -749,9 +749,9 @@ def migrate_shelf_life(supabase, gc):
             key = (shelf_life_id, metric_id, obs_date)
             result_map[key] = {
                 "org_id": ORG_ID,
-                "farm_id": "Lettuce",
+                "farm_name": "Lettuce",
                 "pack_shelf_life_id": shelf_life_id,
-                "pack_shelf_life_metric_id": metric_id,
+                "pack_shelf_life_metric_name": metric_id,
                 "observation_date": obs_date,
                 "shelf_life_day": shelf_life_day,
                 "response_enum": normalized,
@@ -822,7 +822,7 @@ def migrate_shelf_life(supabase, gc):
 
         photo_rows.append({
             "org_id": ORG_ID,
-            "farm_id": "Lettuce",
+            "farm_name": "Lettuce",
             "pack_shelf_life_id": shelf_life_id,
             "observation_date": obs_date,
             "shelf_life_day": shelf_life_day,
@@ -934,7 +934,7 @@ def migrate_pack_dryer_result(supabase, gc):
 
         row = {
             "org_id": ORG_ID,
-            "farm_id": "Lettuce",
+            "farm_name": "Lettuce",
             "site_id": site_id,
             "invnt_item_id": invnt_item_id,
             "check_at": check_at,

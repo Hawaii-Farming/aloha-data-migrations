@@ -347,7 +347,7 @@ def migrate_invnt_item(supabase, gc):
 
         # Farm — "HF" is the org, not a farm; skip it
         farm = str(r.get("Farm", "")).strip()
-        farm_id = to_id(farm) if farm and farm.upper() != "HF" else None
+        farm_name = to_id(farm) if farm and farm.upper() != "HF" else None
 
         # UOMs
         burn_uom = map_uom(r.get("BurnUnits", ""))
@@ -417,7 +417,7 @@ def migrate_invnt_item(supabase, gc):
         row = {
             "id": item_id,
             "org_id": ORG_ID,
-            "farm_id": farm_id,
+            "farm_name": farm_name,
             "invnt_category_id": cat_id,
             "invnt_subcategory_id": sub_id,
             "name": proper_case(name),
@@ -465,7 +465,7 @@ def migrate_invnt_po(supabase, gc):
     FALLBACK_EMP = email_to_emp.get("data@hawaiifarming.com") or email_to_emp.get("admin@hawaiifarming.com")
 
     # Build item name -> id lookup
-    items = paginate_select(supabase, "invnt_item", "id, name, invnt_category_id, burn_uom, order_uom, burn_per_order, farm_id, is_active")
+    items = paginate_select(supabase, "invnt_item", "id, name, invnt_category_id, burn_uom, order_uom, burn_per_order, farm_name, is_active")
     item_by_name = {}
     item_by_id = {}
     for it in items:
@@ -554,7 +554,7 @@ def migrate_invnt_po(supabase, gc):
         # PO row
         po = {
             "org_id": ORG_ID,
-            "farm_id": item.get("farm_id"),
+            "farm_name": item.get("farm_name"),
             "request_type": "inventory_item",
             "invnt_category_id": item.get("invnt_category_id") or "packing",
             "invnt_item_id": item_id,
@@ -596,7 +596,7 @@ def migrate_invnt_po(supabase, gc):
                     lot_row = audit({
                         "id": lot_id,
                         "org_id": ORG_ID,
-                        "farm_id": item.get("farm_id"),
+                        "farm_name": item.get("farm_name"),
                         "invnt_item_id": item_id,
                         "lot_number": lot_number,
                         "lot_expiry_date": parse_date(r.get("ExpiryDate", "")),
@@ -616,7 +616,7 @@ def migrate_invnt_po(supabase, gc):
                     photo = photo.replace("images/invnt/", "images/invnt_po_received/")
                 recv = {
                     "org_id": ORG_ID,
-                    "farm_id": item.get("farm_id"),
+                    "farm_name": item.get("farm_name"),
                     "received_date": arrival,
                     "received_uom": received_uom or order_uom,
                     "received_quantity": safe_numeric(r.get("ReceivedQuantity", "")),
@@ -705,7 +705,7 @@ def migrate_invnt_po(supabase, gc):
         # For completed orders: updated_by is the orderer/reviewer, created_by is the receiver
         po = {
             "org_id": ORG_ID,
-            "farm_id": item.get("farm_id"),
+            "farm_name": item.get("farm_name"),
             "request_type": mapped_type,
             "urgency_level": URGENCY_MAP.get(str(r.get("urgency_level", "")).strip().lower()),
             "invnt_category_id": item.get("invnt_category_id") or "maintenance",
@@ -766,7 +766,7 @@ def migrate_invnt_onhand(supabase, gc):
     records = ws.get_all_records()
 
     # Build item name -> record lookup from Supabase
-    items = paginate_select(supabase, "invnt_item", "id, name, farm_id, burn_uom, onhand_uom, burn_per_onhand, is_active")
+    items = paginate_select(supabase, "invnt_item", "id, name, farm_name, burn_uom, onhand_uom, burn_per_onhand, is_active")
     item_by_name = {}
     for it in items:
         item_by_name[it["name"].lower()] = it
@@ -852,7 +852,7 @@ def migrate_invnt_onhand(supabase, gc):
 
         row = audit({
             "org_id": ORG_ID,
-            "farm_id": item.get("farm_id"),
+            "farm_name": item.get("farm_name"),
             "invnt_item_id": item["id"],
             "onhand_date": onhand_date,
             "burn_uom": burn_uom,
@@ -878,7 +878,7 @@ def migrate_grow_spray_compliance(supabase, gc):
     records = ws.get_all_records()
 
     # Build item name -> record lookup
-    items = paginate_select(supabase, "invnt_item", "id, name, burn_uom, farm_id")
+    items = paginate_select(supabase, "invnt_item", "id, name, burn_uom, farm_name")
     item_by_name = {}
     for it in items:
         item_by_name[it["name"].lower()] = it
@@ -933,8 +933,8 @@ def migrate_grow_spray_compliance(supabase, gc):
 
         # Farm — try sheet, fall back to item, else None
         farm_raw = str(r.get("Farm", "")).strip().lower()
-        farm_id = FARM_MAP.get(farm_raw) or (item.get("farm_id") if item else None)
-        if not farm_id:
+        farm_name = FARM_MAP.get(farm_raw) or (item.get("farm_name") if item else None)
+        if not farm_name:
             unresolved_farms.add(farm_raw or "(blank)")
 
         # Registration — preserve when present, null when missing
@@ -977,7 +977,7 @@ def migrate_grow_spray_compliance(supabase, gc):
 
         row = {
             "org_id": ORG_ID,
-            "farm_id": farm_id,
+            "farm_name": farm_name,
             "invnt_item_id": item["id"] if item else None,
             "epa_registration": epa_reg,
             "phi_days": phi_days,
@@ -1004,7 +1004,7 @@ def migrate_grow_spray_compliance(supabase, gc):
     if unresolved_items:
         print(f"  Inserted with NULL invnt_item_id ({len(unresolved_items)} unique unknown items): {sorted(unresolved_items)[:5]}...")
     if unresolved_farms:
-        print(f"  Inserted with NULL farm_id ({len(unresolved_farms)} unique unknown farms): {sorted(unresolved_farms)}")
+        print(f"  Inserted with NULL farm_name ({len(unresolved_farms)} unique unknown farms): {sorted(unresolved_farms)}")
 
 
 def migrate_grow_lettuce_seed_mix(supabase, gc):
@@ -1057,7 +1057,7 @@ def migrate_grow_lettuce_seed_mix(supabase, gc):
         mix_rows.append({
             "id": to_id(mix_name),
             "org_id": ORG_ID,
-            "farm_id": "Lettuce",
+            "farm_name": "Lettuce",
             "name": proper_case(mix_name),
             "created_by": info["created_by"],
             "updated_by": info["created_by"],
@@ -1073,7 +1073,7 @@ def migrate_grow_lettuce_seed_mix(supabase, gc):
         for item in info["items"]:
             item_rows.append({
                 "org_id": ORG_ID,
-                "farm_id": "Lettuce",
+                "farm_name": "Lettuce",
                 "grow_lettuce_seed_mix_id": mix_id,
                 "invnt_item_id": item["invnt_item_id"],
                 "percentage": item["percentage"],

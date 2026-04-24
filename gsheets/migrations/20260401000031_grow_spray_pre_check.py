@@ -15,12 +15,12 @@ Sheet columns:
   Notes, CheckedBy, ReportedDateTime, EntryID
 
 Setup (upserted):
-  - ops_template: cuke_spray_pre_check (farm_id=cuke)
+  - ops_template: cuke_spray_pre_check (farm_name=cuke)
   - 6 ops_template_question rows (deterministic UUIDs via uuid5)
   - ops_task_template: link spray_pre_check template to the spraying task
 
 Per sheet row:
-  - 1 ops_task_tracker (ops_task_id=spraying, farm_id=cuke, site_id=NULL,
+  - 1 ops_task_tracker (ops_task_name=spraying, farm_name=cuke, site_id=NULL,
     notes carries Notes + marker, created_by from CheckedBy)
   - N * 6 ops_template_result rows where N = tanks in SiteName:
     - Split SiteName on '+' (e.g. "Tank 3+Tank 1" -> 2 tanks)
@@ -28,7 +28,7 @@ Per sheet row:
     - Create 6 results per tank, each scoped by equipment_id
 
 Distinguishing pre-check trackers from real spray trackers
-(both have ops_task_id='spraying'):
+(both have ops_task_name='spraying'):
   - Pre-check trackers have no grow_spray_input rows, only template_results
   - Notes marker "Legacy spray pre-check migration"
 
@@ -177,7 +177,7 @@ def ensure_template(supabase):
     supabase.table("ops_template").upsert({
         "id": TEMPLATE_ID,
         "org_id": ORG_ID,
-        "farm_id": FARM_ID,
+        "farm_name": FARM_ID,
         "name": "Spray Pre-Check",
         "description": "Per-tank equipment inspection run before a spraying event. Migrated from the legacy grow_spray_pre_check sheet.",
         "created_by": AUDIT_USER,
@@ -191,7 +191,7 @@ def ensure_template(supabase):
         row = {
             "id": question_uuid(qtext),
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
+            "farm_name": FARM_ID,
             "ops_template_id": TEMPLATE_ID,
             "question_text": qtext,
             "response_type": rtype,
@@ -208,17 +208,17 @@ def ensure_template(supabase):
     print(f"  Upserted {len(question_rows)} questions")
 
     print(f"\n--- ops_task_template (link) ---")
-    # Unique constraint on (ops_task_id, ops_template_id) — use it for upsert conflict
+    # Unique constraint on (ops_task_name, ops_template_id) — use it for upsert conflict
     supabase.table("ops_task_template").upsert(
         {
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
-            "ops_task_id": OPS_TASK_ID,
+            "farm_name": FARM_ID,
+            "ops_task_name": OPS_TASK_ID,
             "ops_template_id": TEMPLATE_ID,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
         },
-        on_conflict="ops_task_id,ops_template_id",
+        on_conflict="ops_task_name,ops_template_id",
     ).execute()
     print(f"  Linked '{OPS_TASK_ID}' task to '{TEMPLATE_ID}' template")
 
@@ -237,7 +237,7 @@ def clear_existing():
                 DELETE FROM ops_template_result
                 WHERE ops_task_tracker_id IN (
                     SELECT id FROM ops_task_tracker
-                    WHERE ops_task_id = %s AND notes LIKE %s
+                    WHERE ops_task_name = %s AND notes LIKE %s
                 )
                 """,
                 (OPS_TASK_ID, f"%{NOTES_MARKER}%"),
@@ -246,7 +246,7 @@ def clear_existing():
             cur.execute(
                 """
                 DELETE FROM ops_task_tracker
-                WHERE ops_task_id = %s AND notes LIKE %s
+                WHERE ops_task_name = %s AND notes LIKE %s
                 """,
                 (OPS_TASK_ID, f"%{NOTES_MARKER}%"),
             )
@@ -283,9 +283,9 @@ def build_rows(sheet_row):
     tracker = {
         "id": tracker_id,
         "org_id": ORG_ID,
-        "farm_id": FARM_ID,
+        "farm_name": FARM_ID,
         "site_id": None,
-        "ops_task_id": OPS_TASK_ID,
+        "ops_task_name": OPS_TASK_ID,
         "start_time": start.isoformat(),
         "stop_time": start.isoformat(),
         "is_completed": True,
@@ -299,7 +299,7 @@ def build_rows(sheet_row):
         for (sheet_col, qtext, rtype, _pass, _order) in QUESTIONS:
             result = {
                 "org_id": ORG_ID,
-                "farm_id": FARM_ID,
+                "farm_name": FARM_ID,
                 "ops_task_tracker_id": tracker_id,
                 "ops_template_id": TEMPLATE_ID,
                 "ops_template_question_id": question_uuid(qtext),

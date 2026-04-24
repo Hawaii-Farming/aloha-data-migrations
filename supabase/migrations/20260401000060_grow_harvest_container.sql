@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS grow_harvest_container (
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_id         TEXT NOT NULL REFERENCES org_farm(name),
+    farm_name         TEXT NOT NULL REFERENCES org_farm(name),
     name       TEXT PRIMARY KEY,
     grow_variety_id TEXT REFERENCES grow_variety(code),
     grow_grade_id   TEXT REFERENCES grow_grade(code),
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS grow_harvest_container (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by      TEXT,
     is_deleted      BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT uq_grow_harvest_container UNIQUE (org_id, farm_id, name, grow_variety_id, grow_grade_id)
+    CONSTRAINT uq_grow_harvest_container UNIQUE (org_id, farm_name, name, grow_variety_id, grow_grade_id)
 );
 
 COMMENT ON TABLE grow_harvest_container IS 'Harvest container definitions with tare weight per container type, optionally specific to variety and grade. Used to auto-calculate tare during weigh-ins.';

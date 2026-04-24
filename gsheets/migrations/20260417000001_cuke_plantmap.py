@@ -236,7 +236,7 @@ def seed_org_site_cuke_gh(supabase):
         rows.append(audit({
             "id":                site_id,
             "org_id":            ORG_ID,
-            "farm_id":           FARM_ID,
+            "farm_name":           FARM_ID,
             "farm_section":      farm_section,
             "rows_orientation":  "vertical" if vert else "horizontal",
             "sidewalk_position": sidewalk,
@@ -298,7 +298,7 @@ def seed_org_site_cuke_gh_row(supabase, records):
         # the physical row — this table is pure identity (site_id, row_number).
         rows.append(audit({
             "org_id":            ORG_ID,
-            "farm_id":           FARM_ID,
+            "farm_name":           FARM_ID,
             "site_id":           site_id,
             "row_number":           row_number,
         }))
@@ -360,7 +360,7 @@ def seed_org_site_cuke_gh_block(supabase, records, inserted_rows):
 
         rows.append(audit({
             "org_id":        ORG_ID,
-            "farm_id":       FARM_ID,
+            "farm_name":       FARM_ID,
             "site_id":       site_id,
             "block_number":     block_nums_per_site[site_id][block_label],
             "name":          block_label,
@@ -434,7 +434,7 @@ def seed_grow_cuke_gh_row_planting(supabase, records):
         if v1_primary and ppb1 in (4, 5):
             rows.append(audit({
                 "org_id":             ORG_ID,
-                "farm_id":            FARM_ID,
+                "farm_name":            FARM_ID,
                 "org_site_cuke_gh_row_id": row_id,
                 "scenario":           "current",
                 "grow_variety_id":    v1_primary,
@@ -449,7 +449,7 @@ def seed_grow_cuke_gh_row_planting(supabase, records):
         if v2_primary and ppb2 in (4, 5):
             rows.append(audit({
                 "org_id":             ORG_ID,
-                "farm_id":            FARM_ID,
+                "farm_name":            FARM_ID,
                 "org_site_cuke_gh_row_id": row_id,
                 "scenario":           "planned",
                 "grow_variety_id":    v2_primary,
@@ -476,7 +476,7 @@ def migrate_cuke_seed_batches(supabase):
       id, org_id, site_id, ops_task_tracker_id, grow_trial_type_id,
       invnt_item_id, invnt_lot_id, seeding_date, transplant_date,
       status, notes, created_at/by, updated_at/by, is_deleted -> copied verbatim
-      farm_id                 -> forced to 'cuke' (guard)
+      farm_name                 -> forced to 'cuke' (guard)
       seeds                   -> number_of_units * seeds_per_unit
       rows_4_per_bag          -> -1 (historical sentinel)
       rows_5_per_bag          -> -1 (historical sentinel)
@@ -501,7 +501,7 @@ def migrate_cuke_seed_batches(supabase):
                    status, notes,
                    created_at, created_by, updated_at, updated_by, is_deleted
             FROM grow_lettuce_seed_batch
-            WHERE farm_id = 'cuke' AND is_deleted = false
+            WHERE farm_name = 'cuke' AND is_deleted = false
             """,
         )
 
@@ -512,7 +512,7 @@ def migrate_cuke_seed_batches(supabase):
         dest_rows.append({
             "id":                   r["id"],
             "org_id":               r["org_id"],
-            "farm_id":              FARM_ID,
+            "farm_name":              FARM_ID,
             "site_id":              r["site_id"],
             "ops_task_tracker_id":  r["ops_task_tracker_id"],
             "grow_trial_type_id":   r["grow_trial_type_id"],

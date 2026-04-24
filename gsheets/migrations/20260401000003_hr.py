@@ -273,7 +273,7 @@ def migrate_hr_employee(supabase, records, app_users):
             "company_email": email or None,
             "is_primary_org": True,
             "hr_department_id": dept or None,
-            "sys_access_level_id": access_level,
+            "sys_access_level_name": access_level,
             "is_manager": parse_bool(r.get("IsManager", False)),
             "hr_work_authorization_id": status or None,
             "start_date": parse_date(r.get("StartDate", "")),

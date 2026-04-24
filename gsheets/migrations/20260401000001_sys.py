@@ -170,15 +170,15 @@ def seed_sub_modules(supabase, gc):
     Seed sub-modules from the legacy Google Sheet global_menu_icons_sub.
 
     Legacy level mapping:
-      Level 1 -> employee (sys_access_level_id = 'employee')
-      Level 2 -> manager  (sys_access_level_id = 'manager')
-      Level 3 -> admin    (sys_access_level_id = 'admin')
+      Level 1 -> employee (sys_access_level_name = 'employee')
+      Level 2 -> manager  (sys_access_level_name = 'manager')
+      Level 3 -> admin    (sys_access_level_name = 'admin')
     """
     sheet = gc.open_by_key(SHEET_ID)
     ws = sheet.worksheet("global_menu_icons_sub")
     records = ws.get_all_records()
 
-    # Map legacy levels to sys_access_level_id
+    # Map legacy levels to sys_access_level_name
     level_map = {
         "1": "employee",
         "2": "manager",
@@ -188,7 +188,7 @@ def seed_sub_modules(supabase, gc):
         3: "admin",
     }
 
-    # Map legacy main menu names to sys_module_id
+    # Map legacy main menu names to sys_module_name
     module_map = {
         "grow": "grow",
         "pack": "pack",
@@ -212,12 +212,12 @@ def seed_sub_modules(supabase, gc):
         if not sub_name or not main_name:
             continue
 
-        sys_module_id = module_map.get(main_name.lower())
-        if not sys_module_id:
+        sys_module_name = module_map.get(main_name.lower())
+        if not sys_module_name:
             print(f"  SKIP: Unknown module '{main_name}' for sub '{sub_name}'")
             continue
 
-        sys_access_level_id = level_map.get(level, "employee")
+        sys_access_level_name = level_map.get(level, "employee")
         sub_id = to_id(sub_name)
 
         # Deduplicate
@@ -227,9 +227,9 @@ def seed_sub_modules(supabase, gc):
 
         rows.append(audit({
             "id": sub_id,
-            "sys_module_id": sys_module_id,
+            "sys_module_name": sys_module_name,
             "name": sub_name,
-            "sys_access_level_id": sys_access_level_id,
+            "sys_access_level_name": sys_access_level_name,
             "display_order": len(rows) + 1,
         }))
 

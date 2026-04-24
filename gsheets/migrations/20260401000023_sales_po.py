@@ -161,7 +161,7 @@ def ensure_missing_products(supabase, data):
     for code, farm in sorted(missing):
         rows.append(audit({
             "org_id": ORG_ID,
-            "farm_id": to_id(farm),
+            "farm_name": to_id(farm),
             "code": code,
             "name": proper_case(code),
             "is_active": False,
@@ -209,12 +209,12 @@ def migrate_sales_po(supabase, gc):
     emp_result = supabase.table("hr_employee").select("id, company_email").execute()
     emp_by_email = {e["company_email"]: e["id"] for e in emp_result.data if e.get("company_email")}
 
-    # Pack lot lookup by (farm_id, pack_date) and by lot_number
-    lot_result = supabase.table("pack_lot").select("id, farm_id, pack_date, lot_number").execute()
+    # Pack lot lookup by (farm_name, pack_date) and by lot_number
+    lot_result = supabase.table("pack_lot").select("id, farm_name, pack_date, lot_number").execute()
     lot_by_date_farm = {}
     lot_by_number = {}
     for l in lot_result.data:
-        lot_by_date_farm[(l["farm_id"], l["pack_date"])] = l["id"]
+        lot_by_date_farm[(l["farm_name"], l["pack_date"])] = l["id"]
         lot_by_number[l["lot_number"]] = l["id"]
 
     # --- Identify recurring future orders and filter ---
@@ -377,7 +377,7 @@ def migrate_sales_po(supabase, gc):
     po_line_rows = []
     # line_key → (line_idx, [source_rows]) for fulfillment pass
     line_key_map = {}  # (po_key, product_id) → index in po_line_rows
-    line_source_rows = []  # parallel: list of (source_rows, farm_id) per line
+    line_source_rows = []  # parallel: list of (source_rows, farm_name) per line
 
     for key in sorted(po_groups.keys()):
         if key not in po_key_to_idx:
@@ -391,7 +391,7 @@ def migrate_sales_po(supabase, gc):
                 continue
 
             farm_name = str(r.get("Farm", "")).strip()
-            farm_id = to_id(farm_name)
+            farm_name = to_id(farm_name)
             order_qty = safe_numeric(r.get("PurchaseOrderQuantity"))
             price = safe_numeric(r.get("PricePerCase"))
             reported_by = str(r.get("RecordedBy", "")).strip().lower() or AUDIT_USER
@@ -406,7 +406,7 @@ def migrate_sales_po(supabase, gc):
                 line_key_map[line_key] = len(po_line_rows)
                 po_line_rows.append({
                     "org_id": ORG_ID,
-                    "farm_id": farm_id,
+                    "farm_name": farm_name,
                     "sales_po_id": po_uuid,
                     "sales_product_id": product_code,
                     "order_quantity": order_qty,
@@ -414,7 +414,7 @@ def migrate_sales_po(supabase, gc):
                     "created_by": reported_by,
                     "updated_by": reported_by,
                 })
-                line_source_rows.append(([r], farm_id))
+                line_source_rows.append(([r], farm_name))
 
     # Insert PO lines
     inserted_lines = insert_rows(supabase, "sales_po_line", po_line_rows)
@@ -422,7 +422,7 @@ def migrate_sales_po(supabase, gc):
     # --- Build fulfillment rows ---
     fulfillment_rows = []
 
-    for idx, (source_rows, farm_id) in enumerate(line_source_rows):
+    for idx, (source_rows, farm_name) in enumerate(line_source_rows):
         line_uuid = inserted_lines[idx]["id"]
         po_uuid = po_line_rows[idx]["sales_po_id"]
 
@@ -445,11 +445,11 @@ def migrate_sales_po(supabase, gc):
                 if lot_code:
                     pack_lot_id = lot_by_number.get(lot_code)
                 if not pack_lot_id and pack_date:
-                    pack_lot_id = lot_by_date_farm.get((farm_id, pack_date))
+                    pack_lot_id = lot_by_date_farm.get((farm_name, pack_date))
 
                 fulfillment_rows.append({
                     "org_id": ORG_ID,
-                    "farm_id": farm_id,
+                    "farm_name": farm_name,
                     "sales_po_id": po_uuid,
                     "sales_po_line_id": line_uuid,
                     "pack_lot_id": pack_lot_id,
@@ -464,7 +464,7 @@ def migrate_sales_po(supabase, gc):
                 if inv_qty is not None and inv_qty == 0:
                     fulfillment_rows.append({
                         "org_id": ORG_ID,
-                        "farm_id": farm_id,
+                        "farm_name": farm_name,
                         "sales_po_id": po_uuid,
                         "sales_po_line_id": line_uuid,
                         "fulfilled_quantity": 0,

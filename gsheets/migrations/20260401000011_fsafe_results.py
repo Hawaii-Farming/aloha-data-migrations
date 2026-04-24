@@ -317,13 +317,13 @@ def setup_water_sites(supabase, wb):
         parent_id = BUILDING_SITE_MAP.get((farm, building))
         display_name = f"{building.upper()} Water - {sitename}"
         site_id = to_id(f"{farm}_{building}_water_{sitename}")
-        farm_id = farm if farm in ("cuke", "lettuce") else None
+        farm_name = farm if farm in ("cuke", "lettuce") else None
         water_site_map[(farm, building, sitename)] = site_id
 
         rows.append(audit({
             "id": site_id,
             "org_id": ORG_ID,
-            "farm_id": farm_id,
+            "farm_name": farm_name,
             "name": display_name,
             "org_site_category_id": "food_safety",
             "zone": "water",
@@ -349,7 +349,7 @@ def migrate_emp(supabase, wb, sampled_by_lookup, email_map):
 
     # Build org_site lookup: name (lowered) -> id for food_safety sites
     sites = paginate_select(
-        supabase, "org_site", "id, name, farm_id",
+        supabase, "org_site", "id, name, farm_name",
         eq_filters={"org_id": ORG_ID},
     )
     site_by_name = {s["name"].lower(): s["id"] for s in sites}
@@ -371,7 +371,7 @@ def migrate_emp(supabase, wb, sampled_by_lookup, email_map):
         sitename = str(r.get("SiteName", "")).strip()
         site_lookup = f"{building} - {sitename}".lower() if building and sitename else ""
         site_id = site_by_name.get(site_lookup)
-        farm_id = farm if farm in ("cuke", "lettuce") else None
+        farm_name = farm if farm in ("cuke", "lettuce") else None
 
         # TestType -> initial_retest_vector
         test_type_raw = str(r.get("TestType", "")).strip().lower()
@@ -406,7 +406,7 @@ def migrate_emp(supabase, wb, sampled_by_lookup, email_map):
         idx = len(rows)
         row = {
             "org_id": ORG_ID,
-            "farm_id": farm_id,
+            "farm_name": farm_name,
             "site_id": site_id,
             "fsafe_lab_test_id": lab_test_id,
             "initial_retest_vector": initial_retest_vector,
@@ -471,20 +471,20 @@ def migrate_water(supabase, wb, water_site_map, sampled_by_lookup):
         building = str(r.get("Building", "")).strip().lower()
         sitename = str(r.get("SiteName", "")).strip()
         site_id = water_site_map.get((farm, building, sitename))
-        farm_id = farm if farm in ("cuke", "lettuce") else None
+        farm_name = farm if farm in ("cuke", "lettuce") else None
 
         # Lab from "Lab" column
         lab_raw = str(r.get("Lab", "")).strip().lower()
-        fsafe_lab_id = lab_by_name.get(lab_raw)
+        fsafe_lab_name = lab_by_name.get(lab_raw)
 
         sampled_at = parse_timestamp(str(r.get("SampleDateTime", "")).strip())
         sampled_by = resolve_sampled_by(r.get("SampledBy", ""), sampled_by_lookup)
 
         base = {
             "org_id": ORG_ID,
-            "farm_id": farm_id,
+            "farm_name": farm_name,
             "site_id": site_id,
-            "fsafe_lab_id": fsafe_lab_id,
+            "fsafe_lab_name": fsafe_lab_name,
             "status": "completed",
             "sampled_at": sampled_at,
             "sampled_by": sampled_by,
@@ -548,9 +548,9 @@ def migrate_test_hold(supabase, wb, sampled_by_lookup):
     data = wb.worksheet("fsafe_log_test_n_hold").get_all_records()
     print(f"\n  Reading fsafe_log_test_n_hold: {len(data)} rows")
 
-    # Build pack_lot lookup: lot_number -> {id, farm_id}
+    # Build pack_lot lookup: lot_number -> {id, farm_name}
     lots = paginate_select(
-        supabase, "pack_lot", "id, lot_number, farm_id",
+        supabase, "pack_lot", "id, lot_number, farm_name",
         eq_filters={"org_id": ORG_ID},
     )
     lot_by_number = {l["lot_number"]: l for l in lots}
@@ -580,11 +580,11 @@ def migrate_test_hold(supabase, wb, sampled_by_lookup):
             continue
 
         pack_lot_id = lot["id"]
-        farm_id = lot["farm_id"]
+        farm_name = lot["farm_name"]
 
         # Lab
         lab_raw = str(r.get("Lab", "")).strip().lower()
-        fsafe_lab_id = lab_by_name.get(lab_raw)
+        fsafe_lab_name = lab_by_name.get(lab_raw)
 
         # Lab test ID
         lab_test_id = str(r.get("LabTestID", "")).strip() or None
@@ -598,9 +598,9 @@ def migrate_test_hold(supabase, wb, sampled_by_lookup):
 
         hold_row = {
             "org_id": ORG_ID,
-            "farm_id": farm_id,
+            "farm_name": farm_name,
             "pack_lot_id": pack_lot_id,
-            "fsafe_lab_id": fsafe_lab_id,
+            "fsafe_lab_name": fsafe_lab_name,
             "lab_test_id": lab_test_id,
             "delivered_to_lab_on": delivered_to_lab_on,
             "sales_customer_group_id": sales_customer_group_id,
@@ -620,16 +620,16 @@ def migrate_test_hold(supabase, wb, sampled_by_lookup):
             break
         hold = inserted_holds[idx]
         hold_id = hold["id"]
-        farm_id = hold["farm_id"]
-        fsafe_lab_id = hold.get("fsafe_lab_id")
+        farm_name = hold["farm_name"]
+        fsafe_lab_name = hold.get("fsafe_lab_name")
 
         sampled_by = resolve_sampled_by(r.get("SampledBy", ""), sampled_by_lookup)
 
         base = {
             "org_id": ORG_ID,
-            "farm_id": farm_id,
+            "farm_name": farm_name,
             "fsafe_test_hold_id": hold_id,
-            "fsafe_lab_id": fsafe_lab_id,
+            "fsafe_lab_name": fsafe_lab_name,
             "status": "completed",
             "sampled_by": sampled_by,
             "created_by": AUDIT_USER,

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS sales_product (
     code                       TEXT PRIMARY KEY,
     org_id                     TEXT NOT NULL REFERENCES org(id),
-    farm_id                    TEXT NOT NULL REFERENCES org_farm(name),
+    farm_name                    TEXT NOT NULL REFERENCES org_farm(name),
     grow_grade_id              TEXT REFERENCES grow_grade(code),
     name                       TEXT NOT NULL,
     description                TEXT,
@@ -57,12 +57,12 @@ CREATE TABLE IF NOT EXISTS sales_product (
     updated_by                 TEXT,
     is_deleted                 BOOLEAN NOT NULL DEFAULT false,
 
-    CONSTRAINT uq_sales_product_name UNIQUE (farm_id, name)
+    CONSTRAINT uq_sales_product_name UNIQUE (farm_name, name)
 );
 
 COMMENT ON TABLE sales_product IS 'The sellable products from each farm. Combines a grade with a full packaging hierarchy (item → pack → case → pallet). The sale unit is always a case; the shipping unit is always a pallet.';
 
-CREATE INDEX idx_sales_product_farm_id ON sales_product (farm_id);
+CREATE INDEX idx_sales_product_farm_id ON sales_product (farm_name);
 
 COMMENT ON COLUMN sales_product.invnt_item_id IS 'Filtered to packaging items in inventory';
 COMMENT ON COLUMN sales_product.item_uom IS 'Smallest countable unit of the product (e.g. count, lb, oz)';

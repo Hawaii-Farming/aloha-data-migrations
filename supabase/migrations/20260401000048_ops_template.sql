@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS ops_template (
     id                          TEXT        PRIMARY KEY,
     org_id                      TEXT        NOT NULL REFERENCES org(id),
-    farm_id                     TEXT        REFERENCES org_farm(name),
+    farm_name                     TEXT        REFERENCES org_farm(name),
 
     name                        TEXT        NOT NULL,
     org_module_id               TEXT        REFERENCES org_module(id),
@@ -20,7 +20,7 @@ COMMENT ON TABLE ops_template IS 'Master checklist template. Defines the checkli
 
 CREATE INDEX idx_ops_template_org_id ON ops_template (org_id);
 
--- Partial unique indexes handle NULL farm_id correctly (NULL != NULL in standard UNIQUE constraints)
-CREATE UNIQUE INDEX uq_ops_template_org_level  ON ops_template (org_id, name) WHERE farm_id IS NULL;
-CREATE UNIQUE INDEX uq_ops_template_farm_level ON ops_template (org_id, farm_id, name) WHERE farm_id IS NOT NULL;
+-- Partial unique indexes handle NULL farm_name correctly (NULL != NULL in standard UNIQUE constraints)
+CREATE UNIQUE INDEX uq_ops_template_org_level  ON ops_template (org_id, name) WHERE farm_name IS NULL;
+CREATE UNIQUE INDEX uq_ops_template_farm_level ON ops_template (org_id, farm_name, name) WHERE farm_name IS NOT NULL;
 

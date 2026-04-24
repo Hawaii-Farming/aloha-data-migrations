@@ -5,9 +5,9 @@ WITH schedule_base AS (
     -- Derives the task date from start_time and the Sunday-anchored week start date.
     SELECT
         s.hr_employee_id,
-        s.ops_task_id,
+        s.ops_task_name,
         s.org_id,
-        s.farm_id,
+        s.farm_name,
         s.start_time                                                        AS schedule_start,
         s.stop_time                                                         AS schedule_stop,
         s.total_hours                                                       AS schedule_total_hours,
@@ -96,11 +96,11 @@ SELECT
 
 FROM schedule_base sb
 JOIN hr_employee e  ON e.id = sb.hr_employee_id
-JOIN ops_task    t  ON t.name = sb.ops_task_id
+JOIN ops_task    t  ON t.name = sb.ops_task_name
 GROUP BY
     sb.week_start_date,
     sb.org_id,
-    sb.farm_id,
+    sb.farm_name,
     e.id,
     e.hr_department_id,
     e.hr_work_authorization_id,

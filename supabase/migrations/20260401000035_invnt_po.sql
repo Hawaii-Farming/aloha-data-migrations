@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS invnt_po (
     id                     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                 TEXT NOT NULL REFERENCES org(id),
-    farm_id                TEXT REFERENCES org_farm(name),
+    farm_name                TEXT REFERENCES org_farm(name),
 
     -- Request classification
     request_type           TEXT NOT NULL DEFAULT 'inventory_item' CHECK (request_type IN ('non_inventory_item', 'inventory_item')),

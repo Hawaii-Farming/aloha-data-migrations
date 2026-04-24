@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS sales_product_price (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id         TEXT NOT NULL REFERENCES org(id),
-    farm_id        TEXT NOT NULL REFERENCES org_farm(name),
+    farm_name        TEXT NOT NULL REFERENCES org_farm(name),
     sales_product_id     TEXT NOT NULL REFERENCES sales_product(code),
     sales_fob_id         TEXT NOT NULL REFERENCES sales_fob(id),
     sales_customer_group_id  TEXT REFERENCES sales_customer_group(id),

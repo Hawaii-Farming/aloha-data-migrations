@@ -269,7 +269,7 @@ def migrate_sales_product_price(supabase, gc):
             continue
 
         farm_name = str(r.get("Farm", "")).strip()
-        farm_id = to_id(farm_name)
+        farm_name = to_id(farm_name)
         sales_product_id = product_code
 
         # FOB
@@ -295,7 +295,7 @@ def migrate_sales_product_price(supabase, gc):
 
         row = {
             "org_id": ORG_ID,
-            "farm_id": farm_id,
+            "farm_name": farm_name,
             "sales_product_id": sales_product_id,
             "sales_fob_id": fob_id,
             "price_per_case": price,

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS org_site_cuke_gh (
     id                  TEXT PRIMARY KEY,
     org_id              TEXT NOT NULL REFERENCES org(id),
-    farm_id             TEXT NOT NULL REFERENCES org_farm(name),
+    farm_name             TEXT NOT NULL REFERENCES org_farm(name),
     farm_section        TEXT NOT NULL CHECK (farm_section IN ('JTL', 'BIP')),
     acres               NUMERIC,
     rows_orientation    TEXT NOT NULL CHECK (rows_orientation IN ('vertical', 'horizontal')),
@@ -29,4 +29,4 @@ COMMENT ON COLUMN org_site_cuke_gh.layout_grid_col IS 'Dashboard grid column pos
 COMMENT ON COLUMN org_site_cuke_gh.layout_stack_pos IS 'When multiple GHs share the same (grid_row, grid_col), this orders them within the shared cell. Null when no stacking';
 
 CREATE INDEX idx_org_site_cuke_gh_org ON org_site_cuke_gh (org_id);
-CREATE INDEX idx_org_site_cuke_gh_farm ON org_site_cuke_gh (farm_id);
+CREATE INDEX idx_org_site_cuke_gh_farm ON org_site_cuke_gh (farm_name);

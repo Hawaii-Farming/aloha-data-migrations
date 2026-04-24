@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS ops_template_question (
     id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id              TEXT        NOT NULL REFERENCES org(id),
-    farm_id             TEXT        REFERENCES org_farm(name),
+    farm_name             TEXT        REFERENCES org_farm(name),
     ops_template_id     TEXT        NOT NULL REFERENCES ops_template(id),
 
     question_text       TEXT        NOT NULL,
@@ -42,4 +42,4 @@ COMMENT ON COLUMN ops_template_question.boolean_pass_value IS 'The boolean value
 COMMENT ON COLUMN ops_template_question.enum_options IS 'JSON array of available options when response_type is enum';
 COMMENT ON COLUMN ops_template_question.enum_pass_options IS 'JSON array of enum values that constitute a pass';
 COMMENT ON COLUMN ops_template_question.ops_corrective_action_choice_ids IS 'JSON array of suggested corrective action choice IDs when this question fails';
-COMMENT ON COLUMN ops_template_question.farm_id IS 'Inherited from ops_template.farm_id when question is created';
+COMMENT ON COLUMN ops_template_question.farm_name IS 'Inherited from ops_template.farm_name when question is created';

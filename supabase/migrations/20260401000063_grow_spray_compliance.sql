@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_spray_compliance (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
-    farm_id                     TEXT REFERENCES org_farm(name),
+    farm_name                     TEXT REFERENCES org_farm(name),
     invnt_item_id               TEXT REFERENCES invnt_item(id),
 
     -- Regulatory Information — legacy label rows often lack these fields.

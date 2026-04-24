@@ -65,7 +65,7 @@ sched_by_acct AS (
      AND s.hr_employee_id = pa.hr_employee_id
      AND s.start_time::date BETWEEN pa.pay_period_start AND pa.pay_period_end
      AND NOT s.is_deleted
-    LEFT JOIN ops_task t ON t.name = s.ops_task_id
+    LEFT JOIN ops_task t ON t.name = s.ops_task_name
     GROUP BY 1, 2, 3
 ),
 sched_totals AS (

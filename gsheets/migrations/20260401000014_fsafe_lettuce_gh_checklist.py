@@ -235,7 +235,7 @@ def create_stub_employee(supabase, email):
         "last_name": last,
         "company_email": email,
         "is_primary_org": True,
-        "sys_access_level_id": "Employee",
+        "sys_access_level_name": "Employee",
         "is_deleted": True,
     })
     try:
@@ -277,7 +277,7 @@ def build_site_matcher(supabase):
     result = (
         supabase.table("org_site")
         .select("id,name,site_id_parent")
-        .eq("farm_id", FARM_ID)
+        .eq("farm_name", FARM_ID)
         .eq("org_site_category_id", "food_safety")
         .execute()
     )
@@ -321,7 +321,7 @@ def auto_create_atp_site(supabase, raw_name, candidates):
     row = audit({
         "id": new_id,
         "org_id": ORG_ID,
-        "farm_id": FARM_ID,
+        "farm_name": FARM_ID,
         "name": display_name,
         "org_site_category_id": "food_safety",
         "site_id_parent": SITE_ID,
@@ -347,7 +347,7 @@ def upsert_templates(supabase):
         rows.append(audit({
             "id": t["id"],
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
+            "farm_name": FARM_ID,
             "name": t["name"],
             "org_module_id": "food_safety",
             "description": t["description"],
@@ -368,7 +368,7 @@ def reseed_questions(supabase):
         for order, (q_text, rtype, kw) in enumerate(t["questions"], start=1):
             rows.append(audit({
                 "org_id": ORG_ID,
-                "farm_id": FARM_ID,
+                "farm_name": FARM_ID,
                 "ops_template_id": t["id"],
                 "question_text": q_text,
                 "response_type": rtype,
@@ -394,14 +394,14 @@ def upsert_task_template_links(supabase):
     for t in TEMPLATES:
         supabase.table("ops_task_template").delete().eq(
             "ops_template_id", t["id"]
-        ).eq("ops_task_id", TASK_ID).execute()
+        ).eq("ops_task_name", TASK_ID).execute()
 
     rows = []
     for t in TEMPLATES:
         rows.append(audit({
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
-            "ops_task_id": TASK_ID,
+            "farm_name": FARM_ID,
+            "ops_task_name": TASK_ID,
             "ops_template_id": t["id"],
         }))
     insert_rows(supabase, "ops_task_template", rows)
@@ -423,10 +423,10 @@ def clear_existing_data(supabase):
         supabase.table("ops_corrective_action_taken").delete().eq("ops_template_id", tid).execute()
     print("  Cleared ops_corrective_action_taken")
 
-    supabase.table("ops_task_tracker").delete().eq("ops_task_id", TASK_ID).eq("farm_id", FARM_ID).eq("site_id", SITE_ID).execute()
+    supabase.table("ops_task_tracker").delete().eq("ops_task_name", TASK_ID).eq("farm_name", FARM_ID).eq("site_id", SITE_ID).execute()
     print(f"  Cleared ops_task_tracker (lettuce food_safety_log @ {SITE_ID})")
 
-    supabase.table("fsafe_result").delete().eq("fsafe_lab_test_id", ATP_TEST_ID).eq("farm_id", FARM_ID).execute()
+    supabase.table("fsafe_result").delete().eq("fsafe_lab_test_id", ATP_TEST_ID).eq("farm_name", FARM_ID).execute()
     print(f"  Cleared fsafe_result (atp_rlu, lettuce)")
 
 
@@ -462,9 +462,9 @@ def migrate_template(supabase, gc, template_def, q_map, email_map, stub_cache):
         tracker_idx = len(trackers)
         trackers.append({
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
+            "farm_name": FARM_ID,
             "site_id": SITE_ID,
-            "ops_task_id": TASK_ID,
+            "ops_task_name": TASK_ID,
             "start_time": reported,
             "stop_time": reported,
             "is_completed": True,
@@ -491,7 +491,7 @@ def migrate_template(supabase, gc, template_def, q_map, email_map, stub_cache):
         tracker = inserted_trackers[tracker_idx]
         row = {
             "org_id": ORG_ID,
-            "farm_id": FARM_ID,
+            "farm_name": FARM_ID,
             "ops_task_tracker_id": tracker["id"],
             "ops_template_id": template_id,
             "ops_template_question_id": q_id,
@@ -564,9 +564,9 @@ def migrate_atp(supabase, gc, email_map, stub_cache):
 
             rows.append({
                 "org_id": ORG_ID,
-                "farm_id": FARM_ID,
+                "farm_name": FARM_ID,
                 "site_id": site_id,
-                "fsafe_lab_id": ATP_LAB_ID,
+                "fsafe_lab_name": ATP_LAB_ID,
                 "fsafe_lab_test_id": ATP_TEST_ID,
                 "result_numeric": value,
                 "result_pass": result_pass,

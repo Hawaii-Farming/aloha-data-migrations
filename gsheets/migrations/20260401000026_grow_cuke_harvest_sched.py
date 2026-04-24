@@ -15,7 +15,7 @@ Data mapping:
   - Greenhouse                  -> site_id (normalized)
   - NumberOfPeople              -> number_of_people (nullable)
   - ReportedBy                  -> created_by / updated_by
-  - ops_task_id                 -> "harvesting" (hardcoded)
+  - ops_task_name                 -> "harvesting" (hardcoded)
   - notes                       -> "Legacy harvest schedule migration"
                                    (marker for rerun identification)
 
@@ -28,7 +28,7 @@ Columns NOT stored (derivable via view):
 
 Linking strategy (earliest wins):
   Sort trackers by start_time ASC. For each, UPDATE grow_harvest_weight
-  SET ops_task_tracker_id = :id WHERE farm_id = 'cuke' AND
+  SET ops_task_tracker_id = :id WHERE farm_name = 'cuke' AND
   harvest_date = :date AND site_id = :site AND ops_task_tracker_id IS NULL.
   The IS NULL guard means only the first tracker per (date, site) wins.
 
@@ -192,7 +192,7 @@ def clear_existing():
                 SET ops_task_tracker_id = NULL
                 WHERE ops_task_tracker_id IN (
                     SELECT id FROM ops_task_tracker
-                    WHERE farm_id = %s AND ops_task_id = %s AND notes = %s
+                    WHERE farm_name = %s AND ops_task_name = %s AND notes = %s
                 )
                 """,
                 (FARM_ID, OPS_TASK_ID, TRACKER_NOTE_MARKER),
@@ -201,7 +201,7 @@ def clear_existing():
             cur.execute(
                 """
                 DELETE FROM ops_task_tracker
-                WHERE farm_id = %s AND ops_task_id = %s AND notes = %s
+                WHERE farm_name = %s AND ops_task_name = %s AND notes = %s
                 """,
                 (FARM_ID, OPS_TASK_ID, TRACKER_NOTE_MARKER),
             )
@@ -248,9 +248,9 @@ def build_tracker_row(sheet_row, known_sites):
 
     return {
         "org_id": ORG_ID,
-        "farm_id": FARM_ID,
+        "farm_name": FARM_ID,
         "site_id": gh,
-        "ops_task_id": OPS_TASK_ID,
+        "ops_task_name": OPS_TASK_ID,
         "start_time": start_time.isoformat(),
         "stop_time": stop_time.isoformat() if stop_time else None,
         "is_completed": stop_time is not None,
@@ -306,7 +306,7 @@ def link_weights_to_trackers(trackers):
                 UPDATE grow_harvest_weight w
                 SET ops_task_tracker_id = v.tracker_id::uuid
                 FROM (VALUES {values_sql}) AS v(harvest_date, site_id, tracker_id)
-                WHERE w.farm_id = %s
+                WHERE w.farm_name = %s
                   AND w.harvest_date = v.harvest_date::date
                   AND w.site_id = v.site_id
                   AND w.ops_task_tracker_id IS NULL
@@ -336,7 +336,7 @@ def main():
     sites = (
         supabase.table("org_site")
         .select("id")
-        .eq("farm_id", FARM_ID)
+        .eq("farm_name", FARM_ID)
         .eq("org_site_subcategory_id", "greenhouse")
         .execute()
         .data

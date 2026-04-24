@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS hr_employee (
     -- ORGANISATION & ROLE
     -- =============================================
     hr_department_id             TEXT REFERENCES hr_department(id),
-    sys_access_level_id       TEXT NOT NULL REFERENCES sys_access_level(name),
+    sys_access_level_name       TEXT NOT NULL REFERENCES sys_access_level(name),
     is_manager                   BOOLEAN NOT NULL DEFAULT false,
     team_lead_id                 TEXT,
     compensation_manager_id      TEXT,
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS hr_employee (
       FOREIGN KEY (compensation_manager_id) REFERENCES hr_employee(id)
 );
 
-COMMENT ON TABLE hr_employee IS 'Unified employee register and org membership table. Every employee gets a row here with a required sys_access_level_id that defines their role (owner, manager, team_lead, employee). Employees without app access have a null user_id. A user can belong to multiple orgs by having one row per org. Tracks employment details, management hierarchy, and compensation.';
+COMMENT ON TABLE hr_employee IS 'Unified employee register and org membership table. Every employee gets a row here with a required sys_access_level_name that defines their role (owner, manager, team_lead, employee). Employees without app access have a null user_id. A user can belong to multiple orgs by having one row per org. Tracks employment details, management hierarchy, and compensation.';
 
 CREATE INDEX idx_hr_employee_org_id     ON hr_employee (org_id);
 CREATE INDEX idx_hr_employee_user_id    ON hr_employee (user_id);
@@ -85,9 +85,9 @@ CREATE INDEX idx_hr_employee_team_lead  ON hr_employee (team_lead_id);
 CREATE INDEX idx_hr_employee_department ON hr_employee (hr_department_id);
 
 COMMENT ON COLUMN hr_employee.is_primary_org IS 'When user belongs to multiple orgs, the primary org auto-loads on login; only one row per user_id should be true';
-COMMENT ON COLUMN hr_employee.team_lead_id IS 'Filtered to employees with sys_access_level_id = team_lead';
-COMMENT ON COLUMN hr_employee.compensation_manager_id IS 'Filtered to employees with sys_access_level_id = manager';
-COMMENT ON COLUMN hr_employee.sys_access_level_id IS 'Sourced from sys_access_level; determines the employee role and module visibility';
+COMMENT ON COLUMN hr_employee.team_lead_id IS 'Filtered to employees with sys_access_level_name = team_lead';
+COMMENT ON COLUMN hr_employee.compensation_manager_id IS 'Filtered to employees with sys_access_level_name = manager';
+COMMENT ON COLUMN hr_employee.sys_access_level_name IS 'Sourced from sys_access_level; determines the employee role and module visibility';
 COMMENT ON COLUMN hr_employee.overtime_threshold IS 'Hours per week before overtime applies; only relevant when pay_structure = hourly';
 COMMENT ON COLUMN hr_employee.pay_structure IS 'hourly, salary';
 COMMENT ON COLUMN hr_employee.wc IS 'Workers compensation code identifying the compensation plan or pay grade';

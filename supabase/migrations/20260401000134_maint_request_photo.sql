@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS maint_request_photo (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                  TEXT NOT NULL REFERENCES org(id),
-    farm_id                 TEXT REFERENCES org_farm(name),
+    farm_name                 TEXT REFERENCES org_farm(name),
     maint_request_id        UUID NOT NULL REFERENCES maint_request(id),
     photo_type              TEXT NOT NULL CHECK (photo_type IN ('before', 'after')),
     photo_url               TEXT NOT NULL,

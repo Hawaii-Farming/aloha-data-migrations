@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS fsafe_test_hold_po (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id              TEXT NOT NULL REFERENCES org(id),
-    farm_id             TEXT NOT NULL REFERENCES org_farm(name),
+    farm_name             TEXT NOT NULL REFERENCES org_farm(name),
     fsafe_test_hold_id  UUID NOT NULL REFERENCES fsafe_test_hold(id),
     sales_po_id         UUID NOT NULL REFERENCES sales_po(id),
 

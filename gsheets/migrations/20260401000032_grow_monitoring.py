@@ -15,7 +15,7 @@ Setup (upserted):
     three separate metrics since the schema keeps min/max on the metric
 
 Per sheet row:
-  - 1 ops_task_tracker (ops_task_id='monitoring', farm, site_id, station
+  - 1 ops_task_tracker (ops_task_name='monitoring', farm, site_id, station
     details in notes, start_time from ReportedDateTime/CheckedDate)
   - 1 grow_monitoring_result per non-blank measurement column
     (station, reading, is_out_of_range computed from metric range)
@@ -71,7 +71,7 @@ OPS_TASK_ID = "monitoring"
 # Metric definitions
 # ---------------------------------------------------------------------------
 #
-# Schema: grow_monitoring_metric is unique on (org_id, farm_id, site_category, name).
+# Schema: grow_monitoring_metric is unique on (org_id, farm_name, site_category, name).
 # For cuke nursery, EC is split into 3 metrics (Hi/Lo/Water) because each
 # station has a different valid range and the schema stores range on metric.
 #
@@ -298,7 +298,7 @@ def ensure_metrics(supabase):
         row = {
             "id": m["id"],
             "org_id": ORG_ID,
-            "farm_id": m["farm"],
+            "farm_name": m["farm"],
             "site_category": m["site_cat"],
             "name": m["name"],
             "description": NOTES_MARKER,
@@ -333,7 +333,7 @@ def clear_existing():
                 DELETE FROM grow_monitoring_result
                 WHERE ops_task_tracker_id IN (
                     SELECT id FROM ops_task_tracker
-                    WHERE ops_task_id = %s AND notes LIKE %s
+                    WHERE ops_task_name = %s AND notes LIKE %s
                 )
                 """,
                 (OPS_TASK_ID, f"%{NOTES_MARKER}%"),
@@ -344,7 +344,7 @@ def clear_existing():
                 DELETE FROM grow_task_photo
                 WHERE ops_task_tracker_id IN (
                     SELECT id FROM ops_task_tracker
-                    WHERE ops_task_id = %s AND notes LIKE %s
+                    WHERE ops_task_name = %s AND notes LIKE %s
                 )
                 """,
                 (OPS_TASK_ID, f"%{NOTES_MARKER}%"),
@@ -355,14 +355,14 @@ def clear_existing():
                 DELETE FROM grow_task_seed_batch
                 WHERE ops_task_tracker_id IN (
                     SELECT id FROM ops_task_tracker
-                    WHERE ops_task_id = %s AND notes LIKE %s
+                    WHERE ops_task_name = %s AND notes LIKE %s
                 )
                 """,
                 (OPS_TASK_ID, f"%{NOTES_MARKER}%"),
             )
             d4 = cur.rowcount
             cur.execute(
-                "DELETE FROM ops_task_tracker WHERE ops_task_id = %s AND notes LIKE %s",
+                "DELETE FROM ops_task_tracker WHERE ops_task_name = %s AND notes LIKE %s",
                 (OPS_TASK_ID, f"%{NOTES_MARKER}%"),
             )
             d3 = cur.rowcount
@@ -409,7 +409,7 @@ def build_batch_lookups(supabase):
         cuke_list.append((prefix, b["id"]))
 
     lettuce_codes = paginate_select(
-        supabase, "grow_lettuce_seed_batch", "id,batch_code,farm_id",
+        supabase, "grow_lettuce_seed_batch", "id,batch_code,farm_name",
     )
 
     # Lettuce: both the original batch_code and disambiguated variants
@@ -507,9 +507,9 @@ def build_rows(sheet_row, known_sites, cuke_list, lettuce_by_base):
     tracker = {
         "id": tracker_id,
         "org_id": ORG_ID,
-        "farm_id": farm_raw,
+        "farm_name": farm_raw,
         "site_id": site_id,
-        "ops_task_id": OPS_TASK_ID,
+        "ops_task_name": OPS_TASK_ID,
         "start_time": start.isoformat(),
         "stop_time": start.isoformat(),
         "is_completed": True,
@@ -538,7 +538,7 @@ def build_rows(sheet_row, known_sites, cuke_list, lettuce_by_base):
         oor = compute_oor(reading, m.get("min"), m.get("max"))
         results.append({
             "org_id": ORG_ID,
-            "farm_id": farm_raw,
+            "farm_name": farm_raw,
             "site_id": site_id,
             "ops_task_tracker_id": tracker_id,
             "grow_monitoring_metric_id": m["id"],
@@ -562,7 +562,7 @@ def build_rows(sheet_row, known_sites, cuke_list, lettuce_by_base):
         url = url.replace("images/grow_chem/", "images/grow_task/monitoring/")
         photos.append({
             "org_id": ORG_ID,
-            "farm_id": farm_raw,
+            "farm_name": farm_raw,
             "ops_task_tracker_id": tracker_id,
             "photo_url": url,
             "caption": None,
@@ -587,7 +587,7 @@ def build_rows(sheet_row, known_sites, cuke_list, lettuce_by_base):
         # with that column defaulting to NULL at the DB level.
         row = {
             "org_id": ORG_ID,
-            "farm_id": farm_raw,
+            "farm_name": farm_raw,
             "ops_task_tracker_id": tracker_id,
             "grow_cuke_seed_batch_id": batch_id if farm_raw == "cuke" else None,
             "grow_lettuce_seed_batch_id": batch_id if farm_raw == "lettuce" else None,
@@ -620,8 +620,8 @@ def main():
     ensure_metrics(supabase)
 
     # Load known cuke/lettuce sites
-    sites = paginate_select(supabase, "org_site", "id,farm_id")
-    known_sites = {s["id"] for s in sites if s.get("farm_id") in ("cuke", "lettuce")}
+    sites = paginate_select(supabase, "org_site", "id,farm_name")
+    known_sites = {s["id"] for s in sites if s.get("farm_name") in ("cuke", "lettuce")}
     print(f"\n  Known cuke/lettuce sites: {len(known_sites)}")
 
     # Load seed batch lookups for SeedingCycle linking

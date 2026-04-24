@@ -44,13 +44,13 @@ SELECT
     ma.can_delete,
     ma.can_verify
 FROM public.hr_employee e
-JOIN public.sys_access_level emp_al  ON emp_al.name = e.sys_access_level_id
+JOIN public.sys_access_level emp_al  ON emp_al.name = e.sys_access_level_name
 JOIN public.org_sub_module osm       ON osm.org_id = e.org_id
 JOIN public.org_module om            ON om.org_id = osm.org_id
-                                    AND om.sys_module_id = osm.sys_module_id
-JOIN public.sys_module sm            ON sm.name = osm.sys_module_id
+                                    AND om.sys_module_name = osm.sys_module_name
+JOIN public.sys_module sm            ON sm.name = osm.sys_module_name
 JOIN public.sys_sub_module ssm       ON ssm.id = osm.sys_sub_module_id
-JOIN public.sys_access_level req_al  ON req_al.name = osm.sys_access_level_id
+JOIN public.sys_access_level req_al  ON req_al.name = osm.sys_access_level_name
 JOIN public.hr_module_access ma      ON ma.hr_employee_id = e.id
                                     AND ma.org_module_id = om.id
 WHERE e.user_id = auth.uid()

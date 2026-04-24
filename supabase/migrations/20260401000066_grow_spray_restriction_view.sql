@@ -4,7 +4,7 @@ WITH spray_events AS (
     SELECT
         tt.id AS ops_task_tracker_id,
         tt.org_id,
-        tt.farm_id,
+        tt.farm_name,
         tt.site_id,
         tt.stop_time AS spray_stop,
         MAX(c.rei_hours) AS max_rei_hours,
@@ -15,14 +15,14 @@ WITH spray_events AS (
     WHERE tt.is_deleted = false
       AND tt.is_completed = true
       AND tt.stop_time IS NOT NULL
-    GROUP BY tt.id, tt.org_id, tt.farm_id, tt.site_id, tt.stop_time
+    GROUP BY tt.id, tt.org_id, tt.farm_name, tt.site_id, tt.stop_time
 ),
 rei_restrictions AS (
     -- Generate one row per calendar day for REI (No Entry) restriction
     SELECT
         se.ops_task_tracker_id,
         se.org_id,
-        se.farm_id,
+        se.farm_name,
         se.site_id,
         'NE' AS restriction_type,
         d::DATE AS restriction_date,
@@ -47,7 +47,7 @@ phi_restrictions AS (
     SELECT
         se.ops_task_tracker_id,
         se.org_id,
-        se.farm_id,
+        se.farm_name,
         se.site_id,
         'NH' AS restriction_type,
         d::DATE AS restriction_date,
@@ -70,7 +70,7 @@ phi_restrictions AS (
 SELECT
     ops_task_tracker_id,
     org_id,
-    farm_id,
+    farm_name,
     site_id,
     restriction_type,
     restriction_date,
@@ -86,7 +86,7 @@ UNION ALL
 SELECT
     ops_task_tracker_id,
     org_id,
-    farm_id,
+    farm_name,
     site_id,
     restriction_type,
     restriction_date,

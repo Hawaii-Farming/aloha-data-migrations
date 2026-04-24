@@ -163,7 +163,7 @@ def create_stub_employee(supabase, email):
         "last_name": last,
         "company_email": email,
         "is_primary_org": True,
-        "sys_access_level_id": "Employee",
+        "sys_access_level_name": "Employee",
         "is_deleted": True,
     })
     try:
@@ -194,12 +194,12 @@ def resolve_verifier(supabase, email, email_map, stub_cache):
 # ---------------------------------------------------------------------------
 
 def load_trap_index(supabase):
-    """Build a lookup: trap_id -> (site_id_parent, farm_id).
+    """Build a lookup: trap_id -> (site_id_parent, farm_name).
 
     Returns dict keyed by org_site.id for all pest_trap rows.
     """
     sites = paginate_select(
-        supabase, "org_site", "id,site_id_parent,farm_id",
+        supabase, "org_site", "id,site_id_parent,farm_name",
         eq_filters={"org_site_category_id": "pest_trap"},
     )
     return {r["id"]: r for r in sites}
@@ -326,7 +326,7 @@ def migrate(supabase, gc, email_map, stub_cache):
         if len(station_codes) > 1:
             fanned_out += 1
 
-        farm_id = farm_raw.lower()  # 'cuke' / 'lettuce'
+        farm_name = farm_raw.lower()  # 'cuke' / 'lettuce'
 
         for station in station_codes:
             trap_id = build_trap_id(farm_raw, site_raw, station)
@@ -337,7 +337,7 @@ def migrate(supabase, gc, email_map, stub_cache):
             parent_site = trap.get("site_id_parent")
             if not parent_site:
                 # Trap has no parent — fall back to the farm parent (gh/bip)
-                parent_site = "gh" if farm_id == "lettuce" else "bip"
+                parent_site = "gh" if farm_name == "lettuce" else "bip"
 
             # Pre-generate tracker UUID so we can assign it to the
             # pest_result row without a DB roundtrip.
@@ -345,9 +345,9 @@ def migrate(supabase, gc, email_map, stub_cache):
             trackers.append({
                 "id": tracker_id,
                 "org_id": ORG_ID,
-                "farm_id": farm_id,
+                "farm_name": farm_name,
                 "site_id": parent_site,
-                "ops_task_id": TASK_ID,
+                "ops_task_name": TASK_ID,
                 "start_time": reported,
                 "stop_time": reported,
                 "is_completed": True,
@@ -363,7 +363,7 @@ def migrate(supabase, gc, email_map, stub_cache):
 
             pending_results.append({
                 "org_id": ORG_ID,
-                "farm_id": farm_id,
+                "farm_name": farm_name,
                 "site_id": trap_id,
                 "ops_task_tracker_id": tracker_id,
                 "pest_type": pest_type,
