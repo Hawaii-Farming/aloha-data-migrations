@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS pack_lot_item (
     org_id              TEXT NOT NULL REFERENCES org(id),
     farm_id             TEXT NOT NULL REFERENCES org_farm(id),
     pack_lot_id         UUID NOT NULL REFERENCES pack_lot(id),
-    sales_product_id    TEXT NOT NULL REFERENCES sales_product(id),
+    sales_product_id    TEXT NOT NULL REFERENCES sales_product(code),
 
     best_by_date        DATE NOT NULL,
     pack_quantity       NUMERIC NOT NULL,

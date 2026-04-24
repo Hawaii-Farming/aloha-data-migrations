@@ -447,7 +447,6 @@ def migrate_grow_variety(supabase, gc):
         if not code or not name:
             continue
         rows.append(audit({
-            "id": code.lower(),
             "org_id": ORG_ID,
             "farm_id": to_id(farm),
             "code": code,
@@ -461,14 +460,12 @@ def migrate_grow_grade(supabase):
     """Migrate grow grades -- hardcoded for Cuke farm."""
     rows = [
         audit({
-            "id": "1",
             "org_id": ORG_ID,
             "farm_id": "cuke",
             "code": "1",
             "name": "On Grade",
         }),
         audit({
-            "id": "2",
             "org_id": ORG_ID,
             "farm_id": "cuke",
             "code": "2",

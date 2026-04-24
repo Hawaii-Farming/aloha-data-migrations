@@ -116,15 +116,15 @@ GH_CONFIG = {
 # ---------------------------------------------------------------------------
 
 VARIETY_NAME_TO_ID = {
-    "Keiki":    "k",
-    "Japanese": "j",
-    "English":  "e",
+    "Keiki":    "K",
+    "Japanese": "J",
+    "English":  "E",
 }
 
 # User instruction: treat every "Mixed" cell in the Variety (current) column
 # as a 50/50 Keiki + Japanese split. Sheet had only 3 Mixed rows at migration
 # time: GH3 South row 40, GH3 South row 49, Kona West row 55.
-MIXED_SPLIT = ("k", "j")
+MIXED_SPLIT = ("K", "J")
 
 
 # ---------------------------------------------------------------------------

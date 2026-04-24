@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS ops_task_tracker (
     org_id          TEXT NOT NULL REFERENCES org(id),
     farm_id         TEXT REFERENCES org_farm(id),
     site_id         TEXT REFERENCES org_site(id),
-    sales_product_id TEXT REFERENCES sales_product(id),
+    sales_product_id TEXT REFERENCES sales_product(code),
     ops_task_id     TEXT NOT NULL REFERENCES ops_task(id),
     start_time      TIMESTAMPTZ NOT NULL,
     stop_time       TIMESTAMPTZ,

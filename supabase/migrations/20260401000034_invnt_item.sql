@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS invnt_item (
     -- Item details
     invnt_vendor_id          TEXT REFERENCES invnt_vendor(id),
     manufacturer             TEXT,
-    grow_variety_id          TEXT REFERENCES grow_variety(id),
+    grow_variety_id          TEXT REFERENCES grow_variety(code),
     seed_is_pelleted         BOOLEAN,
     maint_part_type          TEXT,
     maint_part_number        TEXT,

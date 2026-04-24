@@ -379,11 +379,11 @@ def migrate_invnt_item(supabase, gc):
         location = str(r.get("ItemLocation", "")).strip()
         site_id = to_id(location) if location else None
 
-        # Variety — only set if it exists in grow_variety (skip unknown codes like 'kl')
-        variety = str(r.get("SeedVariety", "")).strip()
-        variety_id = variety.lower() if variety else None
-        VALID_VARIETIES = {v.lower() for v in ["BB","E","GA","GB","GC","GF","GG","GL","GO","GR","GT",
-            "J","K","KE","MX","RB","RC","RL","RO","RR","SP","WC","WR","WS"]}
+        # Variety — only set if it exists in grow_variety (skip unknown codes like 'KL')
+        variety = str(r.get("SeedVariety", "")).strip().upper()
+        variety_id = variety if variety else None
+        VALID_VARIETIES = {"BB","E","GA","GB","GC","GF","GG","GL","GO","GR","GT",
+            "J","K","KE","MX","RB","RC","RL","RO","RR","SP","WC","WR","WS"}
         if variety_id and variety_id not in VALID_VARIETIES:
             variety_id = None
 

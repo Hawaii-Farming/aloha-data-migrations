@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS pack_shelf_life (
     org_id                      TEXT NOT NULL REFERENCES org(id),
     farm_id                     TEXT REFERENCES org_farm(id),
     pack_lot_id                 UUID REFERENCES pack_lot(id),
-    sales_product_id            TEXT REFERENCES sales_product(id),
+    sales_product_id            TEXT REFERENCES sales_product(code),
     invnt_item_id               TEXT REFERENCES invnt_item(id),
 
     trial_number                INTEGER,

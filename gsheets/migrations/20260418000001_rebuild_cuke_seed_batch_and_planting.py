@@ -80,13 +80,13 @@ GROW_GH_MAP = {
     "KO": "ko", "HK": "hk", "WA": "wa", "HI": "hi",
 }
 
-VARIETY_NAME_TO_ID = {"Keiki": "k", "Japanese": "j", "English": "e"}
-MIXED_SPLIT = ("k", "j")
+VARIETY_NAME_TO_ID = {"Keiki": "K", "Japanese": "J", "English": "E"}
+MIXED_SPLIT = ("K", "J")
 
 DEFAULT_VARIETY_ITEM = {
-    "k": "delta_star_minis_rz",
-    "j": "f1_tsx_cu235jp_tokita",
-    "e": "english",
+    "K": "delta_star_minis_rz",
+    "J": "f1_tsx_cu235jp_tokita",
+    "E": "english",
 }
 ITEM_MAP = {
     "delta star": "delta_star_minis_rz",

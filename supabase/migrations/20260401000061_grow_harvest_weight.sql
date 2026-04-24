@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS grow_harvest_weight (
     ops_task_tracker_id         UUID REFERENCES ops_task_tracker(id),
     grow_lettuce_seed_batch_id  UUID REFERENCES grow_lettuce_seed_batch(id),
     grow_cuke_seed_batch_id     UUID REFERENCES grow_cuke_seed_batch(id),
-    grow_grade_id               TEXT REFERENCES grow_grade(id),
+    grow_grade_id               TEXT REFERENCES grow_grade(code),
     harvest_date                DATE NOT NULL,
     grow_harvest_container_id   TEXT NOT NULL REFERENCES grow_harvest_container(id),
     number_of_containers        INTEGER NOT NULL,

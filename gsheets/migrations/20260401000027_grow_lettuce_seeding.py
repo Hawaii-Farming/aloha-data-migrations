@@ -57,14 +57,14 @@ FARM_ID = "lettuce"
 CONTAINER_ID = "board"
 NOTES_MARKER = "Legacy lettuce migration"
 
-# Variety letter -> grow_variety.id (sheet uses uppercase 2-letter codes)
+# Variety letter -> grow_variety.code (sheet uses uppercase 2-letter codes)
 VARIETY_MAP = {
-    "GB": "gb", "GL": "gl", "RL": "rl", "GA": "ga",
-    "GR": "gr", "RR": "rr", "RB": "rb", "GO": "go",
-    "RO": "ro", "GC": "gc", "RC": "rc", "GF": "gf",
-    "RF": "rf", "GG": "gg", "RG": "rg", "MT": "mt",
-    "MS": "ms", "MG": "mg", "WC": "wc", "BB": "bb",
-    "E": "e", "J": "j", "K": "k", "TR": "tr",
+    "GB": "GB", "GL": "GL", "RL": "RL", "GA": "GA",
+    "GR": "GR", "RR": "RR", "RB": "RB", "GO": "GO",
+    "RO": "RO", "GC": "GC", "RC": "RC", "GF": "GF",
+    "RF": "RF", "GG": "GG", "RG": "RG", "MT": "MT",
+    "MS": "MS", "MG": "MG", "WC": "WC", "BB": "BB",
+    "E": "E", "J": "J", "K": "K", "TR": "TR",
 }
 
 STATUS_MAP = {

@@ -279,7 +279,6 @@ def migrate_sales_product(supabase, gc):
             pallet_net_weight = round(case_net_weight * pallet_ti * pallet_hi, 2)
 
         row = {
-            "id": code.lower(),
             "org_id": ORG_ID,
             "farm_id": farm_id,
             "code": code,
@@ -664,7 +663,7 @@ def migrate_shelf_life(supabase, gc):
         reported_by = str(r.get("RecordedBy", "")).strip().lower() or AUDIT_USER
 
         # Resolve sales_product_id (Trial -> null)
-        sales_product_id = product_code.lower() if product_code and product_code != "Trial" else None
+        sales_product_id = product_code if product_code and product_code != "Trial" else None
 
         # Resolve pack_lot_id by date
         pack_lot_id = lot_by_date.get(pack_date) if pack_date else None

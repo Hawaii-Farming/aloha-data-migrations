@@ -142,8 +142,8 @@ def ensure_missing_customers(supabase, data):
 
 def ensure_missing_products(supabase, data):
     """Auto-create products that exist in PO data but not in sales_product. Marked inactive."""
-    prod_result = supabase.table("sales_product").select("id").execute()
-    existing = {p["id"] for p in prod_result.data}
+    prod_result = supabase.table("sales_product").select("code").execute()
+    existing = {p["code"] for p in prod_result.data}
 
     sheet_prods = set()
     for r in data:
@@ -152,7 +152,7 @@ def ensure_missing_products(supabase, data):
         if code:
             sheet_prods.add((code, farm))
 
-    missing = [(code, farm) for code, farm in sheet_prods if code.lower() not in existing]
+    missing = [(code, farm) for code, farm in sheet_prods if code not in existing]
     if not missing:
         print("  No missing products")
         return
@@ -160,7 +160,6 @@ def ensure_missing_products(supabase, data):
     rows = []
     for code, farm in sorted(missing):
         rows.append(audit({
-            "id": code.lower(),
             "org_id": ORG_ID,
             "farm_id": to_id(farm),
             "code": code,
@@ -409,7 +408,7 @@ def migrate_sales_po(supabase, gc):
                     "org_id": ORG_ID,
                     "farm_id": farm_id,
                     "sales_po_id": po_uuid,
-                    "sales_product_id": product_code.lower(),
+                    "sales_product_id": product_code,
                     "order_quantity": order_qty,
                     "price_per_case": price,
                     "created_by": reported_by,

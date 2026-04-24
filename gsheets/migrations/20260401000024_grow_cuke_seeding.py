@@ -102,13 +102,13 @@ ITEMS_TO_CREATE = [
     {
         "id": "english",
         "name": "English",
-        "grow_variety_id": "e",
+        "grow_variety_id": "E",
         "manufacturer": None,
     },
     {
         "id": "cumlaude",
         "name": "Cumlaude",
-        "grow_variety_id": "e",
+        "grow_variety_id": "E",
         "manufacturer": None,
         "description": "Trial seed variety, originally tracked in legacy sheet as 'Cumlaude / 102247687' or 'Cumlade'",
     },

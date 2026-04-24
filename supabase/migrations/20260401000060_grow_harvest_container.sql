@@ -3,8 +3,8 @@ CREATE TABLE IF NOT EXISTS grow_harvest_container (
     org_id          TEXT NOT NULL REFERENCES org(id),
     farm_id         TEXT NOT NULL REFERENCES org_farm(id),
     name            TEXT NOT NULL,
-    grow_variety_id TEXT REFERENCES grow_variety(id),
-    grow_grade_id   TEXT REFERENCES grow_grade(id),
+    grow_variety_id TEXT REFERENCES grow_variety(code),
+    grow_grade_id   TEXT REFERENCES grow_grade(code),
     weight_uom      TEXT NOT NULL REFERENCES sys_uom(code),
     -- Tare is either a fixed weight (is_tare_calculated=false, tare_weight set)
     -- or derived from a formula applied to the gross weight at weigh-in time

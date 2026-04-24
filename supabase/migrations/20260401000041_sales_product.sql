@@ -1,9 +1,8 @@
 CREATE TABLE IF NOT EXISTS sales_product (
-    id                         TEXT PRIMARY KEY,
+    code                       TEXT PRIMARY KEY,
     org_id                     TEXT NOT NULL REFERENCES org(id),
     farm_id                    TEXT NOT NULL REFERENCES org_farm(id),
-    grow_grade_id              TEXT REFERENCES grow_grade(id),
-    code                       TEXT NOT NULL,
+    grow_grade_id              TEXT REFERENCES grow_grade(code),
     name                       TEXT NOT NULL,
     description                TEXT,
     invnt_item_id         TEXT REFERENCES invnt_item(id),
@@ -58,7 +57,6 @@ CREATE TABLE IF NOT EXISTS sales_product (
     updated_by                 TEXT,
     is_deleted                 BOOLEAN NOT NULL DEFAULT false,
 
-    CONSTRAINT uq_sales_product_code UNIQUE (farm_id, code),
     CONSTRAINT uq_sales_product_name UNIQUE (farm_id, name)
 );
 
