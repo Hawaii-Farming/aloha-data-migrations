@@ -36,7 +36,7 @@ HELPERS = {"_config", "_pg", "_clear_transactional", "_run_nightly", "_upload_im
 # so schedules, payroll, and employee records must stay in sync. 003 uses
 # upsert on hr_employee, so the auth user_id link is preserved.
 DEFAULT_SET = [
-    "003",  # hr (hr_employee, hr_title, hr_department, etc.)
+    "003",  # hr (hr_employee, hr_department, hr_work_authorization)
     "004",  # hr_schedule (ops_task_schedule planned entries)
     "005",  # hr_payroll
     "007",  # maint

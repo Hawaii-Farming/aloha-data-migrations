@@ -55,13 +55,13 @@ import gspread
 from google.oauth2.service_account import Credentials
 from supabase import create_client
 
-from _config import (
+from gsheets.migrations._config import (
     AUDIT_USER,
     ORG_ID,
     SUPABASE_URL,
     require_supabase_key,
 )
-from _pg import get_pg_conn, pg_bulk_insert, pg_select_all
+from gsheets.migrations._pg import get_pg_conn, pg_bulk_insert, pg_select_all
 
 
 PLANT_MAP_SHEET_ID = "1ewWyvaXGkRCvZxjUxBOHGY4PKdMHwKeTA5jTIod48LE"
@@ -483,7 +483,7 @@ def migrate_cuke_seed_batches(supabase):
       next_bag_change_date    -> null
       batch_code              -> dropped (not kept in the new table)
       grow_cycle_pattern_id   -> dropped (always null for cuke)
-      grow_seed_mix_id        -> dropped (cuke never uses seed mixes)
+      grow_lettuce_seed_mix_id -> dropped (cuke never uses seed mixes)
       seeding_uom             -> dropped (always 'bag' for cuke)
       number_of_units         -> dropped (rolled into seeds)
       seeds_per_unit          -> dropped (rolled into seeds)
