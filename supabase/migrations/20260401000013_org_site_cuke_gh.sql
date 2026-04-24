@@ -1,8 +1,9 @@
 CREATE TABLE IF NOT EXISTS org_site_cuke_gh (
-    site_id             TEXT PRIMARY KEY,
+    id                  TEXT PRIMARY KEY,
     org_id              TEXT NOT NULL REFERENCES org(id),
     farm_id             TEXT NOT NULL REFERENCES org_farm(id),
-    farm_section        TEXT NOT NULL,
+    farm_section        TEXT NOT NULL CHECK (farm_section IN ('JTL', 'BIP')),
+    acres               NUMERIC,
     rows_orientation    TEXT NOT NULL CHECK (rows_orientation IN ('vertical', 'horizontal')),
     sidewalk_position   TEXT NOT NULL CHECK (sidewalk_position IN ('middle', 'top', 'bottom', 'left', 'right', 'none')),
     blocks_vertical     BOOLEAN NOT NULL DEFAULT false,
@@ -16,9 +17,10 @@ CREATE TABLE IF NOT EXISTS org_site_cuke_gh (
     is_deleted          BOOLEAN NOT NULL DEFAULT false
 );
 
-COMMENT ON TABLE org_site_cuke_gh IS 'Cuke greenhouse registry — one row per GH with layout and display config for the plant-map dashboard and other GH-aware features. Standalone: site_id is a cuke-GH-scoped identifier and is not FK-linked to org_site.';
+COMMENT ON TABLE org_site_cuke_gh IS 'Cuke greenhouse registry — one row per GH with layout and display config for the plant-map dashboard and other GH-aware features. Standalone: id is a cuke-GH-scoped identifier and is not FK-linked to org_site.';
 
-COMMENT ON COLUMN org_site_cuke_gh.farm_section IS 'Farm area label used by the dashboard (e.g. JTL, BIP)';
+COMMENT ON COLUMN org_site_cuke_gh.farm_section IS 'Physical farm area this GH belongs to. JTL = numbered greenhouses (GH1-GH8); BIP = named houses (Kona, Kohala, Hamakua, Waimea, Hilo). Drives dashboard grouping and layout';
+COMMENT ON COLUMN org_site_cuke_gh.acres IS 'Cultivated area of this greenhouse. Used by reporting / yield-per-acre calculations. Nullable so a GH can be registered before its acreage is measured';
 COMMENT ON COLUMN org_site_cuke_gh.rows_orientation IS 'vertical = rows run top-to-bottom; horizontal = rows run left-to-right';
 COMMENT ON COLUMN org_site_cuke_gh.sidewalk_position IS 'Where the sidewalk renders in the GH visual: middle, top, bottom, left, right, or none. Dashboard renders sidewalks in grey';
 COMMENT ON COLUMN org_site_cuke_gh.blocks_vertical IS 'When true the renderer stacks blocks vertically instead of placing them side-by-side';
