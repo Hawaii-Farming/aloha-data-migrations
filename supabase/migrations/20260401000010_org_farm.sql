@@ -18,3 +18,13 @@ COMMENT ON TABLE org_farm IS 'Represents a crop or product line within an organi
 COMMENT ON COLUMN org_farm.weighing_uom IS 'Default weight unit for this farm; pre-fills grow_harvest_container.weight_uom and sales_product.weight_uom';
 COMMENT ON COLUMN org_farm.growing_uom IS 'Default growing unit for this farm; pre-fills grow_lettuce_seed_batch.seeding_uom (cuke batches do not carry a seeding unit)';
 COMMENT ON COLUMN org_farm.volume_uom IS 'Default volume unit for this farm; pre-fills grow_spray_equipment.water_uom and grow_fertigation.volume_uom';
+
+-- Seed the two known farms so later SQL migrations that carry reference
+-- data (grow_trial_type.legacy_trial) don't hit an FK violation. The
+-- Python migration 002_org.py upserts the same rows with full UOM
+-- defaults on the next nightly.
+INSERT INTO public.org_farm (id, org_id, name)
+VALUES
+  ('cuke',    'hawaii_farming', 'Cuke'),
+  ('lettuce', 'hawaii_farming', 'Lettuce')
+ON CONFLICT (id) DO NOTHING;
