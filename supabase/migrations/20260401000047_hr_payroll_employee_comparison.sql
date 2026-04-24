@@ -15,33 +15,43 @@
 -- for every task row of a given paycheck).
 
 CREATE OR REPLACE VIEW hr_payroll_employee_comparison AS
-WITH ranked_dates AS (
-    SELECT DISTINCT check_date,
+WITH standard_dates AS (
+    -- Period boundaries come from is_standard=TRUE check_dates only.
+    -- Off-cycle / adjustment runs (is_standard=FALSE) can land on arbitrary
+    -- dates and must not shift the "current period" anchor.
+    SELECT DISTINCT check_date
+    FROM hr_payroll
+    WHERE is_standard = true
+      AND payroll_processor = 'HRB'
+      AND NOT is_deleted
+),
+ranked_dates AS (
+    SELECT check_date,
            dense_rank() OVER (ORDER BY check_date DESC) AS rnk
-    FROM hr_payroll_by_task
+    FROM standard_dates
 ),
 periods AS (
     SELECT
-        MAX(check_date) FILTER (WHERE rnk = 1) AS current_date,
-        MAX(check_date) FILTER (WHERE rnk = 2) AS previous_date
+        MAX(check_date) FILTER (WHERE rnk = 1) AS cur_date,
+        MAX(check_date) FILTER (WHERE rnk = 2) AS prev_date
     FROM ranked_dates
 ),
 current_p AS (
     SELECT v.*
     FROM hr_payroll_by_task v, periods p
-    WHERE v.check_date = p.current_date
+    WHERE v.check_date = p.cur_date
 ),
 previous_p AS (
     SELECT v.*
     FROM hr_payroll_by_task v, periods p
-    WHERE v.check_date = p.previous_date
+    WHERE v.check_date = p.prev_date
 ),
 -- Employee-level PTO accrual per paycheck — same value repeats across every
 -- task row in the sheet output, so join by (employee, check_date) not task.
 pto_current AS (
     SELECT hr_employee_id, SUM(pto_hours_accrued) AS pto_hours_accrued
     FROM hr_payroll p, periods pr
-    WHERE p.check_date = pr.current_date
+    WHERE p.check_date = pr.cur_date
       AND p.payroll_processor = 'HRB'
       AND NOT p.is_deleted
     GROUP BY hr_employee_id
@@ -55,7 +65,7 @@ SELECT
     COALESCE(c.workers_compensation_code, pr.workers_compensation_code)  AS workers_compensation_code,
 
     -- Current period
-    (SELECT current_date FROM periods)                                   AS check_date_current_period,
+    (SELECT cur_date FROM periods)                                   AS check_date_current_period,
     COALESCE(c.scheduled_hours, 0)                                       AS scheduled_hours,
     COALESCE(c.total_hours, 0)                                           AS hours_current_period,
     COALESCE(c.total_cost, 0)                                            AS total_cost_current_period,
@@ -65,7 +75,7 @@ SELECT
     pt.pto_hours_accrued                                                 AS pto_hours_accrued,
 
     -- Previous period
-    (SELECT previous_date FROM periods)                                  AS check_date_previous_period,
+    (SELECT prev_date FROM periods)                                  AS check_date_previous_period,
     COALESCE(pr.total_hours, 0)                                          AS hours_previous_period,
     COALESCE(pr.total_cost, 0)                                           AS total_cost_previous_period,
     COALESCE(pr.regular_pay, 0)                                          AS regular_pay_previous_period,
