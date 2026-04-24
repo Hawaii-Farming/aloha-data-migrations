@@ -7,6 +7,10 @@ CREATE TABLE IF NOT EXISTS ops_task_schedule (
     hr_employee_id          TEXT NOT NULL REFERENCES hr_employee(id),
     start_time              TIMESTAMPTZ NOT NULL,
     stop_time               TIMESTAMPTZ,
+    -- Lunch-adjusted hours sourced from the schedule capture (sheet's daily
+    -- Hours column). Computing stop - start overcounts by a 30-min lunch
+    -- per shift, so the pre-computed value is authoritative here.
+    total_hours             NUMERIC,
 
     -- NOTE: units_completed was removed because the unit type varies by task (boards for seeding,
     -- totes for harvesting, acres for spraying) and the totals are already captured in the

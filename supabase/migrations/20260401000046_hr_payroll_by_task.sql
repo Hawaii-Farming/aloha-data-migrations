@@ -48,13 +48,17 @@ sched_by_acct AS (
         pa.hr_employee_id,
         pa.check_date,
         COALESCE(t.qb_account, pa.hr_department_id) AS acct,
-        SUM(EXTRACT(EPOCH FROM (s.stop_time - s.start_time)) / 3600.0) AS scheduled_hours
+        -- Use lunch-adjusted total_hours captured from the sheet's daily
+        -- Hours column; fall back to stop-start when unavailable.
+        SUM(COALESCE(
+            s.total_hours,
+            EXTRACT(EPOCH FROM (s.stop_time - s.start_time)) / 3600.0
+        )) AS scheduled_hours
     FROM payroll_agg pa
     JOIN ops_task_schedule s
       ON s.org_id = pa.org_id
      AND s.hr_employee_id = pa.hr_employee_id
      AND s.start_time::date BETWEEN pa.pay_period_start AND pa.pay_period_end
-     AND s.stop_time IS NOT NULL
      AND NOT s.is_deleted
     LEFT JOIN ops_task t ON t.id = s.ops_task_id
     GROUP BY 1, 2, 3
@@ -102,13 +106,15 @@ SELECT
     a.org_id,
     a.hr_employee_id,
     a.check_date,
-    (e.first_name || ' ' || e.last_name)                AS full_name,
+    -- Match the legacy sheet display: LASTNAME FIRSTNAME uppercase
+    upper(e.last_name || ' ' || e.first_name)           AS full_name,
     e.is_manager,
     e.compensation_manager_id,
-    (cm.first_name || ' ' || cm.last_name)              AS compensation_manager_name,
+    -- Sheet stores the comp manager's preferred/first name only
+    COALESCE(cm.preferred_name, cm.first_name)          AS compensation_manager,
     a.hr_work_authorization_id                          AS status,
-    a.wc,
-    a.acct,
+    a.wc                                                AS workers_compensation_code,
+    a.acct                                              AS task,
     ROUND(a.scheduled_hours::numeric, 2)                AS scheduled_hours,
     -- Allocated payroll fields
     ROUND(

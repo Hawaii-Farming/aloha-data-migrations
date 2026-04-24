@@ -99,6 +99,17 @@ def parse_time(time_str):
     return None
 
 
+def safe_float(val):
+    """Parse a numeric cell to float or None when blank/invalid."""
+    s = str(val).strip()
+    if not s:
+        return None
+    try:
+        return float(s.replace(",", ""))
+    except ValueError:
+        return None
+
+
 def get_sheets():
     """Connect to Google Sheets."""
     scopes = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
@@ -338,6 +349,10 @@ def migrate_schedule(supabase, gc, task_map: dict):
         start_time = f"{date}T{start_time_str}" if start_time_str else f"{date}T07:00:00"
         stop_time = f"{date}T{stop_time_str}" if stop_time_str else None
 
+        # Sheet's Hours column already has the 30-min lunch deduction applied.
+        # Capturing it directly — stop_time - start_time over-counts otherwise.
+        total_hours = safe_float(r.get("Hours"))
+
         reported_by = str(r.get("UpdatedBy", "")).strip().lower() or AUDIT_USER
 
         # Deduplicate by (ops_task_id, hr_employee_id, start_time) — last row wins
@@ -349,6 +364,7 @@ def migrate_schedule(supabase, gc, task_map: dict):
             "hr_employee_id": emp_id,
             "start_time": start_time,
             "stop_time": stop_time,
+            "total_hours": total_hours,
             "created_by": reported_by,
             "updated_by": reported_by,
         }
