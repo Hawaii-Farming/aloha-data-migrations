@@ -15,7 +15,7 @@ create table if not exists public.grow_cuke_rotation (
   org_id             text not null,
   farm_id            text not null,
   slot_num           integer not null check (slot_num between 1 and 12),
-  site_id            text not null references public.org_site_cuke_gh(site_id),
+  site_id            text not null references public.org_site_cuke_gh(id),
   is_anchor          boolean not null default false,
   anchor_week_start  date,
   notes              text,
