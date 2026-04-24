@@ -20,10 +20,10 @@ WITH schedule_base AS (
       AND s.is_deleted = false
 )
 SELECT
-    sb.week_start_date,
-    e.first_name || ' ' || e.last_name                                      AS full_name,
-    e.id                                                                    AS hr_employee_id,
     sb.org_id,
+    sb.week_start_date,
+    e.id                                                                    AS hr_employee_id,
+    e.first_name || ' ' || e.last_name                                      AS full_name,
     e.hr_department_id,
     e.hr_work_authorization_id,
     t.name                                                                  AS task,
