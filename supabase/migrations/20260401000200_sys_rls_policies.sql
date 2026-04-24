@@ -595,28 +595,28 @@ CREATE POLICY "grow_trial_type_read" ON public.grow_trial_type
 GRANT SELECT ON public.grow_trial_type TO authenticated;
 
 -- ============================================================
--- grow_seed_mix
+-- grow_lettuce_seed_mix
 -- ============================================================
 
-ALTER TABLE public.grow_seed_mix ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.grow_lettuce_seed_mix ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "grow_seed_mix_read" ON public.grow_seed_mix
+CREATE POLICY "grow_lettuce_seed_mix_read" ON public.grow_lettuce_seed_mix
   FOR SELECT TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT SELECT ON public.grow_seed_mix TO authenticated;
+GRANT SELECT ON public.grow_lettuce_seed_mix TO authenticated;
 
 -- ============================================================
--- grow_seed_mix_item
+-- grow_lettuce_seed_mix_item
 -- ============================================================
 
-ALTER TABLE public.grow_seed_mix_item ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.grow_lettuce_seed_mix_item ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "grow_seed_mix_item_read" ON public.grow_seed_mix_item
+CREATE POLICY "grow_lettuce_seed_mix_item_read" ON public.grow_lettuce_seed_mix_item
   FOR SELECT TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT SELECT ON public.grow_seed_mix_item TO authenticated;
+GRANT SELECT ON public.grow_lettuce_seed_mix_item TO authenticated;
 
 -- ============================================================
 -- grow_lettuce_seed_batch

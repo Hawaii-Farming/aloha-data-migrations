@@ -1007,11 +1007,11 @@ def migrate_grow_spray_compliance(supabase, gc):
         print(f"  Inserted with NULL farm_id ({len(unresolved_farms)} unique unknown farms): {sorted(unresolved_farms)}")
 
 
-def migrate_grow_seed_mix(supabase, gc):
+def migrate_grow_lettuce_seed_mix(supabase, gc):
     """Migrate seed mix recipes from invt_mix_seed_ratio sheet.
 
-    Each unique item_name becomes a grow_seed_mix row.
-    Each seed within that mix becomes a grow_seed_mix_item row.
+    Each unique item_name becomes a grow_lettuce_seed_mix row.
+    Each seed within that mix becomes a grow_lettuce_seed_mix_item row.
     """
     ws = gc.open_by_key(SHEET_ID).worksheet("invt_mix_seed_ratio")
     records = ws.get_all_records()
@@ -1063,7 +1063,7 @@ def migrate_grow_seed_mix(supabase, gc):
             "updated_by": info["created_by"],
         })
 
-    inserted_mixes = insert_rows(supabase, "grow_seed_mix", mix_rows)
+    inserted_mixes = insert_rows(supabase, "grow_lettuce_seed_mix", mix_rows)
 
     # Insert mix items
     item_rows = []
@@ -1074,14 +1074,14 @@ def migrate_grow_seed_mix(supabase, gc):
             item_rows.append({
                 "org_id": ORG_ID,
                 "farm_id": "lettuce",
-                "grow_seed_mix_id": mix_id,
+                "grow_lettuce_seed_mix_id": mix_id,
                 "invnt_item_id": item["invnt_item_id"],
                 "percentage": item["percentage"],
                 "created_by": item["created_by"],
                 "updated_by": item["created_by"],
             })
 
-    insert_rows(supabase, "grow_seed_mix_item", item_rows)
+    insert_rows(supabase, "grow_lettuce_seed_mix_item", item_rows)
 
 
 def main():
@@ -1099,7 +1099,7 @@ def main():
     # Clear in reverse FK order
     print("Clearing tables...")
     for t in ["grow_spray_compliance", "invnt_onhand", "invnt_po_received", "invnt_lot", "invnt_po",
-              "grow_seed_mix_item", "grow_seed_mix",
+              "grow_lettuce_seed_mix_item", "grow_lettuce_seed_mix",
               "maint_request_invnt_item", "pack_dryer_result",
               "invnt_item", "invnt_category", "invnt_vendor"]:
         try:
@@ -1125,7 +1125,7 @@ def main():
     migrate_invnt_po(supabase, gc)
     migrate_invnt_onhand(supabase, gc)
     migrate_grow_spray_compliance(supabase, gc)
-    migrate_grow_seed_mix(supabase, gc)
+    migrate_grow_lettuce_seed_mix(supabase, gc)
 
     print("\n" + "=" * 60)
     print("DONE")

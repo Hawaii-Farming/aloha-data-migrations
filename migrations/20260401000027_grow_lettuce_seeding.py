@@ -17,7 +17,7 @@ Setup (upserted):
 
 Per-row inserts:
   - grow_lettuce_seed_batch: one per sheet row (batch_code = seedingcycle verbatim)
-    Uses grow_seed_mix_id when seedname matches a mix (e.g. "Mixed Version 2.0")
+    Uses grow_lettuce_seed_mix_id when seedname matches a mix (e.g. "Mixed Version 2.0")
     Otherwise uses invnt_item_id. CHECK constraint enforces XOR.
   - grow_harvest_weight: one per harvested row (harvestdate AND
     greenhousenetweight both populated). number_of_containers=1
@@ -228,7 +228,7 @@ def ensure_cycle_patterns(supabase, records):
 def ensure_items(supabase, records, mix_names_lower):
     """Build seedname -> invnt_item.id lookup. Auto-create missing.
 
-    Skips seednames that match a mix (those get grow_seed_mix_id instead).
+    Skips seednames that match a mix (those get grow_lettuce_seed_mix_id instead).
     Returns: {seedname_lower: invnt_item.id}
     """
     # Load existing lettuce seed items (paginated — 186 rows today, near cap)
@@ -246,7 +246,7 @@ def ensure_items(supabase, records, mix_names_lower):
             continue
         sn_lower = sn.lower()
         if sn_lower in mix_names_lower:
-            continue  # handled via grow_seed_mix
+            continue  # handled via grow_lettuce_seed_mix
         if sn_lower in by_name_lower:
             continue  # already exists
         if sn in to_create:
@@ -368,9 +368,9 @@ def ensure_lots(supabase, records, item_by_name_lower, mix_names_lower):
 
 
 def build_mix_lookup(supabase):
-    """Build seedname_lower -> grow_seed_mix.id lookup for lettuce mixes."""
+    """Build seedname_lower -> grow_lettuce_seed_mix.id lookup for lettuce mixes."""
     mixes = paginate_select(
-        supabase, "grow_seed_mix", "id,name",
+        supabase, "grow_lettuce_seed_mix", "id,name",
         eq_filters={"farm_id": FARM_ID},
     )
     return {m["name"].lower(): m["id"] for m in mixes}
@@ -438,10 +438,10 @@ def build_rows(
     is_mix = seedname_lower in mix_lookup
     if is_mix:
         invnt_item_id = None
-        grow_seed_mix_id = mix_lookup[seedname_lower]
+        grow_lettuce_seed_mix_id = mix_lookup[seedname_lower]
     else:
         invnt_item_id = item_by_name_lower.get(seedname_lower)
-        grow_seed_mix_id = None
+        grow_lettuce_seed_mix_id = None
         if not invnt_item_id:
             return {"_skip": "unknown_seedname", "_detail": seedname}
 
@@ -482,7 +482,7 @@ def build_rows(
         "batch_code": cycle,
         "grow_cycle_pattern_id": grow_cycle_pattern_id,
         "grow_trial_type_id": grow_trial_type_id,
-        "grow_seed_mix_id": grow_seed_mix_id,
+        "grow_lettuce_seed_mix_id": grow_lettuce_seed_mix_id,
         "invnt_item_id": invnt_item_id,
         "invnt_lot_id": invnt_lot_id,
         "seeding_uom": "board",

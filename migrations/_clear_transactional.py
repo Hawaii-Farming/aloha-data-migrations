@@ -85,8 +85,8 @@ TABLES = [
     # plant-map empty and breaks 025's batch lookup. Do not re-add without
     # a repopulator.
     "grow_lettuce_seed_batch",
-    "grow_seed_mix_item",
-    "grow_seed_mix",
+    "grow_lettuce_seed_mix_item",
+    "grow_lettuce_seed_mix",
     # grow_trial_type excluded — reference data upserted idempotently by
     # its own migrations, and truncating it CASCADE-wipes grow_cuke_seed_batch
     # via the trial_type FK. Retired 024 was the only thing reseeding
