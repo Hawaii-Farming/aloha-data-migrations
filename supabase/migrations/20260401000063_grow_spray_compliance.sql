@@ -1,25 +1,29 @@
 CREATE TABLE IF NOT EXISTS grow_spray_compliance (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
-    farm_id                     TEXT NOT NULL REFERENCES org_farm(id),
-    invnt_item_id               TEXT NOT NULL REFERENCES invnt_item(id),
+    farm_id                     TEXT REFERENCES org_farm(id),
+    invnt_item_id               TEXT REFERENCES invnt_item(id),
 
-    -- Regulatory Information
-    epa_registration            TEXT NOT NULL,
-    phi_days                    INTEGER NOT NULL,
-    rei_hours                   INTEGER NOT NULL,
+    -- Regulatory Information — legacy label rows often lack these fields.
+    -- Keep the columns nullable so the full regulatory archive can be
+    -- loaded from the Chemicals sheet without throwing away incomplete
+    -- historical entries; the app guards the active/selection path on
+    -- its own via effective/expiration dates + required-field checks.
+    epa_registration            TEXT,
+    phi_days                    INTEGER NOT NULL DEFAULT 0,
+    rei_hours                   INTEGER NOT NULL DEFAULT 0,
 
     -- Application & Usage
     application_method          JSONB NOT NULL DEFAULT '[]',
     target_pest_disease         JSONB NOT NULL DEFAULT '[]',
-    application_uom             TEXT NOT NULL REFERENCES sys_uom(code),
-    maximum_quantity_per_acre   NUMERIC NOT NULL,
-    burn_uom                    TEXT NOT NULL REFERENCES sys_uom(code),
-    application_per_burn   NUMERIC NOT NULL,
+    application_uom             TEXT REFERENCES sys_uom(code),
+    maximum_quantity_per_acre   NUMERIC,
+    burn_uom                    TEXT REFERENCES sys_uom(code),
+    application_per_burn        NUMERIC NOT NULL DEFAULT 1,
 
     -- Label & Compliance
-    label_date                  DATE NOT NULL,
-    effective_date              DATE NOT NULL,
+    label_date                  DATE,
+    effective_date              DATE,
     expiration_date             DATE,
     external_label_url          TEXT NOT NULL,
 
