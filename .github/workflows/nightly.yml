@@ -61,19 +61,19 @@ jobs:
 
       - name: Pre-clear transactional tables
         if: ${{ inputs.skip_clear != true }}
-        run: python migrations/_clear_transactional.py
+        run: python gsheets/migrations/_clear_transactional.py
 
       - name: Run migrations (default set)
         if: ${{ github.event_name == 'schedule' || inputs.mode == 'default' || inputs.mode == '' }}
-        run: python migrations/_run_nightly.py
+        run: python gsheets/migrations/_run_nightly.py
 
       - name: Run migrations (all)
         if: ${{ inputs.mode == 'all' }}
-        run: python migrations/_run_nightly.py --all
+        run: python gsheets/migrations/_run_nightly.py --all
 
       - name: Run migrations (grow only)
         if: ${{ inputs.mode == 'grow_only' }}
-        run: python migrations/_run_nightly.py --only 024,025,026,027,028,029,030,031,032
+        run: python gsheets/migrations/_run_nightly.py --only 025,026,027,028,029,030,031,032
 
       - name: Cleanup credentials on failure
         if: ${{ always() }}
