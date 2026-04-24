@@ -39,14 +39,17 @@ ORG_ID = "hawaii_farming"
 
 HR_SHEET_ID = "13DUQTQyZf0CW07xv4FJ4ukP2x3Yoz8PyAw3Z2SwNsts"
 
-# Department mapping from payroll values to hr_department IDs
+# Department mapping from payroll values to hr_department IDs.
+# hr_department.id is seeded from the hr_ee_register 'Department' column
+# with original casing ("GH", "PH", "Corp", "Lettuce", "Maintenance"),
+# so values here must match that casing or FK inserts fail.
 DEPT_MAP = {
-    "gh": "gh",
-    "ph": "ph",
-    "lettuce": "lettuce",
-    "maintenance": "maintenance",
-    "corp": "corp",
-    "const": "corp",  # Construction → Corp
+    "gh": "GH",
+    "ph": "PH",
+    "lettuce": "Lettuce",
+    "maintenance": "Maintenance",
+    "corp": "Corp",
+    "const": "Corp",  # Construction → Corp
 }
 
 
