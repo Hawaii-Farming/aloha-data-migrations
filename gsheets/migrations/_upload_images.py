@@ -35,7 +35,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from supabase import create_client
 
-from _config import SUPABASE_URL, require_supabase_key
+from gsheets.migrations._config import SUPABASE_URL, require_supabase_key
 
 BUCKET = "images"
 MAX_WORKERS = 10

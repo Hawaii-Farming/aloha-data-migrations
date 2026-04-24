@@ -24,7 +24,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 from supabase import create_client
 
-from _pg import paginate_select
+from gsheets.migrations._pg import paginate_select
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://kfwqtaazdankxmdlqdak.supabase.co")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")

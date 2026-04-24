@@ -49,7 +49,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 from supabase import create_client
 
-from _config import AUDIT_USER, ORG_ID, SUPABASE_URL, require_supabase_key
+from gsheets.migrations._config import AUDIT_USER, ORG_ID, SUPABASE_URL, require_supabase_key
 
 
 FARM_ID = "cuke"

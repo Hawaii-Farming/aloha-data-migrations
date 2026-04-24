@@ -69,7 +69,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 from supabase import create_client
 
-from _config import (
+from gsheets.migrations._config import (
     AUDIT_USER,
     ORG_ID,
     SHEET_IDS,

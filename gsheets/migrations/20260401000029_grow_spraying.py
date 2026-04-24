@@ -47,14 +47,14 @@ import gspread
 from google.oauth2.service_account import Credentials
 from supabase import create_client
 
-from _config import (
+from gsheets.migrations._config import (
     AUDIT_USER,
     ORG_ID,
     SHEET_IDS,
     SUPABASE_URL,
     require_supabase_key,
 )
-from _pg import get_pg_conn, paginate_select, pg_bulk_insert
+from gsheets.migrations._pg import get_pg_conn, paginate_select, pg_bulk_insert
 
 GROW_SHEET_ID = SHEET_IDS.get("grow") or "1VtEecYn-W1pbnIU1hRHfxIpkH2DtK7hj0CpcpiLoziM"
 NOTES_MARKER = "Legacy spraying migration"

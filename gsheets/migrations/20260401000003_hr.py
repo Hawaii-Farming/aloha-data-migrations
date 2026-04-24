@@ -24,7 +24,7 @@ from google.oauth2.service_account import Credentials
 from supabase import create_client
 
 sys.path.insert(0, str(Path(__file__).parent))
-from _pg import get_pg_conn  # noqa: E402
+from gsheets.migrations._pg import get_pg_conn  # noqa: E402
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://kfwqtaazdankxmdlqdak.supabase.co")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")

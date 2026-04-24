@@ -52,14 +52,14 @@ import gspread
 from google.oauth2.service_account import Credentials
 from supabase import create_client
 
-from _config import (
+from gsheets.migrations._config import (
     AUDIT_USER,
     ORG_ID,
     SHEET_IDS,
     SUPABASE_URL,
     require_supabase_key,
 )
-from _pg import paginate_select
+from gsheets.migrations._pg import paginate_select
 
 FSAFE_SHEET_ID = SHEET_IDS["fsafe"]
 TASK_ID = "food_safety_log"

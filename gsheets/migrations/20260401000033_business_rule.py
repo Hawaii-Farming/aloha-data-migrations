@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from supabase import create_client
 
-from _config import (
+from gsheets.migrations._config import (
     AUDIT_USER,
     ORG_ID,
     SUPABASE_URL,

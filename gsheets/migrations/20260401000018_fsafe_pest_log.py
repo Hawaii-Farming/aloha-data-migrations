@@ -42,14 +42,14 @@ import gspread
 from google.oauth2.service_account import Credentials
 from supabase import create_client
 
-from _config import (
+from gsheets.migrations._config import (
     AUDIT_USER,
     ORG_ID,
     SHEET_IDS,
     SUPABASE_URL,
     require_supabase_key,
 )
-from _pg import get_pg_conn, paginate_select, pg_bulk_insert
+from gsheets.migrations._pg import get_pg_conn, paginate_select, pg_bulk_insert
 
 FSAFE_SHEET_ID = SHEET_IDS["fsafe"]
 TASK_ID = "pest_trap_inspection"
