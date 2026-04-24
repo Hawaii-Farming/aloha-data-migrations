@@ -15,6 +15,12 @@ on:
           - default     # _run_nightly.py default set (007-033)
           - all         # all migrations 001-033
           - grow_only   # grow-related only (024-032)
+          - only        # run exactly the scripts in `only_list` input
+      only_list:
+        description: 'Comma-sep migration numbers when mode=only (e.g. "005" or "003,004,005")'
+        required: false
+        default: ''
+        type: string
       skip_clear:
         description: 'Skip the TRUNCATE pre-clear step'
         required: false
@@ -74,6 +80,10 @@ jobs:
       - name: Run migrations (grow only)
         if: ${{ inputs.mode == 'grow_only' }}
         run: python gsheets/migrations/_run_nightly.py --only 025,026,027,028,029,030,031,032
+
+      - name: Run migrations (custom only list)
+        if: ${{ inputs.mode == 'only' && inputs.only_list != '' }}
+        run: python gsheets/migrations/_run_nightly.py --only ${{ inputs.only_list }}
 
       - name: Cleanup credentials on failure
         if: ${{ always() }}
