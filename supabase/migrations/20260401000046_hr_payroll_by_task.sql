@@ -1,5 +1,5 @@
--- app_hr_payroll_by_task
--- ======================
+-- hr_payroll_by_task
+-- ==================
 -- Port of the legacy `payrollSchedComparison` Google Apps Script that builds
 -- the `hr_ee_payroll_by_tasks` tab. One row per (employee, check_date,
 -- QuickBooks account) with payroll totals allocated proportionally to how the
@@ -20,7 +20,7 @@
 --
 -- Filter matches the GAS script: check_date >= 2025-01-01.
 
-CREATE OR REPLACE VIEW app_hr_payroll_by_task AS
+CREATE OR REPLACE VIEW hr_payroll_by_task AS
 WITH payroll_agg AS (
     SELECT
         p.org_id,
@@ -155,6 +155,6 @@ FROM allocated a
 JOIN hr_employee e ON e.id = a.hr_employee_id
 LEFT JOIN hr_employee cm ON cm.id = e.compensation_manager_id;
 
-GRANT SELECT ON app_hr_payroll_by_task TO authenticated;
+GRANT SELECT ON hr_payroll_by_task TO authenticated;
 
-COMMENT ON VIEW app_hr_payroll_by_task IS 'Replicates the legacy payrollSchedComparison GAS output: payroll totals split across QuickBooks accounts proportionally to scheduled hours per pay period. Scheduled hours column is raw (unscaled) so variance vs paid can be computed downstream.';
+COMMENT ON VIEW hr_payroll_by_task IS 'Replicates the legacy payrollSchedComparison GAS output: payroll totals split across QuickBooks accounts proportionally to scheduled hours per pay period. Scheduled hours column is raw (unscaled) so variance vs paid can be computed downstream.';
