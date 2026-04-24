@@ -3,7 +3,8 @@ CREATE TABLE IF NOT EXISTS grow_fertigation_recipe_item (
     org_id                      TEXT NOT NULL REFERENCES org(id),
     farm_id                     TEXT NOT NULL REFERENCES org_farm(id),
     grow_fertigation_recipe_id  TEXT NOT NULL REFERENCES grow_fertigation_recipe(id),
-    equipment_id                TEXT NOT NULL REFERENCES org_equipment(id),
+    -- Water-only add-on recipes have no tank; equipment_id is null for those.
+    equipment_id                TEXT REFERENCES org_equipment(id),
     invnt_item_id               TEXT REFERENCES invnt_item(id),
     item_name                   TEXT NOT NULL,
     application_uom             TEXT NOT NULL REFERENCES sys_uom(code),
