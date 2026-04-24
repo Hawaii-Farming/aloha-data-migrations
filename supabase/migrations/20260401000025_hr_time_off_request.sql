@@ -43,39 +43,4 @@ COMMENT ON COLUMN hr_time_off_request.non_pto_days IS 'Days not charged to PTO o
 COMMENT ON COLUMN hr_time_off_request.status IS 'pending, approved, denied';
 COMMENT ON COLUMN hr_time_off_request.requested_by IS 'Auto-set to the logged-in employee when the request is created';
 
--- --------------------------------------------------------------------
--- RLS: any authenticated user in the same org can read + insert/update.
--- Granular CRUD (can_edit / can_delete / can_verify) is enforced in the
--- app layer via hr_module_access; there is no DELETE grant (soft delete
--- via is_deleted = true).
--- --------------------------------------------------------------------
-ALTER TABLE hr_time_off_request ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "hr_time_off_request_read" ON public.hr_time_off_request
-  FOR SELECT TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.hr_employee e
-    WHERE e.org_id = hr_time_off_request.org_id
-      AND e.user_id = auth.uid()
-      AND e.is_deleted = false
-  ));
-
-CREATE POLICY "hr_time_off_request_write" ON public.hr_time_off_request
-  FOR INSERT TO authenticated
-  WITH CHECK (EXISTS (
-    SELECT 1 FROM public.hr_employee e
-    WHERE e.org_id = hr_time_off_request.org_id
-      AND e.user_id = auth.uid()
-      AND e.is_deleted = false
-  ));
-
-CREATE POLICY "hr_time_off_request_update" ON public.hr_time_off_request
-  FOR UPDATE TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.hr_employee e
-    WHERE e.org_id = hr_time_off_request.org_id
-      AND e.user_id = auth.uid()
-      AND e.is_deleted = false
-  ));
-
-GRANT SELECT, INSERT, UPDATE ON public.hr_time_off_request TO authenticated;
+-- RLS lives in 20260401000200_sys_rls_policies.sql.
