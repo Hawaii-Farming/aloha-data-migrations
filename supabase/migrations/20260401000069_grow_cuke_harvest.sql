@@ -1,10 +1,10 @@
--- grow_cuke_harvest_v: convenience view for dashboards that need display-
+-- grow_cuke_harvest: convenience view for dashboards that need display-
 -- friendly greenhouse names (GH1, Kona, HK, etc.), the variety letter
 -- (K/J/E), and days_since_seed (age of the cycle on harvest date) without
 -- re-joining seed batch + invnt_item on every query.
 
-DROP VIEW IF EXISTS grow_cuke_harvest_v;
-CREATE VIEW grow_cuke_harvest_v AS
+DROP VIEW IF EXISTS grow_cuke_harvest;
+CREATE VIEW grow_cuke_harvest AS
 SELECT
     h.id,
     h.harvest_date,
@@ -40,4 +40,4 @@ LEFT JOIN grow_cuke_seed_batch b ON b.id = h.grow_cuke_seed_batch_id
 LEFT JOIN invnt_item i ON i.id = b.invnt_item_id
 WHERE h.farm_id = 'cuke' AND h.is_deleted = false;
 
-COMMENT ON VIEW grow_cuke_harvest_v IS 'Cuke harvest weigh-ins with display-friendly greenhouse names (GH1/Kona/HK/etc.), variety letter (K/J/E), and days_since_seed (harvest_date - seeding_date) for dashboards.';
+COMMENT ON VIEW grow_cuke_harvest IS 'Cuke harvest weigh-ins with display-friendly greenhouse names (GH1/Kona/HK/etc.), variety letter (K/J/E), and days_since_seed (harvest_date - seeding_date) for dashboards.';
