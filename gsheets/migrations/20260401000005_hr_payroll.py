@@ -369,14 +369,12 @@ def migrate_payroll(supabase, gc):
             # Hours
             "regular_hours": safe_numeric(r.get("regular_hours")),
             "overtime_hours": safe_numeric(r.get("overtime_hours")),
-            "discretionary_overtime_hours": safe_numeric(r.get("discretionary_overtime_hours")),
             "pto_hours": safe_numeric(r.get("pto_hours_taken")),
             "total_hours": safe_numeric(r.get("total_hours")),
             "pto_hours_accrued": safe_numeric(r.get("pto_hours_accrued")),
             # Earnings
             "regular_pay": safe_numeric(r.get("regular_pay")),
             "overtime_pay": safe_numeric(r.get("overtime_pay")),
-            "discretionary_overtime_pay": safe_numeric(r.get("discretionary_overtime_pay")),
             "pto_pay": safe_numeric(r.get("pto_pay")),
             "other_pay": safe_numeric(r.get("other_pay")),
             "bonus_pay": safe_numeric(r.get("bonus_pay")),
