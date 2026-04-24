@@ -284,7 +284,7 @@ def migrate_hr_employee(supabase, records, app_users):
             "wc": wc,
             "payroll_processor": str(r.get("Source", "")).strip() or None,
             "pay_delivery_method": proper_case(r.get("Check", "")) or None,
-            "site_id": site_id,
+            "housing_name": site_id,
             "is_deleted": not parse_bool(r.get("IsActive", True)),
         }
         employees.append(audit(emp))

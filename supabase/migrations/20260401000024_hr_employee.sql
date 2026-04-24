@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS hr_employee (
     -- =============================================
     -- HOUSING
     -- =============================================
-    site_id                      TEXT REFERENCES org_site_housing(id),
+    housing_name                      TEXT REFERENCES org_site_housing(name),
 
     -- =============================================
     -- AUDIT
@@ -91,6 +91,6 @@ COMMENT ON COLUMN hr_employee.sys_access_level_name IS 'Sourced from sys_access_
 COMMENT ON COLUMN hr_employee.overtime_threshold IS 'Hours per week before overtime applies; only relevant when pay_structure = hourly';
 COMMENT ON COLUMN hr_employee.pay_structure IS 'hourly, salary';
 COMMENT ON COLUMN hr_employee.wc IS 'Workers compensation code identifying the compensation plan or pay grade';
-COMMENT ON COLUMN hr_employee.site_id IS 'References org_site_housing; the housing facility the employee is assigned to. Null if the employee is not housed';
+COMMENT ON COLUMN hr_employee.housing_name IS 'References org_site_housing; the housing facility the employee is assigned to. Null if the employee is not housed';
 
 -- RLS lives in 20260401000200_sys_rls_policies.sql.
