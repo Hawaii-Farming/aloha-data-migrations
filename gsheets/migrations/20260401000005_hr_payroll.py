@@ -243,9 +243,10 @@ def migrate_payroll(supabase, gc):
         full = f"{e['last_name']} {e['first_name']}".upper()
         emp_by_name[full] = e
 
-    # Work authorization lookup
-    wa_result = supabase.table("hr_work_authorization").select("id, name").execute()
-    wa_by_name = {w["name"].lower(): w["id"] for w in wa_result.data}
+    # Work authorization lookup — hr_work_authorization has no 'name' column;
+    # its id IS the display value (e.g. "H2A", "1099", "FUERTE"), so match on id.
+    wa_result = supabase.table("hr_work_authorization").select("id").execute()
+    wa_by_name = {w["id"].lower(): w["id"] for w in wa_result.data}
 
     rows = []
     skipped_adjustment = 0
