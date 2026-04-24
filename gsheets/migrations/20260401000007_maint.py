@@ -917,13 +917,13 @@ def migrate_house_inspections(supabase, client):
     for room_type, tmpl in TEMPLATES.items():
         tmpl_id = f"house_inspection_{room_type}"
         org_module_result = supabase.table("org_module").select("id").eq("sys_module_name", "maintenance").execute()
-        org_module_id = org_module_result.data[0]["id"] if org_module_result.data else None
+        org_module_name = org_module_result.data[0]["id"] if org_module_result.data else None
 
         supabase.table("ops_template").insert({
             "id": tmpl_id,
             "org_id": ORG_ID,
             "name": tmpl["name"],
-            "org_module_id": org_module_id,
+            "org_module_name": org_module_name,
             "display_order": list(TEMPLATES.keys()).index(room_type) + 1,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,

@@ -221,10 +221,9 @@ def migrate_org_module(supabase):
     rows = []
     for mod in result.data:
         rows.append(audit({
-            "id": mod["name"],
             "org_id": ORG_ID,
             "sys_module_name": mod["name"],
-            "display_name": mod["name"],
+            "name": mod["name"],
             "is_enabled": mod["name"] in ENABLED_MODULES,
             "display_order": mod["display_order"],
         }))
@@ -240,13 +239,13 @@ def migrate_org_sub_module(supabase):
     else is provisioned but disabled until its work is ready to roll out.
     """
     ENABLED_SUB_MODULES = {
-        "register",
-        "scheduler",
-        "time_off",
-        "payroll_comp",
-        "payroll_data",
-        "employee_review",
-        "housing",
+        "Register",
+        "Scheduler",
+        "Time Off",
+        "Payroll Comp",
+        "Payroll Data",
+        "Employee Review",
+        "Housing",
     }
 
     result = supabase.table("sys_sub_module").select(
@@ -256,13 +255,12 @@ def migrate_org_sub_module(supabase):
     rows = []
     for sub in result.data:
         rows.append(audit({
-            "id": sub["id"],
             "org_id": ORG_ID,
             "sys_module_name": sub["sys_module_name"],
-            "sys_sub_module_id": sub["id"],
+            "sys_sub_module_name": sub["name"],
             "sys_access_level_name": sub["sys_access_level_name"],
-            "display_name": proper_case(sub["name"]),
-            "is_enabled": sub["id"] in ENABLED_SUB_MODULES,
+            "name": sub["name"],
+            "is_enabled": sub["name"] in ENABLED_SUB_MODULES,
             "display_order": sub["display_order"],
         }))
 
@@ -550,13 +548,23 @@ def main():
         except Exception:
             pass  # May fail if referenced by invnt_item etc; will be upserted
     # Clear tables — try/except for tables that may be referenced by downstream modules
+    # PK column per table — name for the reference tables we keyed by name,
+    # id for everything else that still uses id as PK.
+    PK_COL = {
+        "org_sub_module": "name",
+        "org_module": "name",
+        "org_farm": "name",
+        "org_site": "id",
+        "org_site_category": "id",
+        "org": "id",
+    }
     for t in ["hr_time_off_request", "hr_module_access", "hr_employee",
               "hr_work_authorization", "hr_department",
               "org_sub_module", "org_module", "org_site", "org_site_category",
               "org_farm", "org"]:
         try:
-            supabase.table(t).delete().neq("id" if t in ("org_sub_module", "org_module", "org_site",
-                "org_site_category", "org_farm", "org") else "org_id", "___never___").execute()
+            filter_col = PK_COL.get(t, "org_id")
+            supabase.table(t).delete().neq(filter_col, "___never___").execute()
         except Exception:
             pass  # May fail if referenced by downstream modules; data will be upserted
     # Clear default ops_tasks (exclude house_inspection which is managed by maint.py)

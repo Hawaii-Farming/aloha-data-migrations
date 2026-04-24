@@ -30,14 +30,14 @@ CREATE OR REPLACE VIEW public.hr_rba_navigation AS
 SELECT
     om.org_id,
     -- Module columns
-    om.id               AS module_id,
+    om.name             AS module_id,
     sm.name             AS module_slug,
-    om.display_name     AS module_display_name,
+    om.name     AS module_display_name,
     om.display_order    AS module_display_order,
     -- Sub-module columns
-    osm.id              AS sub_module_id,
-    ssm.id              AS sub_module_slug,
-    osm.display_name    AS sub_module_display_name,
+    osm.name            AS sub_module_id,
+    ssm.name            AS sub_module_slug,
+    osm.name    AS sub_module_display_name,
     osm.display_order   AS sub_module_display_order,
     -- ABAC permissions (module-level)
     ma.can_edit,
@@ -49,10 +49,10 @@ JOIN public.org_sub_module osm       ON osm.org_id = e.org_id
 JOIN public.org_module om            ON om.org_id = osm.org_id
                                     AND om.sys_module_name = osm.sys_module_name
 JOIN public.sys_module sm            ON sm.name = osm.sys_module_name
-JOIN public.sys_sub_module ssm       ON ssm.id = osm.sys_sub_module_id
+JOIN public.sys_sub_module ssm       ON ssm.name = osm.sys_sub_module_name
 JOIN public.sys_access_level req_al  ON req_al.name = osm.sys_access_level_name
 JOIN public.hr_module_access ma      ON ma.hr_employee_id = e.id
-                                    AND ma.org_module_id = om.id
+                                    AND ma.org_module_name = om.name
 WHERE e.user_id = auth.uid()
   AND e.is_deleted = false
   AND om.is_enabled = true          -- Layer 1: parent module enabled

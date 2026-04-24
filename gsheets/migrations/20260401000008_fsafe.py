@@ -233,7 +233,7 @@ def ensure_foreign_material_template(supabase):
         "org_id": ORG_ID,
         "farm_name": None,
         "name": "Foreign Material Event",
-        "org_module_id": "food_safety",
+        "org_module_name": "food_safety",
         "description": "Recorded when a foreign material event occurs during packing or food safety inspection",
         "display_order": 100,
     })).execute()

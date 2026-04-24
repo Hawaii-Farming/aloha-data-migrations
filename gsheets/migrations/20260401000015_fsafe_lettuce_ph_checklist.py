@@ -425,7 +425,7 @@ def upsert_templates(supabase):
             "org_id": ORG_ID,
             "farm_name": FARM_ID,
             "name": t["name"],
-            "org_module_id": "food_safety",
+            "org_module_name": "food_safety",
             "description": t["description"],
             "display_order": next_order,
         }))

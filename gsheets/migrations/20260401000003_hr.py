@@ -345,7 +345,7 @@ def migrate_hr_module_access(supabase, employees, app_users_lookup, module_map):
                 rows.append(audit({
                     "org_id": ORG_ID,
                     "hr_employee_id": emp["id"],
-                    "org_module_id": mod_id,
+                    "org_module_name": mod_id,
                     "is_enabled": True,
                     "can_edit": True,
                     "can_delete": False,

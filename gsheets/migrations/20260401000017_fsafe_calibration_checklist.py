@@ -319,7 +319,7 @@ def upsert_templates(supabase):
             "org_id": ORG_ID,
             "farm_name": farm["farm_name"],
             "name": farm["template_name"],
-            "org_module_id": "food_safety",
+            "org_module_name": "food_safety",
             "description": (
                 f"{farm['sheet_farm']} monthly equipment calibration: thermometers (obs vs NIST), "
                 f"packing scales (498-502 g), and luminometer controls. "

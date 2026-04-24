@@ -1,7 +1,6 @@
 CREATE TABLE IF NOT EXISTS sys_sub_module (
-    id                TEXT PRIMARY KEY,
+    name              TEXT PRIMARY KEY,
     sys_module_name  TEXT NOT NULL REFERENCES sys_module(name),
-    name              TEXT NOT NULL,
     description       TEXT,
     sys_access_level_name  TEXT NOT NULL REFERENCES sys_access_level(name),
     display_order     INTEGER NOT NULL DEFAULT 0,
