@@ -14,9 +14,6 @@ CREATE TABLE IF NOT EXISTS org_site (
     -- Food safety details (shown for food safety child sites)
     zone                    TEXT CHECK (zone IN ('zone_1', 'zone_2', 'zone_3', 'zone_4', 'water')),
 
-    -- Housing details (shown for housing sites)
-    max_beds                INTEGER,
-
     -- Geo coordinates
     latitude                NUMERIC,
     longitude               NUMERIC,
@@ -39,7 +36,7 @@ CREATE TABLE IF NOT EXISTS org_site (
       FOREIGN KEY (org_site_subcategory_id) REFERENCES org_site_category(id)
 );
 
-COMMENT ON TABLE org_site IS 'Unified site register for all physical locations across the organization. Supports a parent-child hierarchy via site_id_parent — top-level sites (greenhouses, packhouses, housing) contain child sites (food safety surfaces, pest traps, rooms). The category drives which fields are relevant in the UI.';
+COMMENT ON TABLE org_site IS 'Site register for growing sites, packhouses, and food-safety zones. Supports parent-child hierarchy via site_id_parent. Cuke greenhouses and housing facilities live in their own dedicated standalone tables (org_site_cuke_gh, org_site_housing).';
 
 CREATE UNIQUE INDEX uq_org_site_org_level ON org_site (org_id, name) WHERE farm_id IS NULL;
 CREATE UNIQUE INDEX uq_org_site_farm_level ON org_site (org_id, farm_id, name) WHERE farm_id IS NOT NULL;
@@ -56,4 +53,3 @@ COMMENT ON COLUMN org_site.org_site_subcategory_id IS 'References org_site_categ
 COMMENT ON COLUMN org_site.site_id_parent IS 'Null for top-level sites; set for child locations within a parent site (e.g. food safety surfaces, pest traps, housing rooms)';
 COMMENT ON COLUMN org_site.acres IS 'Only for growing sites with no subcategory, or subcategory greenhouse, pond, nursery; null for all other site types';
 COMMENT ON COLUMN org_site.zone IS 'zone_1 (food contact surface), zone_2, zone_3, zone_4, water; available on all sites regardless of category';
-COMMENT ON COLUMN org_site.max_beds IS 'Maximum bed capacity for housing sites; NULL for non-housing sites';

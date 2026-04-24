@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS hr_employee (
     preferred_name               TEXT,
     gender                       TEXT CHECK (gender IN ('male', 'female')),
     date_of_birth                DATE,
-    is_minority                  BOOLEAN NOT NULL DEFAULT false,
+    ethnicity                    TEXT CHECK (ethnicity IN ('Caucasian', 'Non-Caucasian')),
     profile_photo_url            TEXT,
 
     -- =============================================
@@ -30,7 +30,6 @@ CREATE TABLE IF NOT EXISTS hr_employee (
     -- ORGANISATION & ROLE
     -- =============================================
     hr_department_id             TEXT REFERENCES hr_department(id),
-    hr_title_id                  TEXT REFERENCES hr_title(id),
     sys_access_level_id       TEXT NOT NULL REFERENCES sys_access_level(id),
     team_lead_id                 TEXT,
     compensation_manager_id      TEXT,
@@ -55,7 +54,7 @@ CREATE TABLE IF NOT EXISTS hr_employee (
     -- =============================================
     -- HOUSING
     -- =============================================
-    site_id                      TEXT REFERENCES org_site(id),
+    site_id                      TEXT REFERENCES org_site_housing(id),
 
     -- =============================================
     -- AUDIT
@@ -83,7 +82,6 @@ CREATE INDEX idx_hr_employee_user_id    ON hr_employee (user_id);
 CREATE INDEX idx_hr_employee_active     ON hr_employee (org_id, is_deleted);
 CREATE INDEX idx_hr_employee_team_lead  ON hr_employee (team_lead_id);
 CREATE INDEX idx_hr_employee_department ON hr_employee (hr_department_id);
-CREATE INDEX idx_hr_employee_title      ON hr_employee (hr_title_id);
 
 COMMENT ON COLUMN hr_employee.is_primary_org IS 'When user belongs to multiple orgs, the primary org auto-loads on login; only one row per user_id should be true';
 COMMENT ON COLUMN hr_employee.team_lead_id IS 'Filtered to employees with sys_access_level_id = team_lead';
@@ -92,7 +90,7 @@ COMMENT ON COLUMN hr_employee.sys_access_level_id IS 'Sourced from sys_access_le
 COMMENT ON COLUMN hr_employee.overtime_threshold IS 'Hours per week before overtime applies; only relevant when pay_structure = hourly';
 COMMENT ON COLUMN hr_employee.pay_structure IS 'hourly, salary';
 COMMENT ON COLUMN hr_employee.wc IS 'Workers compensation code identifying the compensation plan or pay grade';
-COMMENT ON COLUMN hr_employee.site_id IS 'Filtered to org_site where category = housing; the employee assigned housing site';
+COMMENT ON COLUMN hr_employee.site_id IS 'References org_site_housing; the housing facility the employee is assigned to. Null if the employee is not housed';
 
 -- --------------------------------------------------------------------
 -- RLS: authenticated users can read all employees in their own org(s).
