@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS ops_template (
     id                          TEXT        PRIMARY KEY,
     org_id                      TEXT        NOT NULL REFERENCES org(id),
-    farm_id                     TEXT        REFERENCES org_farm(id),
+    farm_id                     TEXT        REFERENCES org_farm(name),
 
     name                        TEXT        NOT NULL,
     org_module_id               TEXT        REFERENCES org_module(id),

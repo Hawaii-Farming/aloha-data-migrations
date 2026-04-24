@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_lettuce_seed_batch (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id              TEXT NOT NULL REFERENCES org(id),
-    farm_id             TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id             TEXT NOT NULL REFERENCES org_farm(name),
     site_id             TEXT REFERENCES org_site(id),
     ops_task_tracker_id UUID REFERENCES ops_task_tracker(id),
     batch_code          TEXT NOT NULL,

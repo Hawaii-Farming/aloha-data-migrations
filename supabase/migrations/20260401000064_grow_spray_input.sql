@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_spray_input (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
-    farm_id                     TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id                     TEXT NOT NULL REFERENCES org_farm(name),
     ops_task_tracker_id            UUID NOT NULL REFERENCES ops_task_tracker(id),
     grow_spray_compliance_id    UUID NOT NULL REFERENCES grow_spray_compliance(id),
     invnt_item_id               TEXT NOT NULL REFERENCES invnt_item(id),

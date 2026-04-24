@@ -1,11 +1,11 @@
 CREATE TABLE IF NOT EXISTS fsafe_test_hold (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_id         TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id         TEXT NOT NULL REFERENCES org_farm(name),
     pack_lot_id     UUID NOT NULL REFERENCES pack_lot(id),
     sales_customer_group_id TEXT REFERENCES sales_customer_group(id),
     sales_customer_id       TEXT REFERENCES sales_customer(id),
-    fsafe_lab_id    TEXT REFERENCES fsafe_lab(id),
+    fsafe_lab_id    TEXT REFERENCES fsafe_lab(name),
     lab_test_id     TEXT,
 
     notes           TEXT,

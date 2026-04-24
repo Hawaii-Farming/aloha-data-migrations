@@ -166,8 +166,8 @@ def resolve_user(raw: str) -> str:
 
 def ensure_pests_and_diseases(supabase):
     """Auto-create any missing pest/disease rows referenced by PEST_TYPE_MAP."""
-    existing_pests = {p["id"] for p in supabase.table("grow_pest").select("id").execute().data}
-    existing_diseases = {d["id"] for d in supabase.table("grow_disease").select("id").execute().data}
+    existing_pests = {p["id"] for p in supabase.table("grow_pest").select("name").execute().data}
+    existing_diseases = {d["id"] for d in supabase.table("grow_disease").select("name").execute().data}
 
     # Check PEST_TYPE_MAP for any missing
     pest_rows = []
@@ -449,8 +449,8 @@ def main():
     print(f"\n  Known cuke/lettuce sites: {len(known_sites)}")
 
     # Load pest/disease IDs for validation
-    existing_pest_ids = {p["id"] for p in supabase.table("grow_pest").select("id").execute().data}
-    existing_disease_ids = {d["id"] for d in supabase.table("grow_disease").select("id").execute().data}
+    existing_pest_ids = {p["id"] for p in supabase.table("grow_pest").select("name").execute().data}
+    existing_disease_ids = {d["id"] for d in supabase.table("grow_disease").select("name").execute().data}
 
     wb = gc.open_by_key(GROW_SHEET_ID)
     print("\nReading grow_scouting...")

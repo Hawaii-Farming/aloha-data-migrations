@@ -1057,7 +1057,7 @@ def migrate_grow_lettuce_seed_mix(supabase, gc):
         mix_rows.append({
             "id": to_id(mix_name),
             "org_id": ORG_ID,
-            "farm_id": "lettuce",
+            "farm_id": "Lettuce",
             "name": proper_case(mix_name),
             "created_by": info["created_by"],
             "updated_by": info["created_by"],
@@ -1073,7 +1073,7 @@ def migrate_grow_lettuce_seed_mix(supabase, gc):
         for item in info["items"]:
             item_rows.append({
                 "org_id": ORG_ID,
-                "farm_id": "lettuce",
+                "farm_id": "Lettuce",
                 "grow_lettuce_seed_mix_id": mix_id,
                 "invnt_item_id": item["invnt_item_id"],
                 "percentage": item["percentage"],

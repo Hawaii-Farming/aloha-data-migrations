@@ -1,6 +1,5 @@
 CREATE TABLE IF NOT EXISTS grow_disease (
-    id          TEXT PRIMARY KEY,
-    name        TEXT NOT NULL,
+    name       TEXT PRIMARY KEY,
     description TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by  TEXT,

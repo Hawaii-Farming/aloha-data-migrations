@@ -331,7 +331,7 @@ def main():
     supabase.table("sales_customer").delete().neq("id", "__none__").execute()
     supabase.table("sales_customer_group").delete().neq("id", "__none__").execute()
     supabase.table("sales_fob").delete().neq("id", "__none__").execute()
-    supabase.table("sales_container_type").delete().neq("id", "__none__").execute()
+    supabase.table("sales_container_type").delete().neq("name", "__none__").execute()
     print("  Cleared")
 
     # Step 1: FOB lookup

@@ -56,15 +56,15 @@ FSAFE_SHEET_ID = SHEET_IDS["fsafe"]
 # Map sheet 'Log' values -> source tab + (template_id|None) + farm_id
 # Templates exist for the ops checklists; EMP/Pest results don't have one.
 LOG_SOURCES = {
-    "Cuke GH Pre Ops":     {"tab": "fsafe_log_C_gh_pre",  "template_id": "cuke_gh_pre_ops",     "farm_id": "cuke",    "kind": "tracker"},
-    "Cuke GH Post Ops":    {"tab": "fsafe_log_C_gh_post", "template_id": "cuke_gh_post_ops",    "farm_id": "cuke",    "kind": "tracker"},
-    "Cuke PH Pre Ops":     {"tab": "fsafe_log_C_ph_pre",  "template_id": "cuke_ph_pre_ops",     "farm_id": "cuke",    "kind": "tracker"},
-    "Cuke PH Post Ops":    {"tab": "fsafe_log_C_ph_post", "template_id": "cuke_ph_post_ops",    "farm_id": "cuke",    "kind": "tracker"},
-    "Lettuce GH Pre Ops":  {"tab": "fsafe_log_L_gh_pre",  "template_id": "lettuce_gh_pre_ops",  "farm_id": "lettuce", "kind": "tracker"},
-    "Lettuce GH Post Ops": {"tab": "fsafe_log_L_gh_post", "template_id": "lettuce_gh_post_ops", "farm_id": "lettuce", "kind": "tracker"},
-    "Lettuce PH Pre Ops":  {"tab": "fsafe_log_L_ph_pre",  "template_id": "lettuce_ph_pre_ops",  "farm_id": "lettuce", "kind": "tracker"},
-    "Lettuce PH Post Ops": {"tab": "fsafe_log_L_ph_post", "template_id": "lettuce_ph_post_ops", "farm_id": "lettuce", "kind": "tracker"},
-    "Lettuce Calibration": {"tab": "fsafe_log_calibration","template_id": "lettuce_calibration", "farm_id": "lettuce", "kind": "tracker"},
+    "Cuke GH Pre Ops":     {"tab": "fsafe_log_C_gh_pre",  "template_id": "cuke_gh_pre_ops",     "farm_id": "Cuke",    "kind": "tracker"},
+    "Cuke GH Post Ops":    {"tab": "fsafe_log_C_gh_post", "template_id": "cuke_gh_post_ops",    "farm_id": "Cuke",    "kind": "tracker"},
+    "Cuke PH Pre Ops":     {"tab": "fsafe_log_C_ph_pre",  "template_id": "cuke_ph_pre_ops",     "farm_id": "Cuke",    "kind": "tracker"},
+    "Cuke PH Post Ops":    {"tab": "fsafe_log_C_ph_post", "template_id": "cuke_ph_post_ops",    "farm_id": "Cuke",    "kind": "tracker"},
+    "Lettuce GH Pre Ops":  {"tab": "fsafe_log_L_gh_pre",  "template_id": "lettuce_gh_pre_ops",  "farm_id": "Lettuce", "kind": "tracker"},
+    "Lettuce GH Post Ops": {"tab": "fsafe_log_L_gh_post", "template_id": "lettuce_gh_post_ops", "farm_id": "Lettuce", "kind": "tracker"},
+    "Lettuce PH Pre Ops":  {"tab": "fsafe_log_L_ph_pre",  "template_id": "lettuce_ph_pre_ops",  "farm_id": "Lettuce", "kind": "tracker"},
+    "Lettuce PH Post Ops": {"tab": "fsafe_log_L_ph_post", "template_id": "lettuce_ph_post_ops", "farm_id": "Lettuce", "kind": "tracker"},
+    "Lettuce Calibration": {"tab": "fsafe_log_calibration","template_id": "lettuce_calibration", "farm_id": "Lettuce", "kind": "tracker"},
     "EMP Results":         {"tab": "fsafe_log_emp",        "template_id": None,                  "farm_id": None,      "kind": "fsafe_result"},
     "Pest Activity Log":   {"tab": "fsafe_log_pest",       "template_id": None,                  "farm_id": None,      "kind": "fsafe_pest_result"},
 }
@@ -346,7 +346,7 @@ def build_lookup_pest(supabase, gc):
     pest_trackers = fetch_all(
         supabase, "ops_task_tracker",
         "id,start_time,created_by",
-        filters={"ops_task_id": "pest_trap_inspection"},
+        filters={"ops_task_id": "Pest Trap Inspection"},
     )
     tracker_index = {}
     for tr in pest_trackers:

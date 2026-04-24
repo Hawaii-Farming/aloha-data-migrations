@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS sales_po_fulfillment (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id              TEXT NOT NULL REFERENCES org(id),
-    farm_id             TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id             TEXT NOT NULL REFERENCES org_farm(name),
     sales_po_id         UUID NOT NULL REFERENCES sales_po(id),
     sales_po_line_id    UUID NOT NULL REFERENCES sales_po_line(id),
     pack_lot_id         UUID REFERENCES pack_lot(id),
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS sales_po_fulfillment (
     fulfilled_quantity  NUMERIC NOT NULL,
 
     -- Shipping traceability (bulk-set during containerization)
-    sales_container_type_id TEXT REFERENCES sales_container_type(id),
+    sales_container_type_id TEXT REFERENCES sales_container_type(name),
     container_id        TEXT,
     booking_id          TEXT,
     pallet_number       TEXT,

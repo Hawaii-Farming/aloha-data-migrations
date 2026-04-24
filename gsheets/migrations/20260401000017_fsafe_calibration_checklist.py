@@ -63,9 +63,9 @@ TASK_ID = "food_safety_log"
 # ---------------------------------------------------------------------------
 # (template_id, farm_id, host_site_id, sheet_farm_value)
 FARMS = [
-    {"farm_id": "cuke",    "host_site_id": "bip_ph",     "sheet_farm": "Cuke",
+    {"farm_id": "Cuke",    "host_site_id": "bip_ph",     "sheet_farm": "Cuke",
      "template_id": "cuke_calibration",    "template_name": "Calibration"},
-    {"farm_id": "lettuce", "host_site_id": "lettuce_ph", "sheet_farm": "Lettuce",
+    {"farm_id": "Lettuce", "host_site_id": "lettuce_ph", "sheet_farm": "Lettuce",
      "template_id": "lettuce_calibration", "template_name": "Calibration"},
 ]
 
@@ -265,7 +265,7 @@ def create_stub_employee(supabase, email):
         "last_name": last,
         "company_email": email,
         "is_primary_org": True,
-        "sys_access_level_id": "employee",
+        "sys_access_level_id": "Employee",
         "is_deleted": True,
     })
     try:

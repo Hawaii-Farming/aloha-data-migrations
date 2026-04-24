@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS maint_request_invnt_item (
     id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id              TEXT        NOT NULL REFERENCES org(id),
-    farm_id             TEXT        REFERENCES org_farm(id),
+    farm_id             TEXT        REFERENCES org_farm(name),
     maint_request_id    UUID        NOT NULL REFERENCES maint_request(id),
     invnt_item_id       TEXT        NOT NULL REFERENCES invnt_item(id),
     uom                 TEXT REFERENCES sys_uom(code),

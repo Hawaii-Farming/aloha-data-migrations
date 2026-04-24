@@ -72,7 +72,7 @@ TEMPLATES = [
     {
         "id": "cuke_glass",
         "name": "Glass Inspection",
-        "farm_id": "cuke",
+        "farm_id": "Cuke",
         "site_id": "bip_ph",
         "sheet_farm": "Cuke",
         "questions": CUKE_GLASS_QUESTIONS,
@@ -81,7 +81,7 @@ TEMPLATES = [
     {
         "id": "lettuce_glass",
         "name": "Glass Inspection",
-        "farm_id": "lettuce",
+        "farm_id": "Lettuce",
         "site_id": "lettuce_ph",
         "sheet_farm": "Lettuce",
         "questions": LETTUCE_GLASS_QUESTIONS,
@@ -204,7 +204,7 @@ def create_stub_employee(supabase, email):
         "last_name": last,
         "company_email": email,
         "is_primary_org": True,
-        "sys_access_level_id": "employee",
+        "sys_access_level_id": "Employee",
         "is_deleted": True,
     })
     try:

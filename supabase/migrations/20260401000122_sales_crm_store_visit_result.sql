@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS sales_crm_store_visit_result (
     org_id                          TEXT NOT NULL REFERENCES org(id),
     sales_crm_store_visit_id        UUID NOT NULL REFERENCES sales_crm_store_visit(id),
     sales_product_id                TEXT REFERENCES sales_product(code),
-    sales_crm_external_product_id   TEXT REFERENCES sales_crm_external_product(id),
+    sales_crm_external_product_id   TEXT REFERENCES sales_crm_external_product(name),
     shelf_price                     NUMERIC,
     best_by_date                    DATE,
     stock_level                     TEXT CHECK (stock_level IN ('zero', 'low', 'medium', 'full')),

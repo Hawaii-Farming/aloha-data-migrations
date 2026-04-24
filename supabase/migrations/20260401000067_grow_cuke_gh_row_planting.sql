@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_cuke_gh_row_planting (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                  TEXT NOT NULL REFERENCES org(id),
-    farm_id                 TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id                 TEXT NOT NULL REFERENCES org_farm(name),
     org_site_cuke_gh_row_id      UUID NOT NULL,
     scenario                TEXT NOT NULL CHECK (scenario IN ('current', 'planned')),
     grow_variety_id         TEXT NOT NULL,

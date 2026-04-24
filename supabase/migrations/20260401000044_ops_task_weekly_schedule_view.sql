@@ -96,7 +96,7 @@ SELECT
 
 FROM schedule_base sb
 JOIN hr_employee e  ON e.id = sb.hr_employee_id
-JOIN ops_task    t  ON t.id = sb.ops_task_id
+JOIN ops_task    t  ON t.name = sb.ops_task_id
 GROUP BY
     sb.week_start_date,
     sb.org_id,

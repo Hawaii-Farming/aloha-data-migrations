@@ -236,7 +236,7 @@ def migrate_fail_categories(supabase):
     """Seed the 6 fail categories for the lettuce farm."""
     print("\nClearing pack_productivity_fail_category...")
     supabase.table("pack_productivity_hour_fail").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
-    supabase.table("pack_productivity_fail_category").delete().neq("id", "__none__").execute()
+    supabase.table("pack_productivity_fail_category").delete().neq("name", "__none__").execute()
 
     categories = [
         ("film", "Film", 1, False),
@@ -252,7 +252,7 @@ def migrate_fail_categories(supabase):
         audit({
             "id": cat_id,
             "org_id": ORG_ID,
-            "farm_id": "lettuce",
+            "farm_id": "Lettuce",
             "name": name,
             "display_order": order,
             "is_active": active,
@@ -398,9 +398,9 @@ def migrate_pack_productivity(supabase, gc):
 
             tracker = {
                 "org_id": ORG_ID,
-                "farm_id": "lettuce",
+                "farm_id": "Lettuce",
                 "site_id": "lettuce_ph",
-                "ops_task_id": "packing",
+                "ops_task_id": "Packing",
                 "sales_product_id": pid,
                 "start_time": start_time,
                 "stop_time": stop_time,
@@ -507,7 +507,7 @@ def migrate_pack_productivity(supabase, gc):
 
                 hour_row = {
                     "org_id": ORG_ID,
-                    "farm_id": "lettuce",
+                    "farm_id": "Lettuce",
                     "ops_task_tracker_id": tracker_id,
                     "pack_end_hour": pack_end_hour,
                     "catchers": catchers,
@@ -540,7 +540,7 @@ def migrate_pack_productivity(supabase, gc):
         for fcat_id, fcount in fail_info["fail_counts"].items():
             all_fail_rows.append({
                 "org_id": ORG_ID,
-                "farm_id": "lettuce",
+                "farm_id": "Lettuce",
                 "pack_productivity_hour_id": hour_uuid,
                 "pack_productivity_fail_category_id": fcat_id,
                 "fail_count": fcount,

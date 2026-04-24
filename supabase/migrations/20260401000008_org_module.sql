@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS org_module (
     id                TEXT PRIMARY KEY,
     org_id            TEXT NOT NULL REFERENCES org(id),
-    sys_module_id  TEXT NOT NULL REFERENCES sys_module(id),
+    sys_module_id  TEXT NOT NULL REFERENCES sys_module(name),
     display_name      TEXT NOT NULL,
     is_enabled        BOOLEAN NOT NULL DEFAULT true,
     display_order     INTEGER NOT NULL DEFAULT 0,

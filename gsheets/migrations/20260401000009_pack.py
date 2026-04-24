@@ -387,7 +387,7 @@ def migrate_pack_lettuce(supabase, gc, product_map):
         reported_by = info["reported_by"] or AUDIT_USER
         lot_rows.append({
             "org_id": ORG_ID,
-            "farm_id": "lettuce",
+            "farm_id": "Lettuce",
             "lot_number": lot_number,
             "harvest_date": info["harvest_date"],
             "pack_date": info["pack_date"],
@@ -419,7 +419,7 @@ def migrate_pack_lettuce(supabase, gc, product_map):
 
             item_rows.append({
                 "org_id": ORG_ID,
-                "farm_id": "lettuce",
+                "farm_id": "Lettuce",
                 "pack_lot_id": lot_id,
                 "sales_product_id": product_id,
                 "best_by_date": item_best_by,
@@ -480,7 +480,7 @@ def migrate_pack_cuke(supabase, gc, product_map):
         reported_by = date_reporters.get(pack_date) or AUDIT_USER
         lot_rows.append({
             "org_id": ORG_ID,
-            "farm_id": "cuke",
+            "farm_id": "Cuke",
             "lot_number": pack_date.replace("-", ""),
             "pack_date": pack_date,
             "created_by": reported_by,
@@ -507,7 +507,7 @@ def migrate_pack_cuke(supabase, gc, product_map):
             reported_by = date_reporters.get(pack_date) or AUDIT_USER
             item_rows.append({
                 "org_id": ORG_ID,
-                "farm_id": "cuke",
+                "farm_id": "Cuke",
                 "pack_lot_id": lot_id,
                 "sales_product_id": product_id,
                 "best_by_date": best_by,
@@ -599,14 +599,14 @@ PHOTO_SIDE_MAP = {
 def migrate_shelf_life_metrics(supabase):
     """Seed the 5 shelf life observation metrics."""
     print("\nClearing pack_shelf_life_metric...")
-    supabase.table("pack_shelf_life_metric").delete().neq("id", "__none__").execute()
+    supabase.table("pack_shelf_life_metric").delete().neq("name", "__none__").execute()
 
     rows = []
     for m in SHELF_LIFE_METRICS:
         rows.append(audit({
             "id": m["id"],
             "org_id": ORG_ID,
-            "farm_id": "lettuce",
+            "farm_id": "Lettuce",
             "name": m["name"],
             "response_type": m["response_type"],
             "enum_options": m["enum_options"],
@@ -690,7 +690,7 @@ def migrate_shelf_life(supabase, gc):
 
         trial_rows.append({
             "org_id": ORG_ID,
-            "farm_id": "lettuce",
+            "farm_id": "Lettuce",
             "pack_lot_id": pack_lot_id,
             "sales_product_id": sales_product_id,
             "trial_number": safe_int(trial_id),
@@ -749,7 +749,7 @@ def migrate_shelf_life(supabase, gc):
             key = (shelf_life_id, metric_id, obs_date)
             result_map[key] = {
                 "org_id": ORG_ID,
-                "farm_id": "lettuce",
+                "farm_id": "Lettuce",
                 "pack_shelf_life_id": shelf_life_id,
                 "pack_shelf_life_metric_id": metric_id,
                 "observation_date": obs_date,
@@ -822,7 +822,7 @@ def migrate_shelf_life(supabase, gc):
 
         photo_rows.append({
             "org_id": ORG_ID,
-            "farm_id": "lettuce",
+            "farm_id": "Lettuce",
             "pack_shelf_life_id": shelf_life_id,
             "observation_date": obs_date,
             "shelf_life_day": shelf_life_day,
@@ -934,7 +934,7 @@ def migrate_pack_dryer_result(supabase, gc):
 
         row = {
             "org_id": ORG_ID,
-            "farm_id": "lettuce",
+            "farm_id": "Lettuce",
             "site_id": site_id,
             "invnt_item_id": invnt_item_id,
             "check_at": check_at,

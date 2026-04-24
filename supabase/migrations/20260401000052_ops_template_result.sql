@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS ops_template_result (
     id                      UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                  TEXT        NOT NULL REFERENCES org(id),
-    farm_id                 TEXT        REFERENCES org_farm(id),
+    farm_id                 TEXT        REFERENCES org_farm(name),
     ops_task_tracker_id     UUID        NOT NULL REFERENCES ops_task_tracker(id),
     ops_template_id         TEXT        NOT NULL REFERENCES ops_template(id),
     ops_template_question_id         UUID        REFERENCES ops_template_question(id),

@@ -1,7 +1,6 @@
 CREATE TABLE IF NOT EXISTS sales_crm_external_product (
-    id              TEXT PRIMARY KEY,
     org_id          TEXT NOT NULL REFERENCES org(id),
-    name            TEXT NOT NULL,
+    name       TEXT PRIMARY KEY,
     display_order   INTEGER NOT NULL DEFAULT 0,
     is_active       BOOLEAN NOT NULL DEFAULT true,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),

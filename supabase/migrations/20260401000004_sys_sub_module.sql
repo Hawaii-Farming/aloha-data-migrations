@@ -1,9 +1,9 @@
 CREATE TABLE IF NOT EXISTS sys_sub_module (
     id                TEXT PRIMARY KEY,
-    sys_module_id  TEXT NOT NULL REFERENCES sys_module(id),
+    sys_module_id  TEXT NOT NULL REFERENCES sys_module(name),
     name              TEXT NOT NULL,
     description       TEXT,
-    sys_access_level_id  TEXT NOT NULL REFERENCES sys_access_level(id),
+    sys_access_level_id  TEXT NOT NULL REFERENCES sys_access_level(name),
     display_order     INTEGER NOT NULL DEFAULT 0,
     created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by        TEXT,

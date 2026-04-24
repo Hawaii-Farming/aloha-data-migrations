@@ -292,7 +292,7 @@ def migrate_visit_results(supabase, gc):
     store_by_name = {s["name"].lower(): s["id"] for s in store_result.data}
 
     # Build external product lookup
-    ext_result = supabase.table("sales_crm_external_product").select("id, name").execute()
+    ext_result = supabase.table("sales_crm_external_product").select("name").execute()
     ext_by_name = {e["name"].lower(): e["id"] for e in ext_result.data}
 
     # Build visit lookup by (store_id, visit_date)
@@ -398,7 +398,7 @@ def main():
     supabase.table("sales_crm_store_visit_photo").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
     supabase.table("sales_crm_store_visit").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
     supabase.table("sales_crm_store").delete().neq("id", "__none__").execute()
-    supabase.table("sales_crm_external_product").delete().neq("id", "__none__").execute()
+    supabase.table("sales_crm_external_product").delete().neq("name", "__none__").execute()
     print("  Cleared")
 
     # Step 1: External products

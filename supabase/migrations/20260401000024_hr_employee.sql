@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS hr_employee (
     -- ORGANISATION & ROLE
     -- =============================================
     hr_department_id             TEXT REFERENCES hr_department(id),
-    sys_access_level_id       TEXT NOT NULL REFERENCES sys_access_level(id),
+    sys_access_level_id       TEXT NOT NULL REFERENCES sys_access_level(name),
     is_manager                   BOOLEAN NOT NULL DEFAULT false,
     team_lead_id                 TEXT,
     compensation_manager_id      TEXT,

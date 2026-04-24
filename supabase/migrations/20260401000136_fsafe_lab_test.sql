@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS fsafe_lab_test (
     id              TEXT PRIMARY KEY,
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_id         TEXT REFERENCES org_farm(id),
+    farm_id         TEXT REFERENCES org_farm(name),
 
     test_name       TEXT NOT NULL,
     test_methods    JSONB NOT NULL DEFAULT '[]',

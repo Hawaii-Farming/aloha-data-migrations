@@ -1,6 +1,5 @@
 CREATE TABLE IF NOT EXISTS sys_access_level (
-    id            TEXT PRIMARY KEY,
-    name          TEXT NOT NULL,
+    name       TEXT PRIMARY KEY,
     level         INTEGER NOT NULL UNIQUE,
     description   TEXT,
     display_order INTEGER NOT NULL DEFAULT 0,

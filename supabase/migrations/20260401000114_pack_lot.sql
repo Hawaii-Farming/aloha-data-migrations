@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pack_lot (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_id         TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id         TEXT NOT NULL REFERENCES org_farm(name),
 
     lot_number      TEXT NOT NULL,
     harvest_date    DATE,

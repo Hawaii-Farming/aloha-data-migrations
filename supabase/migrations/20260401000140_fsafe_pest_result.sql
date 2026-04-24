@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS fsafe_pest_result (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                  TEXT NOT NULL REFERENCES org(id),
-    farm_id                 TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id                 TEXT NOT NULL REFERENCES org_farm(name),
     ops_task_tracker_id     UUID NOT NULL REFERENCES ops_task_tracker(id),
     site_id                 TEXT NOT NULL REFERENCES org_site(id),
     pest_type               TEXT CHECK (pest_type IN ('mouse', 'rat')),

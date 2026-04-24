@@ -702,7 +702,7 @@ def clear_data(supabase):
     ).execute()
     print("  Cleared fsafe_test_hold")
 
-    supabase.table("fsafe_lab").delete().neq("id", "__none__").execute()
+    supabase.table("fsafe_lab").delete().neq("name", "__none__").execute()
     print("  Cleared fsafe_lab")
 
 

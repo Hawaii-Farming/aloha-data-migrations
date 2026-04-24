@@ -376,39 +376,39 @@ def migrate_maint_sites(supabase):
     # Sites that need parent site and/or farm overrides
     SITE_OVERRIDES = {
         # -- BIP children (farm=cuke, parent=bip) --
-        "fert_bip":                     {"site_id_parent": "bip", "farm_id": "cuke"},
-        "bip_ph":                       {"site_id_parent": "bip", "farm_id": "cuke"},
+        "fert_bip":                     {"site_id_parent": "bip", "farm_id": "Cuke"},
+        "bip_ph":                       {"site_id_parent": "bip", "farm_id": "Cuke"},
 
         # -- BIP PH children (farm=cuke, parent=bip_ph) --
-        "bip_breakroom":                {"site_id_parent": "bip_ph", "farm_id": "cuke"},
-        "bip_office":                   {"site_id_parent": "bip_ph", "farm_id": "cuke"},
-        "bip_cold_storage_1":           {"site_id_parent": "bip_ph", "farm_id": "cuke"},
-        "bip_cold_storage_2":           {"site_id_parent": "bip_ph", "farm_id": "cuke"},
+        "bip_breakroom":                {"site_id_parent": "bip_ph", "farm_id": "Cuke"},
+        "bip_office":                   {"site_id_parent": "bip_ph", "farm_id": "Cuke"},
+        "bip_cold_storage_1":           {"site_id_parent": "bip_ph", "farm_id": "Cuke"},
+        "bip_cold_storage_2":           {"site_id_parent": "bip_ph", "farm_id": "Cuke"},
 
         # -- JTL children (farm=cuke, parent=jtl) --
-        "fert_jtl":                     {"site_id_parent": "jtl", "farm_id": "cuke"},
-        "gh_01_storage":                {"site_id_parent": "jtl", "farm_id": "cuke"},
-        "watanabe_break_room":          {"site_id_parent": "jtl", "farm_id": "cuke"},
-        "shop":                         {"site_id_parent": "jtl", "farm_id": "cuke"},
-        "boneyard_container_racks":     {"site_id_parent": "jtl", "farm_id": "cuke"},
-        "boneyard_containers":          {"site_id_parent": "jtl", "farm_id": "cuke"},
-        "boneyard_parts_containers":    {"site_id_parent": "jtl", "farm_id": "cuke"},
+        "fert_jtl":                     {"site_id_parent": "jtl", "farm_id": "Cuke"},
+        "gh_01_storage":                {"site_id_parent": "jtl", "farm_id": "Cuke"},
+        "watanabe_break_room":          {"site_id_parent": "jtl", "farm_id": "Cuke"},
+        "shop":                         {"site_id_parent": "jtl", "farm_id": "Cuke"},
+        "boneyard_container_racks":     {"site_id_parent": "jtl", "farm_id": "Cuke"},
+        "boneyard_containers":          {"site_id_parent": "jtl", "farm_id": "Cuke"},
+        "boneyard_parts_containers":    {"site_id_parent": "jtl", "farm_id": "Cuke"},
 
         # -- GH children (farm=lettuce, parent=gh) --
-        "lettuce_fert_station":         {"site_id_parent": "gh", "farm_id": "lettuce"},
-        "lettuce_germination_room":     {"site_id_parent": "gh", "farm_id": "lettuce"},
-        "lettuce_ph":                   {"site_id_parent": "gh", "farm_id": "lettuce"},
+        "lettuce_fert_station":         {"site_id_parent": "gh", "farm_id": "Lettuce"},
+        "lettuce_germination_room":     {"site_id_parent": "gh", "farm_id": "Lettuce"},
+        "lettuce_ph":                   {"site_id_parent": "gh", "farm_id": "Lettuce"},
 
         # -- Lettuce PH children (farm=lettuce, parent=lettuce_ph) --
-        "lettuce_packing_room":         {"site_id_parent": "lettuce_ph", "farm_id": "lettuce"},
-        "lettuce_ph_cold_storage":      {"site_id_parent": "lettuce_ph", "farm_id": "lettuce"},
-        "lettuce_ph_utility_closet":    {"site_id_parent": "lettuce_ph", "farm_id": "lettuce"},
-        "lettuce_breezeway":            {"site_id_parent": "lettuce_ph", "farm_id": "lettuce"},
-        "lettuce_dry_side_storage":     {"site_id_parent": "lettuce_ph", "farm_id": "lettuce"},
-        "lettuce_cold_storage":         {"site_id_parent": "lettuce_ph", "farm_id": "lettuce"},
-        "emergency_40_reefer_container": {"site_id_parent": "lettuce_ph", "farm_id": "lettuce"},
-        "new_40_reefer_container":      {"site_id_parent": "lettuce_ph", "farm_id": "lettuce"},
-        "new_40ft_container":           {"site_id_parent": "lettuce_ph", "farm_id": "lettuce"},
+        "lettuce_packing_room":         {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
+        "lettuce_ph_cold_storage":      {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
+        "lettuce_ph_utility_closet":    {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
+        "lettuce_breezeway":            {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
+        "lettuce_dry_side_storage":     {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
+        "lettuce_cold_storage":         {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
+        "emergency_40_reefer_container": {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
+        "new_40_reefer_container":      {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
+        "new_40ft_container":           {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
 
         # -- Housing children (parent=their house, no farm) --
         "duplex_downstairs_bathroom_1": {"site_id_parent": "duplex"},

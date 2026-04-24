@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS fin_expense (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id              TEXT NOT NULL REFERENCES org(id),
-    farm_id             TEXT REFERENCES org_farm(id),
+    farm_id             TEXT REFERENCES org_farm(name),
     txn_date            DATE NOT NULL,
     payee_name          TEXT,
     description         TEXT,

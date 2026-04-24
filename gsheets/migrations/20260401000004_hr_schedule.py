@@ -256,7 +256,7 @@ def _resolve_or_create_employee(supabase, full_name: str, emp_by_name: dict) -> 
             "first_name": first,
             "last_name": last,
             "is_primary_org": True,
-            "sys_access_level_id": "employee",
+            "sys_access_level_id": "Employee",
             "is_deleted": True,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,

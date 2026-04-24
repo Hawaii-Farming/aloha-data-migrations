@@ -246,7 +246,7 @@ def ensure_items(supabase, recipe_mix_records):
         rows.append({
             "id": final_id,
             "org_id": ORG_ID,
-            "farm_id": "lettuce",
+            "farm_id": "Lettuce",
             "invnt_category_id": FERTILIZER_CATEGORY_ID,
             "name": name,
             "qb_account": "1. Growing:Fertilizers",
@@ -649,7 +649,7 @@ def main():
     # Also include cuke greenhouse sites for cuke fertigation events
     cuke_gh = paginate_select(
         supabase, "org_site", "id,farm_id",
-        eq_filters={"farm_id": "cuke", "org_site_subcategory_id": "greenhouse"},
+        eq_filters={"farm_id": "Cuke", "org_site_subcategory_id": "greenhouse"},
     )
     for s in cuke_gh:
         known_sites[s["id"]] = s["farm_id"]

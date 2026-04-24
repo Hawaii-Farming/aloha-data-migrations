@@ -235,7 +235,7 @@ def create_stub_employee(supabase, email):
         "last_name": last,
         "company_email": email,
         "is_primary_org": True,
-        "sys_access_level_id": "employee",
+        "sys_access_level_id": "Employee",
         "is_deleted": True,
     })
     try:

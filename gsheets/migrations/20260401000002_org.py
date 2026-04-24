@@ -151,7 +151,6 @@ def migrate_org_farm(supabase, gc):
         farm_id = to_id(farm_name)
         defaults = farm_defaults.get(farm_id, {})
         rows.append(audit({
-            "id": farm_id,
             "org_id": ORG_ID,
             "name": proper_case(farm_name),
             **defaults,
@@ -215,18 +214,18 @@ def migrate_org_module(supabase):
     Only `human_resources` is enabled for now; all other modules are
     provisioned but disabled until they are ready to roll out.
     """
-    ENABLED_MODULES = {"human_resources"}
+    ENABLED_MODULES = {"Human Resources"}
 
-    result = supabase.table("sys_module").select("id, name, display_order").order("display_order").execute()
+    result = supabase.table("sys_module").select("name, display_order").order("display_order").execute()
 
     rows = []
     for mod in result.data:
         rows.append(audit({
-            "id": mod["id"],
+            "id": mod["name"],
             "org_id": ORG_ID,
-            "sys_module_id": mod["id"],
+            "sys_module_id": mod["name"],
             "display_name": mod["name"],
-            "is_enabled": mod["id"] in ENABLED_MODULES,
+            "is_enabled": mod["name"] in ENABLED_MODULES,
             "display_order": mod["display_order"],
         }))
 
@@ -278,7 +277,7 @@ def migrate_org_site(supabase):
         audit({
             "id": "jtl",
             "org_id": ORG_ID,
-            "farm_id": "cuke",
+            "farm_id": "Cuke",
             "name": "JTL",
             "org_site_category_id": "growing",
             "display_order": 1,
@@ -286,7 +285,7 @@ def migrate_org_site(supabase):
         audit({
             "id": "bip",
             "org_id": ORG_ID,
-            "farm_id": "cuke",
+            "farm_id": "Cuke",
             "name": "BIP",
             "org_site_category_id": "growing",
             "display_order": 2,
@@ -332,7 +331,7 @@ def migrate_org_site(supabase):
         site = {
             "id": code.lower(),
             "org_id": ORG_ID,
-            "farm_id": "cuke",
+            "farm_id": "Cuke",
             "name": code,
             "org_site_category_id": "growing",
             "org_site_subcategory_id": "greenhouse",
@@ -351,7 +350,7 @@ def migrate_org_site(supabase):
         site = {
             "id": code.lower(),
             "org_id": ORG_ID,
-            "farm_id": "cuke",
+            "farm_id": "Cuke",
             "name": code,
             "org_site_category_id": "growing",
             "org_site_subcategory_id": "greenhouse",
@@ -368,7 +367,7 @@ def migrate_org_site(supabase):
         cuke_children.append(audit({
             "id": code.lower(),
             "org_id": ORG_ID,
-            "farm_id": "cuke",
+            "farm_id": "Cuke",
             "name": code,
             "org_site_category_id": "growing",
             "org_site_subcategory_id": "nursery",
@@ -382,7 +381,7 @@ def migrate_org_site(supabase):
         audit({
             "id": "gh",
             "org_id": ORG_ID,
-            "farm_id": "lettuce",
+            "farm_id": "Lettuce",
             "name": "GH",
             "org_site_category_id": "growing",
             "acres": round(108900 / 43560, 2),
@@ -402,7 +401,7 @@ def migrate_org_site(supabase):
         lettuce_children.append(audit({
             "id": code.lower(),
             "org_id": ORG_ID,
-            "farm_id": "lettuce",
+            "farm_id": "Lettuce",
             "name": code,
             "org_site_category_id": "growing",
             "org_site_subcategory_id": "pond",
@@ -461,13 +460,13 @@ def migrate_grow_grade(supabase):
     rows = [
         audit({
             "org_id": ORG_ID,
-            "farm_id": "cuke",
+            "farm_id": "Cuke",
             "code": "1",
             "name": "On Grade",
         }),
         audit({
             "org_id": ORG_ID,
-            "farm_id": "cuke",
+            "farm_id": "Cuke",
             "code": "2",
             "name": "Off Grade",
         }),
@@ -491,7 +490,6 @@ def migrate_ops_task(supabase):
 
     rows = [
         audit({
-            "id": task_id,
             "org_id": ORG_ID,
             "name": name,
             "description": description,
@@ -513,7 +511,7 @@ def migrate_grow_pest(supabase):
         "Fungus Gnat", "Shore Fly", "Caterpillar", "Leafminer",
     ]
     rows = [
-        audit({"id": to_id(p), "name": p})
+        audit({"name": p})
         for p in pests
     ]
     insert_rows(supabase, "grow_pest", rows, upsert=True)
@@ -526,7 +524,7 @@ def migrate_grow_disease(supabase):
         "Pythium", "Root Rot", "Bacterial Leaf Spot", "Tipburn",
     ]
     rows = [
-        audit({"id": to_id(d), "name": d})
+        audit({"name": d})
         for d in diseases
     ]
     insert_rows(supabase, "grow_disease", rows, upsert=True)
@@ -562,10 +560,10 @@ def main():
         except Exception:
             pass  # May fail if referenced by downstream modules; data will be upserted
     # Clear default ops_tasks (exclude house_inspection which is managed by maint.py)
-    default_task_ids = ["seeding", "harvesting", "scouting", "spraying",
-                        "fertigation", "monitoring", "packing", "pest_trap_inspection"]
+    default_task_names = ["Seeding", "Harvesting", "Scouting", "Spraying",
+                          "Fertigation", "Monitoring", "Packing", "Pest Trap Inspection"]
     try:
-        supabase.table("ops_task").delete().in_("id", default_task_ids).execute()
+        supabase.table("ops_task").delete().in_("name", default_task_names).execute()
     except Exception:
         pass
     print("  All cleared")

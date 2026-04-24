@@ -322,8 +322,8 @@ def main():
     # Clear sys tables in reverse FK order so they can be re-seeded below.
     print("Clearing sys tables...")
     supabase.table("sys_sub_module").delete().neq("id", "___never___").execute()
-    supabase.table("sys_module").delete().neq("id", "___never___").execute()
-    supabase.table("sys_access_level").delete().neq("id", "___never___").execute()
+    supabase.table("sys_module").delete().neq("name", "___never___").execute()
+    supabase.table("sys_access_level").delete().neq("name", "___never___").execute()
     supabase.table("sys_uom").delete().neq("code", "___never___").execute()
     print("  All cleared")
 

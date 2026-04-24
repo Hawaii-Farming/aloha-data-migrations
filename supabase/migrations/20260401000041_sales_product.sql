@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS sales_product (
     code                       TEXT PRIMARY KEY,
     org_id                     TEXT NOT NULL REFERENCES org(id),
-    farm_id                    TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id                    TEXT NOT NULL REFERENCES org_farm(name),
     grow_grade_id              TEXT REFERENCES grow_grade(code),
     name                       TEXT NOT NULL,
     description                TEXT,

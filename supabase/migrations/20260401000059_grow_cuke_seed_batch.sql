@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_cuke_seed_batch (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                  TEXT NOT NULL REFERENCES org(id),
-    farm_id                 TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id                 TEXT NOT NULL REFERENCES org_farm(name),
     site_id                 TEXT REFERENCES org_site_cuke_gh(id),
     -- ops_task_tracker_id and invnt_lot_id intentionally carry no FK: both
     -- parent tables are TRUNCATEd nightly and CASCADE would wipe this

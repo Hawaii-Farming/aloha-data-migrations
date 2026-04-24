@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS fsafe_result (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_id         TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id         TEXT NOT NULL REFERENCES org_farm(name),
     site_id         TEXT REFERENCES org_site(id),
     fsafe_test_hold_id  UUID REFERENCES fsafe_test_hold(id),
-    fsafe_lab_id    TEXT REFERENCES fsafe_lab(id),
+    fsafe_lab_id    TEXT REFERENCES fsafe_lab(name),
     fsafe_lab_test_id   TEXT NOT NULL REFERENCES fsafe_lab_test(id),
     test_method             TEXT,
     initial_retest_vector   TEXT CHECK (initial_retest_vector IN ('initial', 'retest', 'vector')),

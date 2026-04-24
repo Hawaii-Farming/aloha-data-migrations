@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_fertigation_recipe_item (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
-    farm_id                     TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id                     TEXT NOT NULL REFERENCES org_farm(name),
     grow_fertigation_recipe_id  TEXT NOT NULL REFERENCES grow_fertigation_recipe(id),
     -- Water-only add-on recipes have no tank; equipment_id is null for those.
     equipment_id                TEXT REFERENCES org_equipment(id),

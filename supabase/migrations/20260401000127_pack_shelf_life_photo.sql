@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pack_shelf_life_photo (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
-    farm_id                     TEXT REFERENCES org_farm(id),
+    farm_id                     TEXT REFERENCES org_farm(name),
     pack_shelf_life_id    UUID NOT NULL REFERENCES pack_shelf_life(id),
 
     observation_date            DATE NOT NULL,
