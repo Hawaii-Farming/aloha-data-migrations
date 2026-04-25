@@ -565,7 +565,7 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
         equip_by_name[legacy_name.lower()] = legacy_name
 
     # Build item name -> id lookup
-    item_result = supabase.table("invnt_item").select("id, name, burn_uom").execute()
+    item_result = supabase.table("invnt_item").select("name, burn_uom").execute()
     item_by_name = {}
     for it in item_result.data:
         item_by_name[it["name"].lower()] = it
@@ -689,7 +689,7 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
                 qty = safe_numeric(r.get("QuantityUsed", ""))
                 invnt_item_rows.append((req_index, {
                     "org_id": ORG_ID,
-                    "invnt_item_name": item["id"],
+                    "invnt_item_name": item["name"],
                     "uom": item.get("burn_uom"),
                     "quantity_used": qty if qty else None,
                     "created_by": req_email or AUDIT_USER,
@@ -899,31 +899,29 @@ def migrate_house_inspections(supabase, client):
             return "garage"
         return None
 
-    # 1. Create ops_task (upsert — house_inspection may already exist as a
+    # 1. Create ops_task (upsert — House Inspection may already exist as a
     # system task seeded by the org migration)
-    task_id = "house_inspection"
+    task_name = "House Inspection"
     supabase.table("ops_task").upsert({
-        "id": task_id,
         "org_id": ORG_ID,
-        "name": "House Inspection",
+        "name": task_name,
         "description": "Periodic inspection of housing units and rooms",
         "created_by": AUDIT_USER,
         "updated_by": AUDIT_USER,
     }).execute()
     print("\n--- ops_task ---")
-    print("  Upserted house_inspection task")
+    print(f"  Upserted {task_name!r} task")
 
     # 2. Create ops_template + ops_template_question for each room type
     template_questions = {}  # room_type -> {question_text: question_id}
     for room_type, tmpl in TEMPLATES.items():
-        tmpl_id = f"house_inspection_{room_type}"
-        org_module_result = supabase.table("org_module").select("id").eq("sys_module_name", "maintenance").execute()
-        org_module_name = org_module_result.data[0]["id"] if org_module_result.data else None
+        org_module_result = supabase.table("org_module").select("name").eq("sys_module_name", "Maintenance").execute()
+        org_module_name = org_module_result.data[0]["name"] if org_module_result.data else None
 
+        tmpl_name = tmpl["name"]
         supabase.table("ops_template").insert({
-            "id": tmpl_id,
             "org_id": ORG_ID,
-            "name": tmpl["name"],
+            "name": tmpl_name,
             "org_module_name": org_module_name,
             "display_order": list(TEMPLATES.keys()).index(room_type) + 1,
             "created_by": AUDIT_USER,
@@ -933,8 +931,8 @@ def migrate_house_inspections(supabase, client):
         # Link task to template
         supabase.table("ops_task_template").insert({
             "org_id": ORG_ID,
-            "ops_task_name": task_id,
-            "ops_template_name": tmpl_id,
+            "ops_task_name": task_name,
+            "ops_template_name": tmpl_name,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
         }).execute()
@@ -944,7 +942,7 @@ def migrate_house_inspections(supabase, client):
         for i, (q_text, resp_type, min_val, max_val) in enumerate(tmpl["questions"]):
             q_row = {
                 "org_id": ORG_ID,
-                "ops_template_name": tmpl_id,
+                "ops_template_name": tmpl_name,
                 "question_text": q_text,
                 "response_type": resp_type,
                 "is_required": True,
@@ -1012,12 +1010,13 @@ def migrate_house_inspections(supabase, client):
         inspector_email = str(r.get("InspectedBy", "")).strip().lower()
         inspector_id = email_to_emp.get(inspector_email) or FALLBACK_EMP
 
-        tmpl_id = f"house_inspection_{room_type}"
+        # Resolve the display-name PK for this room's template
+        tmpl_name = TEMPLATES[room_type]["name"]
 
         tracker = {
             "org_id": ORG_ID,
             "site_id": site_id,
-            "ops_task_name": task_id,
+            "ops_task_name": task_name,
             "start_time": inspection_date,
             "stop_time": inspection_date,
             "is_completed": True,
@@ -1039,7 +1038,7 @@ def migrate_house_inspections(supabase, client):
 
             result_row = {
                 "org_id": ORG_ID,
-                "ops_template_name": tmpl_id,
+                "ops_template_name": tmpl_name,
                 "ops_template_question_id": q_id,
                 "created_by": inspector_email or AUDIT_USER,
                 "updated_by": inspector_email or AUDIT_USER,
