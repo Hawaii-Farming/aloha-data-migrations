@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS fsafe_result (
     site_id         TEXT REFERENCES org_site(id),
     fsafe_test_hold_id  UUID REFERENCES fsafe_test_hold(id),
     fsafe_lab_name    TEXT REFERENCES fsafe_lab(name),
-    fsafe_lab_test_id   TEXT NOT NULL REFERENCES fsafe_lab_test(id),
+    fsafe_lab_test_name   TEXT NOT NULL REFERENCES fsafe_lab_test(test_name),
     test_method             TEXT,
     initial_retest_vector   TEXT CHECK (initial_retest_vector IN ('initial', 'retest', 'vector')),
     status                  TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed')),
@@ -43,7 +43,7 @@ COMMENT ON TABLE fsafe_result IS 'Unified food safety test results table. Result
 CREATE INDEX idx_fsafe_result_org       ON fsafe_result (org_id);
 CREATE INDEX idx_fsafe_result_lab       ON fsafe_result (fsafe_lab_name);
 CREATE INDEX idx_fsafe_result_site      ON fsafe_result (site_id);
-CREATE INDEX idx_fsafe_result_test      ON fsafe_result (fsafe_lab_test_id);
+CREATE INDEX idx_fsafe_result_test      ON fsafe_result (fsafe_lab_test_name);
 CREATE INDEX idx_fsafe_result_test_hold ON fsafe_result (fsafe_test_hold_id);
 CREATE INDEX idx_fsafe_result_original  ON fsafe_result (fsafe_result_id_original);
 CREATE INDEX idx_fsafe_result_status    ON fsafe_result (org_id, status);

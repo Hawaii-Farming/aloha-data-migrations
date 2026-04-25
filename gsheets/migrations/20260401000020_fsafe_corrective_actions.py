@@ -279,7 +279,7 @@ def build_lookup_emp(supabase, gc):
     print(f"    Loading EMP fsafe_result rows...")
     fr_rows = fetch_all(
         supabase, "fsafe_result",
-        "id,sampled_at,site_id,fsafe_lab_test_id",
+        "id,sampled_at,site_id,fsafe_lab_test_name",
     )
     # Filter to actual EMP results: not test_hold, not water (water has zone),
     # not ATP. Easiest filter: exclude atp_rlu test, exclude rows with fsafe_test_hold_id.

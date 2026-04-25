@@ -408,7 +408,7 @@ def migrate_emp(supabase, wb, sampled_by_lookup, email_map):
             "org_id": ORG_ID,
             "farm_name": farm_name,
             "site_id": site_id,
-            "fsafe_lab_test_id": lab_test_id,
+            "fsafe_lab_test_name": lab_test_id,
             "initial_retest_vector": initial_retest_vector,
             "status": "completed",
             "result_enum": result_enum,
@@ -496,7 +496,7 @@ def migrate_water(supabase, wb, water_site_map, sampled_by_lookup):
         tc_val = str(r.get("TotalColiform", "")).strip()
         if tc_val:
             row = dict(base)
-            row["fsafe_lab_test_id"] = "tc"
+            row["fsafe_lab_test_name"] = "tc"
             row["result_numeric"] = safe_numeric(tc_val)
             row["result_pass"] = True
             rows.append(row)
@@ -506,7 +506,7 @@ def migrate_water(supabase, wb, water_site_map, sampled_by_lookup):
         if ecoli_val:
             numeric = safe_numeric(ecoli_val, default=0)
             row = dict(base)
-            row["fsafe_lab_test_id"] = "e_coli"
+            row["fsafe_lab_test_name"] = "e_coli"
             row["result_numeric"] = numeric
             row["result_enum"] = "Positive" if numeric > 0 else "Negative"
             row["result_pass"] = numeric <= 126
@@ -517,7 +517,7 @@ def migrate_water(supabase, wb, water_site_map, sampled_by_lookup):
         if sal_val:
             is_pos = parse_bool_result(sal_val)
             row = dict(base)
-            row["fsafe_lab_test_id"] = "salmonella"
+            row["fsafe_lab_test_name"] = "salmonella"
             row["result_enum"] = "Positive" if is_pos else "Negative"
             row["result_pass"] = not is_pos
             rows.append(row)
@@ -527,7 +527,7 @@ def migrate_water(supabase, wb, water_site_map, sampled_by_lookup):
         if lis_val:
             is_pos = parse_bool_result(lis_val)
             row = dict(base)
-            row["fsafe_lab_test_id"] = "listeria"
+            row["fsafe_lab_test_name"] = "listeria"
             row["result_enum"] = "Positive" if is_pos else "Negative"
             row["result_pass"] = not is_pos
             rows.append(row)
@@ -642,7 +642,7 @@ def migrate_test_hold(supabase, wb, sampled_by_lookup):
                 continue
 
             row = dict(base)
-            row["fsafe_lab_test_id"] = test_id
+            row["fsafe_lab_test_name"] = test_id
 
             if is_enum:
                 is_pos = parse_bool_result(val)

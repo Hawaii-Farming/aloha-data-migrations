@@ -426,7 +426,7 @@ def clear_existing_data(supabase):
     supabase.table("ops_task_tracker").delete().eq("ops_task_name", TASK_ID).eq("farm_name", FARM_ID).eq("site_id", SITE_ID).execute()
     print(f"  Cleared ops_task_tracker (lettuce food_safety_log @ {SITE_ID})")
 
-    supabase.table("fsafe_result").delete().eq("fsafe_lab_test_id", ATP_TEST_ID).eq("farm_name", FARM_ID).execute()
+    supabase.table("fsafe_result").delete().eq("fsafe_lab_test_name", ATP_TEST_ID).eq("farm_name", FARM_ID).execute()
     print(f"  Cleared fsafe_result (atp_rlu, lettuce)")
 
 
@@ -567,7 +567,7 @@ def migrate_atp(supabase, gc, email_map, stub_cache):
                 "farm_name": FARM_ID,
                 "site_id": site_id,
                 "fsafe_lab_name": ATP_LAB_ID,
-                "fsafe_lab_test_id": ATP_TEST_ID,
+                "fsafe_lab_test_name": ATP_TEST_ID,
                 "result_numeric": value,
                 "result_pass": result_pass,
                 "status": "completed",

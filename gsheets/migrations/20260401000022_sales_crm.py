@@ -234,7 +234,7 @@ def migrate_visits(supabase, gc):
 
         visit_rows.append({
             "org_id": ORG_ID,
-            "sales_crm_store_id": store_id,
+            "sales_crm_store_name": store_id,
             "visit_date": visit_date,
             "notes": notes,
             "visited_by": visited_by,
@@ -296,10 +296,10 @@ def migrate_visit_results(supabase, gc):
     ext_by_name = {e["name"].lower(): e["id"] for e in ext_result.data}
 
     # Build visit lookup by (store_id, visit_date)
-    visit_result = supabase.table("sales_crm_store_visit").select("id, sales_crm_store_id, visit_date").execute()
+    visit_result = supabase.table("sales_crm_store_visit").select("id, sales_crm_store_name, visit_date").execute()
     visit_by_store_date = {}
     for v in visit_result.data:
-        visit_by_store_date[(v["sales_crm_store_id"], v["visit_date"])] = v["id"]
+        visit_by_store_date[(v["sales_crm_store_name"], v["visit_date"])] = v["id"]
 
     # Stock level normalization
     stock_map = {
