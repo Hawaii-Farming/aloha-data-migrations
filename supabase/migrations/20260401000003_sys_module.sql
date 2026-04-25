@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS sys_module (
 );
 
 COMMENT ON TABLE sys_module IS 'System-level lookup defining the application modules available for access control (e.g. Inventory, HR, Operations, Pack, Sales, Maintenance, Food Safety).';
-COMMENT ON COLUMN sys_module.id IS 'Human-readable identifier derived from module name (e.g. inventory, human_resources)';
+COMMENT ON COLUMN sys_module.name IS 'Human-readable identifier derived from module name (e.g. inventory, human_resources)';
 
 -- --------------------------------------------------------------------
 -- Grants for authenticated role (workspace shell / sys_navigation view)
