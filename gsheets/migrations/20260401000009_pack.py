@@ -51,27 +51,27 @@ PACK_SHEET_ID = "1XEwjbU_NKNmoUED4w5iuaGV_ilovCJg4f2AkA9lB2cg"
 
 # Lettuce product columns → sales_product.id
 LETTUCE_PRODUCT_COLS = {
-    "LRCases": "lr",
-    "LWCases": "lw",
-    "WRCases": "wr",
-    "ARCases": "ar",
-    "LFCases": "lf",
-    "AFCases": "af",
+    "LRCases": "LR",
+    "LWCases": "LW",
+    "WRCases": "WR",
+    "ARCases": "AR",
+    "LFCases": "LF",
+    "AFCases": "AF",
 }
 
 # Cuke product columns → sales_product.id
 CUKE_PRODUCT_COLS = {
-    "KWCases": "kw",
-    "KRCases": "kr",
-    "KFCases": "kf",
-    "OKCases": "ok",
-    "JWCases": "jw",
-    "JRCases": "jr",
-    "JFCases": "jf",
-    "OJCases": "oj",
-    "EWCases": "ew",
-    "ERCases": "er",
-    "OECases": "oe",
+    "KWCases": "KW",
+    "KRCases": "KR",
+    "KFCases": "KF",
+    "OKCases": "OK",
+    "JWCases": "JW",
+    "JRCases": "JR",
+    "JFCases": "JF",
+    "OJCases": "OJ",
+    "EWCases": "EW",
+    "ERCases": "ER",
+    "OECases": "OE",
 }
 
 # UOM mapping from sheet values → sys_uom codes
@@ -260,7 +260,7 @@ def migrate_sales_product(supabase, gc):
     print("Clearing pack_lot...")
     supabase.table("pack_lot").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
     print("Clearing sales_product...")
-    supabase.table("sales_product").delete().neq("id", "__none__").execute()
+    supabase.table("sales_product").delete().neq("code", "__none__").execute()
 
     rows = []
     for code, base in base_map.items():
@@ -370,14 +370,14 @@ def migrate_pack_lettuce(supabase, gc, product_map):
 
     # Clear existing (farm-scoped)
     print("\nClearing pack_lot_item (lettuce)...")
-    existing_lots = supabase.table("pack_lot").select("id").eq("farm_name", "lettuce").execute().data
+    existing_lots = supabase.table("pack_lot").select("id").eq("farm_name", "Lettuce").execute().data
     if existing_lots:
         lot_ids = [l["id"] for l in existing_lots]
         for i in range(0, len(lot_ids), 100):
             batch = lot_ids[i:i + 100]
             supabase.table("pack_lot_item").delete().in_("pack_lot_id", batch).execute()
     print("Clearing pack_lot (lettuce)...")
-    supabase.table("pack_lot").delete().eq("farm_name", "lettuce").execute()
+    supabase.table("pack_lot").delete().eq("farm_name", "Lettuce").execute()
 
     # Insert lots
     lot_rows = []
@@ -464,14 +464,14 @@ def migrate_pack_cuke(supabase, gc, product_map):
 
     # Clear existing (farm-scoped)
     print("\nClearing pack_lot_item (cuke)...")
-    existing_lots = supabase.table("pack_lot").select("id").eq("farm_name", "cuke").execute().data
+    existing_lots = supabase.table("pack_lot").select("id").eq("farm_name", "Cuke").execute().data
     if existing_lots:
         lot_ids = [l["id"] for l in existing_lots]
         for i in range(0, len(lot_ids), 100):
             batch = lot_ids[i:i + 100]
             supabase.table("pack_lot_item").delete().in_("pack_lot_id", batch).execute()
     print("Clearing pack_lot (cuke)...")
-    supabase.table("pack_lot").delete().eq("farm_name", "cuke").execute()
+    supabase.table("pack_lot").delete().eq("farm_name", "Cuke").execute()
 
     # Insert lots sorted by date
     lot_rows = []
@@ -571,11 +571,11 @@ SHELF_LIFE_METRICS = [
 
 # Map observation columns to metric IDs
 OBSV_METRIC_MAP = {
-    "ExternalDamage": "external_damage",
-    "InternalDamage": "internal_damage",
-    "Moisture": "moisture",
-    "Color": "color",
-    "Texture": "texture",
+    "ExternalDamage": "External Damage",
+    "InternalDamage": "Internal Damage",
+    "Moisture": "Moisture",
+    "Color": "Color",
+    "Texture": "Texture",
 }
 
 # Normalize enum values (legacy data has inconsistent casing)
@@ -604,7 +604,6 @@ def migrate_shelf_life_metrics(supabase):
     rows = []
     for m in SHELF_LIFE_METRICS:
         rows.append(audit({
-            "id": m["id"],
             "org_id": ORG_ID,
             "farm_name": "Lettuce",
             "name": m["name"],
@@ -635,7 +634,7 @@ def migrate_shelf_life(supabase, gc):
     print(f"  {len(obsv_data)} observations, {len(photo_data)} photos")
 
     # --- Build pack_lot lookup by date ---
-    lots = supabase.table("pack_lot").select("id, pack_date").eq("farm_name", "lettuce").execute()
+    lots = supabase.table("pack_lot").select("id, pack_date").eq("farm_name", "Lettuce").execute()
     lot_by_date = {}
     for l in lots.data:
         lot_by_date.setdefault(l["pack_date"], l["id"])
