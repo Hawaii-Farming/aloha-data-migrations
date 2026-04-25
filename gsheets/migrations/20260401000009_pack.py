@@ -840,24 +840,25 @@ def migrate_shelf_life(supabase, gc):
 # ─────────────────────────────────────────────────────────────
 
 # Normalize legacy seed_name values to invnt_item IDs
+# Normalize legacy seed_name values to invnt_item.name (proper case)
 SEED_NAME_MAP = {
     "3013": "3013",
     "3013 after dryer": "3013",
     "3310": "3310",
     "3404": "3404",
     "3901": "3901",
-    "alboreto": "alboreto",
+    "alboreto": "Alboreto",
     "hf mix": None,
-    "mixed version 2.0": "mixed_version_2_0",
-    "mixedversion 2.0": "mixed_version_2_0",
+    "mixed version 2.0": "Mixed Version 2.0",
+    "mixedversion 2.0": "Mixed Version 2.0",
     "mixed boards": None,
     "mixed seeds": None,
     "romaine": None,
     "romaine w heater overnight": None,
-    "runaway": "runaway",
-    "trial": "trial",
-    "watercress": "watercress",
-    "webber": "webber",
+    "runaway": "Runaway",
+    "trial": "Trial",
+    "watercress": "Watercress",
+    "webber": "Webber",
 }
 
 # Extract pond site_id from notes text
