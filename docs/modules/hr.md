@@ -34,10 +34,10 @@
   | Access level | Rows visible | Columns visible |
   |---|---|---|
   | `employee`, `team_lead` | all employees in the org | hours columns only (`scheduled_hours`, `total_hours`, `regular_hours`, `discretionary_overtime_hours`) — **redact the dollar columns** (`total_cost`, `regular_pay`, `discretionary_overtime_pay`) |
-  | `manager` | only rows where the employee's `compensation_manager_id` resolves to this user's `hr_employee.id` | hours **and** dollars |
+  | `manager` | only rows where the employee's `compensation_manager_name` resolves to this user's `hr_employee.name` | hours **and** dollars |
   | `admin`, `owner` | all rows | hours and dollars |
 
-  The view itself does not apply these filters — it returns everything. The module loader (server-side) must (a) resolve the current user's access level and employee id, (b) add the `compensation_manager_id` filter for managers, and (c) project away the dollar columns for employees and team leads before the payload reaches the client.
+  The view itself does not apply these filters — it returns everything. The module loader (server-side) must (a) resolve the current user's access level and employee id, (b) add the `compensation_manager_name` filter for managers, and (c) project away the dollar columns for employees and team leads before the payload reaches the client.
 
 ### 5. Payroll Data (`payroll_data`)
 - **Data sits in:** `hr_payroll`

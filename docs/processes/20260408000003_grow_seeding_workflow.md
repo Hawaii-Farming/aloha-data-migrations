@@ -25,10 +25,10 @@ This document describes the seeding activity flow using `ops_task_tracker` as th
    - If templates are linked to the "Seeding" task via `ops_task_template`, they are presented for completion
 2. Assign employees working on this seeding via `ops_task_schedule` (one row per employee)
 3. Create a `grow_seed_batch` record linked to the activity via `ops_task_tracker_id`
-4. Select either a single seed item (`invnt_item_id`) or a seed mix (`grow_lettuce_seed_mix_id`) — never both (enforced by CHECK constraint)
+4. Select either a single seed item (`invnt_item_name`) or a seed mix (`grow_lettuce_seed_mix_name`) — never both (enforced by CHECK constraint)
 5. Enter batch code (system-generated, editable), seeding UOM, number of units, seeds per unit, number of rows
 6. Enter seeding date, transplant date, and estimated harvest date
-7. Optionally link to a trial type (`grow_trial_type_id`)
+7. Optionally link to a trial type (`grow_trial_type_name`)
 8. Update status through lifecycle: `planned` → `seeded` → `transplanted` → `harvesting` → `harvested`
 
 ---
@@ -47,8 +47,8 @@ flowchart TD
     A[Create ops_task_tracker\nTask = Seeding] --> A1[Assign employees\nvia ops_task_schedule]
     A1 --> B[Create grow_seed_batch record]
     B --> C{Single variety or mix?}
-    C -->|Single| D[Select invnt_item_id]
-    C -->|Mix| E[Select grow_lettuce_seed_mix_id]
+    C -->|Single| D[Select invnt_item_name]
+    C -->|Mix| E[Select grow_lettuce_seed_mix_name]
     D --> F[Enter batch code, seeding UOM,\nnumber of units, seeds per unit, rows]
     E --> F
     F --> G[Enter seeding date, transplant date,\nestimated harvest date]

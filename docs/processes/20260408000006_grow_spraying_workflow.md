@@ -36,7 +36,7 @@ This document describes the spraying activity flow using `ops_task_tracker` dire
    - Enter the target pest/disease, application UOM, and quantity applied
    - The app enforces that `application_quantity` does not exceed the compliance record's `maximum_quantity_per_acre`
 6. For each piece of equipment used, create a `grow_spray_equipment` record:
-   - Select the equipment (`equipment_id`)
+   - Select the equipment (`equipment_name`)
    - Enter water UOM and quantity
 
 ---

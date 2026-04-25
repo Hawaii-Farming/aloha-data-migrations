@@ -31,7 +31,7 @@ Steps must be executed in this order due to FK dependencies:
 | Target | Source | Notes |
 |--------|--------|-------|
 | `org_module` | `sys_module` | One row per system module; all `is_enabled = true`; `display_name` and `display_order` inherited from system |
-| `org_sub_module` | `sys_sub_module` | One row per system sub-module; all `is_enabled = true`; `sys_access_level_id`, `display_name`, and `display_order` inherited from system |
+| `org_sub_module` | `sys_sub_module` | One row per system sub-module; all `is_enabled = true`; `sys_access_level_name`, `display_name`, and `display_order` inherited from system |
 
 ---
 
@@ -90,7 +90,7 @@ Default categories and subcategories:
 
 | Target | Source | Notes |
 |--------|--------|-------|
-| `hr_employee` | Manual input | Created manually with `sys_access_level_id = admin` and a linked `user_id` |
+| `hr_employee` | Manual input | Created manually with `sys_access_level_name = admin` and a linked `user_id` |
 
 ---
 

@@ -64,7 +64,7 @@ Each activity records its own seedings snapshot, tank volumes, and timing indepe
 5. App looks up active seedings in those sites (`grow_seed_batch.status IN ('transplanted', 'harvesting')`)
 6. User confirms — seedings are recorded in `grow_task_seed_batch` as a point-in-time snapshot
 7. For each tank used, create a `grow_fertigation` record:
-   - Select the equipment (`equipment_id`)
+   - Select the equipment (`equipment_name`)
    - Enter volume UOM and quantity applied
 8. Complete the activity (stop time)
 
@@ -72,11 +72,11 @@ Each activity records its own seedings snapshot, tank volumes, and timing indepe
 
 ## Design Decision: Recipe ID on Tank Table
 
-The `grow_fertigation_recipe_id` is stored on `grow_fertigation` rather than on `grow_task_seed_batch` or `ops_task_tracker`. This keeps the unified `grow_task_seed_batch` table clean (no activity-specific columns) and `ops_task_tracker` module-agnostic. The recipe link lives on the fertigation-specific tank table where it belongs — each tank row says "this tank delivered this recipe's mix."
+The `grow_fertigation_recipe_name` is stored on `grow_fertigation` rather than on `grow_task_seed_batch` or `ops_task_tracker`. This keeps the unified `grow_task_seed_batch` table clean (no activity-specific columns) and `ops_task_tracker` module-agnostic. The recipe link lives on the fertigation-specific tank table where it belongs — each tank row says "this tank delivered this recipe's mix."
 
 To query which recipe was used for a fertigation event:
 ```sql
-SELECT DISTINCT grow_fertigation_recipe_id
+SELECT DISTINCT grow_fertigation_recipe_name
 FROM grow_fertigation
 WHERE ops_task_tracker_id = ?
 ```
@@ -86,7 +86,7 @@ WHERE ops_task_tracker_id = ?
 ## Notes
 
 - Recipes are reusable across multiple fertigation events. The recipe defines what gets mixed; the event records when and where it was applied.
-- `grow_fertigation_recipe_item.invnt_item_id` is nullable for one-off fertilizers not tracked in inventory. `item_name` is always set for display.
+- `grow_fertigation_recipe_item.invnt_item_name` is nullable for one-off fertilizers not tracked in inventory. `item_name` is always set for display.
 - Seedings are filtered to `transplanted` or `harvesting` status only.
 
 ---

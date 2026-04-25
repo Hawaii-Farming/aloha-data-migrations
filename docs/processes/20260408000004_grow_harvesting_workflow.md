@@ -28,7 +28,7 @@ This document describes the harvesting activity flow using `ops_task_tracker` di
    - Select the seeding batch (`grow_seed_batch_id`) — only batches with status `transplanted` or `harvesting` are available
    - Optionally assign a harvest grade (`grow_grade_id`)
    - Enter the harvest date
-   - Select a container type (`grow_harvest_container_id`)
+   - Select a container type (`grow_harvest_container_name`)
    - Enter number of containers and gross weight
    - Tare weight is calculated on the fly from `grow_harvest_container.tare_weight × number_of_containers`
    - Net weight = gross weight minus calculated tare

@@ -96,7 +96,7 @@ Both approaches store the same `formula` TEXT in the database — the UI method 
 1. Create an `ops_task_tracker` activity with task = "Monitoring"
    - If templates are linked to the "Monitoring" task via `ops_task_template`, they are presented for completion
 2. Assign employees working on this monitoring via `ops_task_schedule` (one row per employee)
-3. Select the site — the app loads monitoring points matching `farm_id` + `site.category`
+3. Select the site — the app loads monitoring points matching `farm_name` + `site.category`
 4. Enter the monitoring station name (free-text `grow_monitoring_result.monitoring_station`)
 5. For each monitoring point, enter the reading based on its `response_type`:
    - **Numeric**: user enters a number (e.g. EC, pH, mL, temperature)

@@ -29,7 +29,7 @@ This document describes the scouting activity flow using `ops_task_tracker` dire
 3. App snapshots active seeding batches present in the site via `grow_task_seed_batch` (batches with status `transplanted` or `harvesting`) — this records which batches were in the site at the time of scouting
 4. For each pest or disease found, create a `grow_scout_result` record:
    - Set `observation_type` to `pest` or `disease`
-   - Select the pest (`grow_pest_id`) or disease (`grow_disease_id`) from the lookup — enforced by CHECK constraint
+   - Select the pest (`grow_pest_name`) or disease (`grow_disease_name`) from the lookup — enforced by CHECK constraint
    - Select the specific growing row (`site_id` referencing org_site where category = row)
    - Set severity level (`low`, `moderate`, `high`, `severe`)
    - For diseases, set infection stage (`early`, `mid`, `late`, `advanced`)

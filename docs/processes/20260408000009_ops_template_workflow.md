@@ -45,9 +45,9 @@ Assign employees working on this activity via `ops_task_schedule` (one row per e
 When the user selects a task, the app queries `ops_task_template` to find all templates linked to that task:
 
 ```sql
-SELECT ops_template_id
+SELECT ops_template_name
 FROM ops_task_template
-WHERE ops_task_id = ?
+WHERE ops_task_name = ?
   AND is_deleted = false
 ```
 
@@ -73,7 +73,7 @@ When an ATP test is linked to the activity, the system randomly selects `atp_sit
 
 Pass/fail is evaluated against the `fsafe_lab_test` thresholds. Results are stored in `fsafe_result` linked to the `ops_task_tracker`.
 
-> **Note:** Each `ops_template_result` targets either a site (`site_id`) or equipment (`equipment_id`), never both. ATP readings have `site_id` populated and `ops_template_question_id = null`. Equipment inspections have `equipment_id` populated. Standard checklist rows have `ops_template_question_id` populated with both `site_id` and `equipment_id` null.
+> **Note:** Each `ops_template_result` targets either a site (`site_id`) or equipment (`equipment_name`), never both. ATP readings have `site_id` populated and `ops_template_question_id = null`. Equipment inspections have `equipment_name` populated. Standard checklist rows have `ops_template_question_id` populated with both `site_id` and `equipment_name` null.
 
 ### 6. Submit the Activity
 
