@@ -583,7 +583,7 @@ def migrate_invnt_po(supabase, gc):
         lot_id = None
         if lot_number and lot_number.upper() != "NA" and item_id:
             # Check if item is active
-            item_obj = item_by_id.get(item_id, {})
+            item_obj = item_by_name.get(item_name.lower(), {})
             if item_obj.get("is_active", True):
                 lot_key = to_id(lot_number)
                 lot_id = lot_key
