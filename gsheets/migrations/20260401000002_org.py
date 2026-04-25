@@ -445,7 +445,7 @@ def migrate_grow_variety(supabase, gc):
             continue
         rows.append(audit({
             "org_id": ORG_ID,
-            "farm_name": to_id(farm),
+            "farm_name": proper_case(farm),
             "code": code,
             "name": proper_case(name),
         }))
