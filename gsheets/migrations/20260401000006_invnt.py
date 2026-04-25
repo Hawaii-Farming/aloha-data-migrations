@@ -144,14 +144,13 @@ def migrate_invnt_vendor(supabase, gc):
 
     rows = [
         audit({
-            "id": to_id(v),
             "org_id": ORG_ID,
             "name": proper_case(v),
         })
         for v in vendors
     ]
     insert_rows(supabase, "invnt_vendor", rows)
-    return {v: to_id(v) for v in vendors}
+    return {v: proper_case(v) for v in vendors}
 
 
 def migrate_invnt_category(supabase, gc):
@@ -347,7 +346,7 @@ def migrate_invnt_item(supabase, gc):
 
         # Farm — "HF" is the org, not a farm; skip it
         farm = str(r.get("Farm", "")).strip()
-        farm_name = to_id(farm) if farm and farm.upper() != "HF" else None
+        farm_name = proper_case(farm) if farm and farm.upper() != "HF" else None
 
         # UOMs
         burn_uom = map_uom(r.get("BurnUnits", ""))
@@ -415,7 +414,6 @@ def migrate_invnt_item(supabase, gc):
         maint_part_type = proper_case(maint_sub) if legacy_cat == "Maint Parts" and maint_sub else None
 
         row = {
-            "id": item_id,
             "org_id": ORG_ID,
             "farm_name": farm_name,
             "invnt_category_id": cat_id,
@@ -455,7 +453,7 @@ def migrate_invnt_po(supabase, gc):
     """Migrate POs from both invnt_item_po (historical) and proc_requests (active)."""
 
     # Build employee email -> id lookup from Supabase
-    employees = paginate_select(supabase, "hr_employee", "id, company_email")
+    employees = paginate_select(supabase, "hr_employee", "name, company_email")
     email_to_emp = {}
     for e in employees:
         if e.get("company_email"):
@@ -465,16 +463,14 @@ def migrate_invnt_po(supabase, gc):
     FALLBACK_EMP = email_to_emp.get("data@hawaiifarming.com") or email_to_emp.get("admin@hawaiifarming.com")
 
     # Build item name -> id lookup
-    items = paginate_select(supabase, "invnt_item", "id, name, invnt_category_id, burn_uom, order_uom, burn_per_order, farm_name, is_active")
+    items = paginate_select(supabase, "invnt_item", "name, invnt_category_id, burn_uom, order_uom, burn_per_order, farm_name, is_active")
     item_by_name = {}
-    item_by_id = {}
     for it in items:
         item_by_name[it["name"].lower()] = it
-        item_by_id[it["id"]] = it
 
     # Build vendor name -> id lookup
-    vendors = paginate_select(supabase, "invnt_vendor", "id, name")
-    vendor_by_name = {v["name"].lower(): v["id"] for v in vendors}
+    vendors = paginate_select(supabase, "invnt_vendor", "name")
+    vendor_by_name = {v["name"].lower(): v["name"] for v in vendors}
 
     # UOM mapping
     UOM_MAP = {
@@ -530,7 +526,7 @@ def migrate_invnt_po(supabase, gc):
 
         # Resolve item
         item = item_by_name.get(item_name.lower(), {})
-        item_id = item.get("id")
+        item_id = item.get("name")
 
         # Status
         raw_status = str(r.get("OrderStatus", "")).strip().lower()
@@ -666,7 +662,7 @@ def migrate_invnt_po(supabase, gc):
 
         # Resolve item for inventory items
         item = item_by_name.get(item_name.lower(), {}) if mapped_type == "inventory_item" else {}
-        item_id = item.get("id") if mapped_type == "inventory_item" else None
+        item_id = item.get("name") if mapped_type == "inventory_item" else None
 
         # Vendor
         vendor_name = str(r.get("manufacturer_vendor", "")).strip()
@@ -766,7 +762,7 @@ def migrate_invnt_onhand(supabase, gc):
     records = ws.get_all_records()
 
     # Build item name -> record lookup from Supabase
-    items = paginate_select(supabase, "invnt_item", "id, name, farm_name, burn_uom, onhand_uom, burn_per_onhand, is_active")
+    items = paginate_select(supabase, "invnt_item", "name, farm_name, burn_uom, onhand_uom, burn_per_onhand, is_active")
     item_by_name = {}
     for it in items:
         item_by_name[it["name"].lower()] = it
@@ -878,16 +874,16 @@ def migrate_grow_spray_compliance(supabase, gc):
     records = ws.get_all_records()
 
     # Build item name -> record lookup
-    items = paginate_select(supabase, "invnt_item", "id, name, burn_uom, farm_name")
+    items = paginate_select(supabase, "invnt_item", "name, burn_uom, farm_name")
     item_by_name = {}
     for it in items:
         item_by_name[it["name"].lower()] = it
 
     # Farm mapping
     FARM_MAP = {
-        "lettuce": "lettuce",
-        "cuke": "cuke",
-        "cucumber": "cuke",
+        "lettuce": "Lettuce",
+        "cuke": "Cuke",
+        "cucumber": "Cuke",
     }
 
     # UOM mapping
@@ -978,7 +974,7 @@ def migrate_grow_spray_compliance(supabase, gc):
         row = {
             "org_id": ORG_ID,
             "farm_name": farm_name,
-            "invnt_item_name": item["id"] if item else None,
+            "invnt_item_name": item["name"] if item else None,
             "epa_registration": epa_reg,
             "phi_days": phi_days,
             "rei_hours": rei_hours,
@@ -1018,9 +1014,9 @@ def migrate_grow_lettuce_seed_mix(supabase, gc):
 
     print(f"\nProcessing {len(records)} seed mix ratio rows...")
 
-    # Build invnt_item lookup
-    items = paginate_select(supabase, "invnt_item", "id, name")
-    item_by_name = {it["name"].lower(): it["id"] for it in items}
+    # Build invnt_item lookup — name is now the PK
+    items = paginate_select(supabase, "invnt_item", "name")
+    item_by_name = {it["name"].lower(): it["name"] for it in items}
 
     # Group by mix name
     mixes = {}
@@ -1055,7 +1051,7 @@ def migrate_grow_lettuce_seed_mix(supabase, gc):
     for mix_name in sorted(mixes.keys()):
         info = mixes[mix_name]
         mix_rows.append({
-            "id": to_id(mix_name),
+
             "org_id": ORG_ID,
             "farm_name": "Lettuce",
             "name": proper_case(mix_name),
@@ -1065,16 +1061,15 @@ def migrate_grow_lettuce_seed_mix(supabase, gc):
 
     inserted_mixes = insert_rows(supabase, "grow_lettuce_seed_mix", mix_rows)
 
-    # Insert mix items
+    # Insert mix items — FK points at grow_lettuce_seed_mix.name (proper-case)
     item_rows = []
     for mix_name in sorted(mixes.keys()):
-        mix_id = to_id(mix_name)
         info = mixes[mix_name]
         for item in info["items"]:
             item_rows.append({
                 "org_id": ORG_ID,
                 "farm_name": "Lettuce",
-                "grow_lettuce_seed_mix_name": mix_id,
+                "grow_lettuce_seed_mix_name": proper_case(mix_name),
                 "invnt_item_name": item["invnt_item_name"],
                 "percentage": item["percentage"],
                 "created_by": item["created_by"],
