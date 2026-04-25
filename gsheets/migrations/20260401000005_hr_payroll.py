@@ -169,7 +169,7 @@ def ensure_missing_employees(supabase, data, emp_by_pid, emp_by_name):
 
         emp_id = to_id(name)
         rows.append(audit({
-            "id": emp_id,
+            "name": emp_id,
             "org_id": ORG_ID,
             "first_name": first,
             "last_name": last,
@@ -214,7 +214,7 @@ def migrate_payroll(supabase, gc):
 
     # Build employee lookups
     emps = supabase.table("hr_employee").select(
-        "id, first_name, last_name, payroll_id, hr_department_name, "
+        "name, first_name, last_name, payroll_id, hr_department_name, "
         "hr_work_authorization_name, wc, pay_structure, overtime_threshold"
     ).execute()
 
@@ -232,7 +232,7 @@ def migrate_payroll(supabase, gc):
 
     # Refresh lookups after auto-create
     emps = supabase.table("hr_employee").select(
-        "id, first_name, last_name, payroll_id, hr_department_name, "
+        "name, first_name, last_name, payroll_id, hr_department_name, "
         "hr_work_authorization_name, wc, pay_structure, overtime_threshold"
     ).execute()
     emp_by_pid = {}
@@ -245,8 +245,8 @@ def migrate_payroll(supabase, gc):
 
     # Work authorization lookup — hr_work_authorization has no 'name' column;
     # its id IS the display value (e.g. "H2A", "1099", "FUERTE"), so match on id.
-    wa_result = supabase.table("hr_work_authorization").select("id").execute()
-    wa_by_name = {w["id"].lower(): w["id"] for w in wa_result.data}
+    wa_result = supabase.table("hr_work_authorization").select("name").execute()
+    wa_by_name = {w["name"].lower(): w["name"] for w in wa_result.data}
 
     rows = []
     skipped_adjustment = 0
@@ -280,7 +280,7 @@ def migrate_payroll(supabase, gc):
                 last = proper_case(parts[0]) if parts else proper_case(name)
                 first = proper_case(" ".join(parts[1:])) if len(parts) >= 2 else "Unknown"
                 stub = {
-                    "id": new_id,
+                    "name": new_id,
                     "org_id": ORG_ID,
                     "first_name": first,
                     "last_name": last,
