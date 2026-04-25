@@ -240,7 +240,7 @@ def migrate_sales_product(supabase, gc):
     # Deduplicate names within the same farm — append code suffix if collision
     farm_names = defaultdict(list)
     for code, base in base_map.items():
-        farm_name = to_id(str(base.get("Farm", "")).strip())
+        farm_name = proper_case(str(base.get("Farm", "")).strip())
         name = str(base.get("Description", "")).strip()
         farm_names[(farm_name, name)].append(code)
 
@@ -264,8 +264,7 @@ def migrate_sales_product(supabase, gc):
 
     rows = []
     for code, base in base_map.items():
-        farm_name = str(base.get("Farm", "")).strip()
-        farm_name = to_id(farm_name)
+        farm_name = proper_case(str(base.get("Farm", "")).strip())
         spec = specs_map.get(code, {})
         meas = meas_map.get(code, {})
         sysco = sysco_map.get(code, {})
