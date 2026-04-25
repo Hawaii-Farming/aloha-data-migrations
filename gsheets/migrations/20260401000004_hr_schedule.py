@@ -124,13 +124,13 @@ def get_sheets():
 def derive_farm_id(task_name: str) -> str | None:
     """Infer farm_name from a task name prefix.
 
-    "Cuke *" → "cuke", "Lettuce *" → "lettuce", else None.
+    "Cuke *" → "Cuke", "Lettuce *" → "Lettuce", else None.
     """
     key = task_name.strip().lower()
     if key.startswith("cuke"):
-        return "cuke"
+        return "Cuke"
     if key.startswith("lettuce"):
-        return "lettuce"
+        return "Lettuce"
     return None
 
 
@@ -159,11 +159,9 @@ def seed_tasks_from_sheet(supabase, gc) -> dict:
         if not task_name:
             continue
         qb_account = str(r.get("QuickBooksAccount", "")).strip() or None
-        task_id = to_id(task_name)
         farm_name = derive_farm_id(task_name)
 
         rows.append({
-            "id": task_id,
             "org_id": ORG_ID,
             "name": task_name,
             "qb_account": qb_account,
@@ -171,7 +169,7 @@ def seed_tasks_from_sheet(supabase, gc) -> dict:
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
         })
-        task_map[task_name.lower()] = (task_id, farm_name)
+        task_map[task_name.lower()] = (task_name, farm_name)
 
     print("\n--- ops_task (seed from hr_ee_tasks tab) ---")
     for row in rows:
@@ -200,13 +198,9 @@ def _resolve_or_create_task(
     if key in task_cache:
         return task_cache[key]
 
-    new_id = to_id(task_name)
-    if not new_id:
-        new_id = "unknown_task"
     farm_name = derive_farm_id(task_name)
     try:
         supabase.table("ops_task").upsert({
-            "id": new_id,
             "org_id": ORG_ID,
             "name": task_name,
             "farm_name": farm_name,
@@ -215,12 +209,12 @@ def _resolve_or_create_task(
             "updated_by": AUDIT_USER,
         }).execute()
     except Exception as e:
-        print(f"  WARN failed to auto-create ops_task {new_id!r}: {type(e).__name__}: {e}")
-        task_cache[key] = ("other", None)
+        print(f"  WARN failed to auto-create ops_task {task_name!r}: {type(e).__name__}: {e}")
+        task_cache[key] = ("Other", None)
         return task_cache[key]
 
-    print(f"  Auto-created ops_task: {new_id!r} (from legacy task name {task_name!r})")
-    task_cache[key] = (new_id, farm_name)
+    print(f"  Auto-created ops_task: {task_name!r}")
+    task_cache[key] = (task_name, farm_name)
     return task_cache[key]
 
 
@@ -251,7 +245,7 @@ def _resolve_or_create_employee(supabase, full_name: str, emp_by_name: dict) -> 
 
     try:
         supabase.table("hr_employee").upsert({
-            "id": emp_id,
+            "name": emp_id,
             "org_id": ORG_ID,
             "first_name": first,
             "last_name": last,
