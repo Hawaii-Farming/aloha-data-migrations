@@ -22,8 +22,8 @@ COMMENT ON COLUMN org_farm.volume_uom IS 'Default volume unit for this farm; pre
 -- data (grow_trial_type.legacy_trial) don't hit an FK violation. The
 -- Python migration 002_org.py upserts the same rows with full UOM
 -- defaults on the next nightly.
-INSERT INTO public.org_farm (id, org_id, name)
+INSERT INTO public.org_farm (org_id, name)
 VALUES
-  ('cuke',    'hawaii_farming', 'Cuke'),
-  ('lettuce', 'hawaii_farming', 'Lettuce')
-ON CONFLICT (id) DO NOTHING;
+  ('hawaii_farming', 'Cuke'),
+  ('hawaii_farming', 'Lettuce')
+ON CONFLICT (name) DO NOTHING;

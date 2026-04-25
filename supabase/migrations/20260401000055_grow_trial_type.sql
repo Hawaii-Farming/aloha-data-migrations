@@ -17,14 +17,13 @@ COMMENT ON TABLE grow_trial_type IS 'Lookup table defining types of seeding tria
 -- the 13 historical trial blocks migrated from grow_C_seeding. Retired
 -- migration 024 used to re-seed this nightly; with that gone, the row
 -- needs to live here.
-INSERT INTO public.grow_trial_type (id, org_id, farm_name, name, description, created_by, updated_by)
+INSERT INTO public.grow_trial_type (org_id, farm_name, name, description, created_by, updated_by)
 VALUES (
-  'legacy_trial',
   'hawaii_farming',
-  'cuke',
+  'Cuke',
   'Legacy Trial',
   'Generic trial type used to flag historical trial seedings migrated from the legacy grow_C_seeding sheet',
   'data@hawaiifarming.com',
   'data@hawaiifarming.com'
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (name) DO NOTHING;
