@@ -317,7 +317,7 @@ def migrate_sales_product(supabase, gc):
         rows.append(audit(row))
 
     inserted = insert_rows(supabase, "sales_product", rows)
-    return {r["id"]: r for r in inserted}
+    return {r["code"]: r for r in inserted}
 
 
 # ─────────────────────────────────────────────────────────────
