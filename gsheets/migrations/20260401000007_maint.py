@@ -541,7 +541,7 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
     email_to_emp = {}
     for e in emp_result.data:
         if e.get("company_email"):
-            email_to_emp[e["company_email"].lower()] = e["id"]
+            email_to_emp[e["company_email"].lower()] = e["name"]
     FALLBACK_EMP = email_to_emp.get("data@hawaiifarming.com")
 
     # Build site -> farm_name and equipment -> farm_name lookups
@@ -768,7 +768,7 @@ def migrate_house_inspections(supabase, client):
     email_to_emp = {}
     for e in emp_result.data:
         if e.get("company_email"):
-            email_to_emp[e["company_email"].lower()] = e["id"]
+            email_to_emp[e["company_email"].lower()] = e["name"]
     FALLBACK_EMP = email_to_emp.get("data@hawaiifarming.com")
 
     # Build site lookup: "house|room" -> org_site_id

@@ -298,9 +298,9 @@ def migrate_schedule(supabase, gc, task_map: dict):
     emp_by_name = {}
     for e in emp_result.data:
         full = f"{e['last_name']} {e['first_name']}".upper()
-        emp_by_name[full] = e["id"]
+        emp_by_name[full] = e["name"]
         # Also try last_name only for partial matches
-        emp_by_name[e["last_name"].upper()] = e["id"]
+        emp_by_name[e["last_name"].upper()] = e["name"]
 
     task_cache = {}  # task_name.lower() -> (ops_task_name, farm_name)  [auto-created only]
     dedup_map = {}   # (ops_task_name, emp_id, start_time) → row

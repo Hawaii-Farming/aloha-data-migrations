@@ -211,7 +211,7 @@ def build_sampled_by_lookup(supabase):
 
     lookup = {}
     for e in emps:
-        eid = e["id"]
+        eid = e["name"]
         fn = (e.get("first_name") or "").strip().lower()
         ln = (e.get("last_name") or "").strip().lower()
         pn = (e.get("preferred_name") or "").strip().lower()
@@ -237,7 +237,7 @@ def build_email_to_emp(supabase):
     )
 
     return {
-        e["company_email"].strip().lower(): e["id"]
+        e["company_email"].strip().lower(): e["name"]
         for e in emps
         if e.get("company_email")
     }

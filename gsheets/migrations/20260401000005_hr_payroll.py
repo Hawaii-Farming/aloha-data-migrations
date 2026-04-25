@@ -351,8 +351,8 @@ def migrate_payroll(supabase, gc):
 
         row = {
             "org_id": ORG_ID,
-            "hr_employee_name": emp["id"],
-            "payroll_id": eid or emp.get("payroll_id") or emp["id"],
+            "hr_employee_name": emp["name"],
+            "payroll_id": eid or emp.get("payroll_id") or emp["name"],
             "pay_period_start": pay_period_start,
             "pay_period_end": pay_period_end,
             "check_date": check_date,

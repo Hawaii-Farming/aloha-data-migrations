@@ -204,7 +204,7 @@ def migrate_visits(supabase, gc):
 
     # Build employee lookup for visited_by
     emp_result = supabase.table("hr_employee").select("name, company_email").execute()
-    emp_by_email = {e["company_email"]: e["id"] for e in emp_result.data if e.get("company_email")}
+    emp_by_email = {e["company_email"]: e["name"] for e in emp_result.data if e.get("company_email")}
 
     visit_rows = []
     visit_meta = []  # parallel: (store_name, row) for photo pass
@@ -293,7 +293,7 @@ def migrate_visit_results(supabase, gc):
 
     # Build external product lookup
     ext_result = supabase.table("sales_crm_external_product").select("name").execute()
-    ext_by_name = {e["name"].lower(): e["id"] for e in ext_result.data}
+    ext_by_name = {e["name"].lower(): e["name"] for e in ext_result.data}
 
     # Build visit lookup by (store_id, visit_date)
     visit_result = supabase.table("sales_crm_store_visit").select("id, sales_crm_store_name, visit_date").execute()

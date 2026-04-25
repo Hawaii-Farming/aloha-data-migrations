@@ -123,17 +123,17 @@ def migrate_training(supabase, gc):
 
     # Employee lookups
     emp_result = supabase.table("hr_employee").select("name, first_name, last_name, preferred_name, company_email").execute()
-    emp_by_email = {e["company_email"]: e["id"] for e in emp_result.data if e.get("company_email")}
+    emp_by_email = {e["company_email"]: e["name"] for e in emp_result.data if e.get("company_email")}
     emp_by_name = {}
     for e in emp_result.data:
         full_upper = f"{e['last_name']} {e['first_name']}".upper()
-        emp_by_name[full_upper] = e["id"]
+        emp_by_name[full_upper] = e["name"]
         fn = (e.get("first_name") or "").lower()
         pn = (e.get("preferred_name") or "").lower()
         if fn:
-            emp_by_name[fn] = e["id"]
+            emp_by_name[fn] = e["name"]
         if pn:
-            emp_by_name[pn] = e["id"]
+            emp_by_name[pn] = e["name"]
 
     # --- Training types ---
     types = sorted(set(str(r.get("TrainingType", "")).strip() for r in training_data

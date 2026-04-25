@@ -459,7 +459,7 @@ def migrate_invnt_po(supabase, gc):
     email_to_emp = {}
     for e in employees:
         if e.get("company_email"):
-            email_to_emp[e["company_email"].lower()] = e["id"]
+            email_to_emp[e["company_email"].lower()] = e["name"]
 
     # Fallback employee for unresolved emails
     FALLBACK_EMP = email_to_emp.get("data@hawaiifarming.com") or email_to_emp.get("admin@hawaiifarming.com")
