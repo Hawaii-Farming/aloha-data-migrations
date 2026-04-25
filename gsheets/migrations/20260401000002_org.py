@@ -418,7 +418,7 @@ def migrate_org_site(supabase):
     housing_rows = []
     for name in housing_sites:
         housing_rows.append(audit({
-            "id": name,
+            "name": name,
             "org_id": ORG_ID,
         }))
 
