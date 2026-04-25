@@ -249,7 +249,7 @@ def migrate_org_sub_module(supabase):
     }
 
     result = supabase.table("sys_sub_module").select(
-        "id, sys_module_name, name, sys_access_level_name, display_order"
+        "sys_module_name, name, sys_access_level_name, display_order"
     ).order("display_order").execute()
 
     rows = []
