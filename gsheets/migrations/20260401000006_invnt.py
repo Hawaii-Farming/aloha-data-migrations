@@ -849,7 +849,7 @@ def migrate_invnt_onhand(supabase, gc):
         row = audit({
             "org_id": ORG_ID,
             "farm_name": item.get("farm_name"),
-            "invnt_item_name": item["id"],
+            "invnt_item_name": item["name"],
             "onhand_date": onhand_date,
             "burn_uom": burn_uom,
             "onhand_uom": onhand_uom,
