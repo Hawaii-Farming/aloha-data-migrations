@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS fin_expense (
-    org_id              TEXT NOT NULL REFERENCES org(id),
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id              TEXT NOT NULL REFERENCES org(id),
     farm_name             TEXT REFERENCES org_farm(name),
     txn_date            DATE NOT NULL,
     payee_name          TEXT,

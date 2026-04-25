@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS org_site_cuke_gh (
-    org_id              TEXT NOT NULL REFERENCES org(id),
     id                  TEXT PRIMARY KEY,
+    org_id              TEXT NOT NULL REFERENCES org(id),
     farm_name             TEXT NOT NULL REFERENCES org_farm(name),
     farm_section        TEXT NOT NULL CHECK (farm_section IN ('JTL', 'BIP')),
     acres               NUMERIC,

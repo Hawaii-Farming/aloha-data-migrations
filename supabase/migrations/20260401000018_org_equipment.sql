@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS org_equipment (
+    name                    TEXT PRIMARY KEY,
     org_id                  TEXT NOT NULL REFERENCES org(id),
     farm_name                 TEXT REFERENCES org_farm(name),
     type                    TEXT CHECK (type IN ('vehicle', 'tool', 'machine', 'ppe', 'bag_pack_sprayer', 'fogger', 'tank')),
-    name                    TEXT PRIMARY KEY,
     description             TEXT,
     manufacturer            TEXT,
     model                   TEXT,

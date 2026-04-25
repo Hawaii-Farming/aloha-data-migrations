@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_harvest_container (
+    name       TEXT PRIMARY KEY,
     org_id          TEXT NOT NULL REFERENCES org(id),
     farm_name         TEXT NOT NULL REFERENCES org_farm(name),
-    name       TEXT PRIMARY KEY,
     grow_variety_id TEXT REFERENCES grow_variety(code),
     grow_grade_id   TEXT REFERENCES grow_grade(code),
     weight_uom      TEXT NOT NULL REFERENCES sys_uom(code),

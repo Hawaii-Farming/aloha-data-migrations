@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS org_site_housing_area (
+    name          TEXT PRIMARY KEY,
     org_id        TEXT NOT NULL REFERENCES org(id),
     housing_name    TEXT NOT NULL REFERENCES org_site_housing(name),
-    name          TEXT PRIMARY KEY,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by    TEXT,
     updated_at    TIMESTAMPTZ NOT NULL DEFAULT now(),

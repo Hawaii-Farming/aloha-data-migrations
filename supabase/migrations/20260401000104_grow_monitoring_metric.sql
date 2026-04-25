@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS grow_monitoring_metric (
-    org_id          TEXT NOT NULL REFERENCES org(id),
     id              TEXT PRIMARY KEY,
+    org_id          TEXT NOT NULL REFERENCES org(id),
     farm_name         TEXT NOT NULL REFERENCES org_farm(name),
     site_category   TEXT NOT NULL,
     name            TEXT NOT NULL,

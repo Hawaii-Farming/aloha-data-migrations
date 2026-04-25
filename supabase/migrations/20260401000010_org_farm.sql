@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS org_farm (
-    org_id           TEXT NOT NULL REFERENCES org(id),
     name       TEXT PRIMARY KEY,
+    org_id           TEXT NOT NULL REFERENCES org(id),
     weighing_uom  TEXT REFERENCES sys_uom(code),
     growing_uom   TEXT REFERENCES sys_uom(code),
     volume_uom    TEXT REFERENCES sys_uom(code),

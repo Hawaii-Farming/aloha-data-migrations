@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS maint_request (
-    org_id                    TEXT        NOT NULL REFERENCES org(id),
     id                        UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id                    TEXT        NOT NULL REFERENCES org(id),
     farm_name                   TEXT        REFERENCES org_farm(name),
     site_id                   TEXT        REFERENCES org_site(id),
     equipment_name              TEXT        REFERENCES org_equipment(name),

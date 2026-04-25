@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS fsafe_lab (
+    name       TEXT PRIMARY KEY,
     org_id          TEXT NOT NULL REFERENCES org(id),
 
-    name       TEXT PRIMARY KEY,
     description     TEXT,
 
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),

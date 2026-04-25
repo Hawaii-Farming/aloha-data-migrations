@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS sales_invoice (
-    org_id              TEXT NOT NULL REFERENCES org(id),
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id              TEXT NOT NULL REFERENCES org(id),
     farm_name             TEXT REFERENCES org_farm(name),
     invoice_number      TEXT NOT NULL,
     invoice_date        DATE NOT NULL,

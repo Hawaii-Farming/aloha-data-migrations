@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS hr_module_access (
-    org_id          TEXT NOT NULL REFERENCES org(id),
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          TEXT NOT NULL REFERENCES org(id),
     hr_employee_name  TEXT NOT NULL REFERENCES hr_employee(name),
     org_module_name   TEXT NOT NULL REFERENCES org_module(name),
     is_enabled      BOOLEAN NOT NULL DEFAULT true,

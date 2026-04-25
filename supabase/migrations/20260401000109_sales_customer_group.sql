@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS sales_customer_group (
-    org_id     TEXT NOT NULL REFERENCES org(id),
     name       TEXT PRIMARY KEY,
+    org_id     TEXT NOT NULL REFERENCES org(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by TEXT,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),

@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS pack_dryer_result (
-    org_id                          TEXT NOT NULL REFERENCES org(id),
     id                              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id                          TEXT NOT NULL REFERENCES org(id),
     farm_name                         TEXT NOT NULL REFERENCES org_farm(name),
     site_id                         TEXT NOT NULL REFERENCES org_site(id),
     grow_lettuce_seed_batch_id      UUID REFERENCES grow_lettuce_seed_batch(id),

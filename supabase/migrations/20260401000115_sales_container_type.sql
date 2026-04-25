@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS sales_container_type (
-    org_id                  TEXT NOT NULL REFERENCES org(id),
     name       TEXT PRIMARY KEY,
+    org_id                  TEXT NOT NULL REFERENCES org(id),
     maximum_spaces          INTEGER NOT NULL,
     is_active               BOOLEAN NOT NULL DEFAULT true,
     created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),

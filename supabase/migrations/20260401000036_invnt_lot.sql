@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS invnt_lot (
-    org_id                      TEXT NOT NULL REFERENCES org(id),
     id                          TEXT PRIMARY KEY,
+    org_id                      TEXT NOT NULL REFERENCES org(id),
     farm_name                     TEXT NOT NULL REFERENCES org_farm(name),
     invnt_item_name               TEXT NOT NULL REFERENCES invnt_item(name),
     lot_number                  TEXT NOT NULL,

@@ -1,9 +1,9 @@
 CREATE TABLE IF NOT EXISTS sales_customer (
+    name            TEXT PRIMARY KEY,
     org_id          TEXT NOT NULL REFERENCES org(id),
     sales_customer_group_name   TEXT REFERENCES sales_customer_group(name),
     sales_fob_name          TEXT REFERENCES sales_fob(name),
     qb_account     TEXT,
-    name            TEXT PRIMARY KEY,
     email           TEXT,
     cc_emails       JSONB NOT NULL DEFAULT '[]',
     billing_address TEXT,

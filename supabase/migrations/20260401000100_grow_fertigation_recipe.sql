@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_fertigation_recipe (
+    name            TEXT PRIMARY KEY,
     org_id          TEXT NOT NULL REFERENCES org(id),
     farm_name         TEXT NOT NULL REFERENCES org_farm(name),
-    name            TEXT PRIMARY KEY,
     description     TEXT,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by      TEXT,

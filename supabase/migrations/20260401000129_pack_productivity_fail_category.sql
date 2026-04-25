@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pack_productivity_fail_category (
+    name       TEXT PRIMARY KEY,
     org_id          TEXT NOT NULL REFERENCES org(id),
     farm_name         TEXT REFERENCES org_farm(name),
-    name       TEXT PRIMARY KEY,
     description     TEXT,
     display_order   INTEGER NOT NULL DEFAULT 0,
     is_active       BOOLEAN NOT NULL DEFAULT true,

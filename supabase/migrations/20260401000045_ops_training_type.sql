@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS ops_training_type (
-    org_id      TEXT        NOT NULL REFERENCES org(id),
     name        TEXT PRIMARY KEY,
+    org_id      TEXT        NOT NULL REFERENCES org(id),
     description TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by  TEXT,

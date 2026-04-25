@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS hr_employee_review (
-    org_id              TEXT NOT NULL REFERENCES org(id),
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id              TEXT NOT NULL REFERENCES org(id),
     hr_employee_name      TEXT NOT NULL,
     review_year         INTEGER NOT NULL,
     review_quarter      INTEGER NOT NULL CHECK (review_quarter BETWEEN 1 AND 4),

@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS hr_travel_request (
-    org_id              TEXT NOT NULL REFERENCES org(id),
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id              TEXT NOT NULL REFERENCES org(id),
     hr_employee_name         TEXT NOT NULL,
 
     -- Travel details

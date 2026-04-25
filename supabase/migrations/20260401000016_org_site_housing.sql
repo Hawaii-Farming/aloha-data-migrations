@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS org_site_housing (
-    org_id        TEXT NOT NULL REFERENCES org(id),
     name            TEXT PRIMARY KEY,
+    org_id        TEXT NOT NULL REFERENCES org(id),
     maximum_beds  INTEGER,
     address       TEXT,
     notes         TEXT,

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pack_shelf_life_metric (
+    name       TEXT PRIMARY KEY,
     org_id          TEXT NOT NULL REFERENCES org(id),
     farm_name         TEXT REFERENCES org_farm(name),
-    name       TEXT PRIMARY KEY,
     description     TEXT,
 
     -- Response configuration

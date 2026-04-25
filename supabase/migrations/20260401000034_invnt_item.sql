@@ -1,9 +1,9 @@
 CREATE TABLE IF NOT EXISTS invnt_item (
+    name                     TEXT PRIMARY KEY,
     org_id                   TEXT NOT NULL REFERENCES org(id),
     farm_name                  TEXT REFERENCES org_farm(name),
     invnt_category_id        TEXT REFERENCES invnt_category(id),
     invnt_subcategory_id     TEXT REFERENCES invnt_category(id),
-    name                     TEXT PRIMARY KEY,
     qb_account            TEXT,
     description              TEXT,
 
