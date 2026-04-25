@@ -308,65 +308,65 @@ def migrate_maint_sites(supabase):
 
     EQUIPMENT_MAP = {
         # ----- GROWING: Equipment -----
-        "Lettuce Pond Pumps":           ("lettuce_pond_pumps",          "machine",  "lettuce"),
-        "Lettuce Fert Meter":           ("lettuce_fert_meter",          "machine",  "lettuce"),
-        "Earth Pot":                    ("earth_pot",                   "machine",  "lettuce"),
-        "Pond Chillers":                ("pond_chillers",               "machine",  "lettuce"),
-        "Earth pot vacuum system":      ("earth_pot_vacuum_system",     "machine",  "lettuce"),
-        "Lettuce GH Fans":             ("lettuce_gh_fans",             "machine",  "lettuce"),
-        "Lettuce GH PV system":        ("lettuce_gh_pv_system",        "machine",  "lettuce"),
-        "Nursery air compressor":       ("nursery_air_compressor",      "machine",  "lettuce"),
-        "Cravo Roof Back-up System":    ("cravo_roof_back_up_system",   "machine",  "lettuce"),
+        "Lettuce Pond Pumps":           ("lettuce_pond_pumps",          "machine",  "Lettuce"),
+        "Lettuce Fert Meter":           ("lettuce_fert_meter",          "machine",  "Lettuce"),
+        "Earth Pot":                    ("earth_pot",                   "machine",  "Lettuce"),
+        "Pond Chillers":                ("pond_chillers",               "machine",  "Lettuce"),
+        "Earth pot vacuum system":      ("earth_pot_vacuum_system",     "machine",  "Lettuce"),
+        "Lettuce GH Fans":             ("lettuce_gh_fans",             "machine",  "Lettuce"),
+        "Lettuce GH PV system":        ("lettuce_gh_pv_system",        "machine",  "Lettuce"),
+        "Nursery air compressor":       ("nursery_air_compressor",      "machine",  "Lettuce"),
+        "Cravo Roof Back-up System":    ("cravo_roof_back_up_system",   "machine",  "Lettuce"),
 
         # ----- PACKING: Cuke equipment -----
-        "Cucumber Clamco East":         ("cucumber_clamco_east",        "machine",  "cuke"),
-        "Cucumber Clamco Middle":       ("cucumber_clamco_middle",      "machine",  "cuke"),
-        "Cucumber Clamco West":         ("cucumber_clamco_west",        "machine",  "cuke"),
-        "BIP Tote Washer":             ("bip_tote_washer",             "machine",  "cuke"),
+        "Cucumber Clamco East":         ("cucumber_clamco_east",        "machine",  "Cuke"),
+        "Cucumber Clamco Middle":       ("cucumber_clamco_middle",      "machine",  "Cuke"),
+        "Cucumber Clamco West":         ("cucumber_clamco_west",        "machine",  "Cuke"),
+        "BIP Tote Washer":             ("bip_tote_washer",             "machine",  "Cuke"),
 
         # ----- PACKING: Lettuce equipment -----
-        "Lettuce Board Conveyor (middle)": ("lettuce_board_conveyor_middle", "machine", "lettuce"),
-        "Lettuce conveyor (Leading)":   ("lettuce_conveyor_leading",    "machine",  "lettuce"),
-        "Proseal":                      ("proseal",                     "machine",  "lettuce"),
-        "Metal Detector":               ("metal_detector",              "machine",  "lettuce"),
-        "Harvester":                    ("harvester",                   "machine",  "lettuce"),
-        "Seeder":                       ("seeder",                      "machine",  "lettuce"),
-        "Dryer":                        ("dryer",                       "machine",  "cuke"),
-        "Lettuce Dryer":                ("lettuce_dryer",               "machine",  "lettuce"),
-        "Lettuce Fogger Machine":       ("lettuce_fogger_machine",      "fogger",   "lettuce"),
-        "Lettuce Tote Washer":          ("lettuce_tote_washer",         "machine",  "lettuce"),
-        "Lettuce PH Turntable":         ("lettuce_ph_turntable",        "machine",  "lettuce"),
-        "Lettuce floor scrubber":       ("lettuce_floor_scrubber",      "machine",  "lettuce"),
-        "Lettuce forklift":             ("lettuce_forklift",            "vehicle",  "lettuce"),
-        "Lettuce pallet jack scale":    ("lettuce_pallet_jack_scale",   "machine",  "lettuce"),
+        "Lettuce Board Conveyor (middle)": ("lettuce_board_conveyor_middle", "machine", "Lettuce"),
+        "Lettuce conveyor (Leading)":   ("lettuce_conveyor_leading",    "machine",  "Lettuce"),
+        "Proseal":                      ("proseal",                     "machine",  "Lettuce"),
+        "Metal Detector":               ("metal_detector",              "machine",  "Lettuce"),
+        "Harvester":                    ("harvester",                   "machine",  "Lettuce"),
+        "Seeder":                       ("seeder",                      "machine",  "Lettuce"),
+        "Dryer":                        ("dryer",                       "machine",  "Cuke"),
+        "Lettuce Dryer":                ("lettuce_dryer",               "machine",  "Lettuce"),
+        "Lettuce Fogger Machine":       ("lettuce_fogger_machine",      "fogger",   "Lettuce"),
+        "Lettuce Tote Washer":          ("lettuce_tote_washer",         "machine",  "Lettuce"),
+        "Lettuce PH Turntable":         ("lettuce_ph_turntable",        "machine",  "Lettuce"),
+        "Lettuce floor scrubber":       ("lettuce_floor_scrubber",      "machine",  "Lettuce"),
+        "Lettuce forklift":             ("lettuce_forklift",            "vehicle",  "Lettuce"),
+        "Lettuce pallet jack scale":    ("lettuce_pallet_jack_scale",   "machine",  "Lettuce"),
 
         # ----- INFRASTRUCTURE: Water & filtration -----
         "Amiad Filter":                 ("amiad_filter",                "machine",  None),
-        "JTL Incoming Water Filter":    ("jtl_incoming_water_filter",   "machine",  "cuke"),
+        "JTL Incoming Water Filter":    ("jtl_incoming_water_filter",   "machine",  "Cuke"),
         "Municipal Water System":       ("municipal_water_system",      "machine",  None),
         "Back Flow Prevention Valves":  ("back_flow_prevention_valves", "machine",  None),
         "bermad water meter":           ("bermad_water_meter",          "machine",  None),
 
         # ----- INFRASTRUCTURE: Power & climate -----
         "Air Comp/Dryer":               ("air_comp_dryer",              "machine",  None),
-        "BIP Back Up Generator":        ("bip_back_up_generator",       "machine",  "cuke"),
-        "O2 Generator":                 ("o2_generator",                "machine",  "lettuce"),
+        "BIP Back Up Generator":        ("bip_back_up_generator",       "machine",  "Cuke"),
+        "O2 Generator":                 ("o2_generator",                "machine",  "Lettuce"),
         "Ice Machine":                  ("ice_machine",                 "machine",  None),
-        "Link 4":                       ("link_4",                      "machine",  "lettuce"),
+        "Link 4":                       ("link_4",                      "machine",  "Lettuce"),
 
         # ----- INFRASTRUCTURE: Tanks -----
-        "Tank #1":                      ("tank_1",                      "tank",     "cuke"),
-        "Tank #2":                      ("tank_2",                      "tank",     "cuke"),
-        "Tank #3":                      ("tank_3",                      "tank",     "cuke"),
+        "Tank #1":                      ("tank_1",                      "tank", "Cuke"),
+        "Tank #2":                      ("tank_2",                      "tank", "Cuke"),
+        "Tank #3":                      ("tank_3",                      "tank", "Cuke"),
 
         # ----- VEHICLES -----
         "Large box truck":              ("large_box_truck",             "vehicle",  None),
         "Small Box Truck":              ("small_box_truck",             "vehicle",  None),
 
         # ----- MONITORING -----
-        "Weather Station":              ("weather_station",             "machine",  "lettuce"),
-        "Crodeon weather station":      ("crodeon_weather_station",     "machine",  "lettuce"),
-        "Yellow sticky traps":          ("yellow_sticky_traps",         "tool",     "lettuce"),
+        "Weather Station":              ("weather_station",             "machine",  "Lettuce"),
+        "Crodeon weather station":      ("crodeon_weather_station",     "machine",  "Lettuce"),
+        "Yellow sticky traps":          ("yellow_sticky_traps",         "tool", "Lettuce"),
     }
 
     # Get existing site IDs
