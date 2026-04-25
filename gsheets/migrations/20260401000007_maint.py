@@ -537,7 +537,7 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
     records = ws.get_all_records()
 
     # Build employee email -> id lookup
-    emp_result = supabase.table("hr_employee").select("id, company_email").execute()
+    emp_result = supabase.table("hr_employee").select("name, company_email").execute()
     email_to_emp = {}
     for e in emp_result.data:
         if e.get("company_email"):
@@ -764,7 +764,7 @@ def migrate_house_inspections(supabase, client):
     records = ws.get_all_records()
 
     # Build employee email -> id lookup
-    emp_result = supabase.table("hr_employee").select("id, company_email").execute()
+    emp_result = supabase.table("hr_employee").select("name, company_email").execute()
     email_to_emp = {}
     for e in emp_result.data:
         if e.get("company_email"):

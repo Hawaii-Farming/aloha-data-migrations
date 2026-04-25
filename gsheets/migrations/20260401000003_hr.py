@@ -157,7 +157,7 @@ def migrate_hr_department(supabase, records):
 
     rows = [
         audit({
-            "id": d,
+            "name": d,
             "org_id": ORG_ID,
         })
         for d in departments
@@ -175,7 +175,7 @@ def migrate_hr_work_authorization(supabase, records):
 
     rows = [
         audit({
-            "id": s,
+            "name": s,
             "org_id": ORG_ID,
         })
         for s in statuses
@@ -188,18 +188,18 @@ def migrate_hr_employee(supabase, records, app_users):
 
     # Build app_users lookup by email
     user_lookup = {}
-    level_map = {1: "employee", 2: "manager", 3: "admin", "1": "employee", "2": "manager", "3": "admin"}
+    level_map = {1: "Employee", 2: "Manager", 3: "Admin", "1": "Employee", "2": "Manager", "3": "Admin"}
     for u in app_users:
         email = str(u.get("Email", "")).strip().lower()
         if email:
             user_lookup[email] = u
 
-    # Module name mapping for InAppViews
+    # Module name mapping for InAppViews → sys_module.name display values
     module_map = {
-        "grow": "grow", "pack": "pack", "food safety": "food_safety",
-        "maintenance": "maintenance", "inventory": "inventory",
-        "human resources": "human_resources", "sales": "sales",
-        "execute": "operations", "global": "operations",
+        "grow": "Grow", "pack": "Pack", "food safety": "Food Safety",
+        "maintenance": "Maintenance", "inventory": "Inventory",
+        "human resources": "Human Resources", "sales": "Sales",
+        "execute": "Operations", "global": "Operations",
     }
 
     # Housing site ID mapping
@@ -229,7 +229,7 @@ def migrate_hr_employee(supabase, records, app_users):
         # Get access level from app_users
         app_user = user_lookup.get(email, {})
         level = app_user.get("Level", 1)
-        access_level = level_map.get(level, "employee")
+        access_level = level_map.get(level, "Employee")
 
         # Gender
         gender = str(r.get("Gender", "")).strip().lower()
@@ -260,7 +260,7 @@ def migrate_hr_employee(supabase, records, app_users):
             wc = None
 
         emp = {
-            "id": emp_id,
+            "name": emp_id,
             "org_id": ORG_ID,
             "first_name": first,
             "last_name": last,
@@ -314,7 +314,7 @@ def migrate_hr_employee(supabase, records, app_users):
             patch["compensation_manager_name"] = name_to_id[comp_mgr]
 
         if patch:
-            supabase.table("hr_employee").update(patch).eq("id", emp_id).execute()
+            supabase.table("hr_employee").update(patch).eq("name", emp_id).execute()
             updates += 1
 
     print(f"  Updated {updates} employees with team_lead/compensation_manager")

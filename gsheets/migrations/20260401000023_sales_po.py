@@ -206,7 +206,7 @@ def migrate_sales_po(supabase, gc):
     fob_by_name = {f["name"].lower(): f["id"] for f in fob_result.data}
 
     # Employee lookup for workflow fields (approved_by, qb_uploaded_by)
-    emp_result = supabase.table("hr_employee").select("id, company_email").execute()
+    emp_result = supabase.table("hr_employee").select("name, company_email").execute()
     emp_by_email = {e["company_email"]: e["id"] for e in emp_result.data if e.get("company_email")}
 
     # Pack lot lookup by (farm_name, pack_date) and by lot_number

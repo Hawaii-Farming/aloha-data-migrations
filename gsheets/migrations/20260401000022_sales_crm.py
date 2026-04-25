@@ -203,7 +203,7 @@ def migrate_visits(supabase, gc):
     store_by_name = {s["name"].lower(): s["id"] for s in store_result.data}
 
     # Build employee lookup for visited_by
-    emp_result = supabase.table("hr_employee").select("id, company_email").execute()
+    emp_result = supabase.table("hr_employee").select("name, company_email").execute()
     emp_by_email = {e["company_email"]: e["id"] for e in emp_result.data if e.get("company_email")}
 
     visit_rows = []

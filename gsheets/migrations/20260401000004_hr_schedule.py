@@ -294,7 +294,7 @@ def migrate_schedule(supabase, gc, task_map: dict):
     print(f"\nProcessing {len(data)} schedule rows...")
 
     # Build employee lookup by full name (uppercase in sheet)
-    emp_result = supabase.table("hr_employee").select("id, first_name, last_name").execute()
+    emp_result = supabase.table("hr_employee").select("name, first_name, last_name").execute()
     emp_by_name = {}
     for e in emp_result.data:
         full = f"{e['last_name']} {e['first_name']}".upper()

@@ -122,7 +122,7 @@ def migrate_training(supabase, gc):
     print(f"\nProcessing {len(training_data)} training sessions, {len(attendee_data)} attendee rows...")
 
     # Employee lookups
-    emp_result = supabase.table("hr_employee").select("id, first_name, last_name, preferred_name, company_email").execute()
+    emp_result = supabase.table("hr_employee").select("name, first_name, last_name, preferred_name, company_email").execute()
     emp_by_email = {e["company_email"]: e["id"] for e in emp_result.data if e.get("company_email")}
     emp_by_name = {}
     for e in emp_result.data:

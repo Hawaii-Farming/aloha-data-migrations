@@ -182,7 +182,7 @@ def normalize_iso(s):
 
 
 def load_employee_email_map(supabase):
-    result = supabase.table("hr_employee").select("id, company_email").execute()
+    result = supabase.table("hr_employee").select("name, company_email").execute()
     return {
         (r["company_email"] or "").lower(): r["id"]
         for r in result.data
