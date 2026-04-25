@@ -141,11 +141,11 @@ def get_sheets():
 def seed_access_levels(supabase):
     """Seed the 5 access levels."""
     rows = [
-        audit({"id": "employee",  "name": "Employee",  "level": 1, "display_order": 1}),
-        audit({"id": "team_lead", "name": "Team Lead", "level": 2, "display_order": 2}),
-        audit({"id": "manager",   "name": "Manager",   "level": 3, "display_order": 3}),
-        audit({"id": "admin",     "name": "Admin",     "level": 4, "display_order": 4}),
-        audit({"id": "owner",     "name": "Owner",     "level": 5, "display_order": 5}),
+        audit({"name": "Employee",  "level": 1, "display_order": 1}),
+        audit({"name": "Team Lead", "level": 2, "display_order": 2}),
+        audit({"name": "Manager",   "level": 3, "display_order": 3}),
+        audit({"name": "Admin",     "level": 4, "display_order": 4}),
+        audit({"name": "Owner",     "level": 5, "display_order": 5}),
     ]
     insert_rows(supabase, "sys_access_level", rows)
 
@@ -153,14 +153,14 @@ def seed_access_levels(supabase):
 def seed_modules(supabase):
     """Seed the application modules."""
     rows = [
-        audit({"id": "operations",      "name": "Operations",      "display_order": 1}),
-        audit({"id": "grow",            "name": "Grow",            "display_order": 2}),
-        audit({"id": "pack",            "name": "Pack",            "display_order": 3}),
-        audit({"id": "food_safety",     "name": "Food Safety",     "display_order": 4}),
-        audit({"id": "maintenance",     "name": "Maintenance",     "display_order": 5}),
-        audit({"id": "inventory",       "name": "Inventory",       "display_order": 6}),
-        audit({"id": "sales",           "name": "Sales",           "display_order": 7}),
-        audit({"id": "human_resources", "name": "Human Resources", "display_order": 8}),
+        audit({"name": "Operations",      "display_order": 1}),
+        audit({"name": "Grow",            "display_order": 2}),
+        audit({"name": "Pack",            "display_order": 3}),
+        audit({"name": "Food Safety",     "display_order": 4}),
+        audit({"name": "Maintenance",     "display_order": 5}),
+        audit({"name": "Inventory",       "display_order": 6}),
+        audit({"name": "Sales",           "display_order": 7}),
+        audit({"name": "Human Resources", "display_order": 8}),
     ]
     insert_rows(supabase, "sys_module", rows)
 
@@ -168,37 +168,33 @@ def seed_modules(supabase):
 def seed_sub_modules(supabase, gc):
     """
     Seed sub-modules from the legacy Google Sheet global_menu_icons_sub.
-
-    Legacy level mapping:
-      Level 1 -> employee (sys_access_level_name = 'employee')
-      Level 2 -> manager  (sys_access_level_name = 'manager')
-      Level 3 -> admin    (sys_access_level_name = 'admin')
+    name is the PK; FK columns carry the display-name values.
     """
     sheet = gc.open_by_key(SHEET_ID)
     ws = sheet.worksheet("global_menu_icons_sub")
     records = ws.get_all_records()
 
-    # Map legacy levels to sys_access_level_name
+    # Map legacy sheet level (1/2/3) to sys_access_level.name display value
     level_map = {
-        "1": "employee",
-        "2": "manager",
-        "3": "admin",
-        1: "employee",
-        2: "manager",
-        3: "admin",
+        "1": "Employee",
+        "2": "Manager",
+        "3": "Admin",
+        1:   "Employee",
+        2:   "Manager",
+        3:   "Admin",
     }
 
-    # Map legacy main menu names to sys_module_name
+    # Map legacy sheet main-menu labels to sys_module.name display value
     module_map = {
-        "grow": "grow",
-        "pack": "pack",
-        "food safety": "food_safety",
-        "maintenance": "maintenance",
-        "inventory": "inventory",
-        "human resources": "human_resources",
-        "sales": "sales",
-        "execute": "operations",
-        "global": "operations",
+        "grow":            "Grow",
+        "pack":            "Pack",
+        "food safety":     "Food Safety",
+        "maintenance":     "Maintenance",
+        "inventory":       "Inventory",
+        "human resources": "Human Resources",
+        "sales":           "Sales",
+        "execute":         "Operations",
+        "global":          "Operations",
     }
 
     rows = []
@@ -217,16 +213,14 @@ def seed_sub_modules(supabase, gc):
             print(f"  SKIP: Unknown module '{main_name}' for sub '{sub_name}'")
             continue
 
-        sys_access_level_name = level_map.get(level, "employee")
-        sub_id = to_id(sub_name)
+        sys_access_level_name = level_map.get(level, "Employee")
 
-        # Deduplicate
-        if sub_id in seen:
+        # Deduplicate by display name (the PK)
+        if sub_name in seen:
             continue
-        seen.add(sub_id)
+        seen.add(sub_name)
 
         rows.append(audit({
-            "id": sub_id,
             "sys_module_name": sys_module_name,
             "name": sub_name,
             "sys_access_level_name": sys_access_level_name,
