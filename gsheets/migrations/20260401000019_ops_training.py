@@ -159,7 +159,7 @@ def migrate_training(supabase, gc):
 
         # Trainer: split on "+", resolve first non-URL name, put extras in notes
         trainer_raw = str(r.get("TrainedBy", "")).strip()
-        trainer_id = None
+        trainer_name = None
         materials_url = None
         notes = None
         if trainer_raw:
@@ -168,8 +168,8 @@ def migrate_training(supabase, gc):
                 if part.startswith("http"):
                     materials_url = part
                     continue
-                if not trainer_id:
-                    trainer_id = emp_by_name.get(part.lower())
+                if not trainer_name:
+                    trainer_name = emp_by_name.get(part.lower())
 
             names = [p for p in parts if not p.startswith("http")]
             urls = [p for p in parts if p.startswith("http")]
@@ -186,9 +186,9 @@ def migrate_training(supabase, gc):
 
         training_id_map[training_id] = len(training_rows)
         training_rows.append({
-            "org_id": ORG_ID, "ops_training_type_id": type_id,
+            "org_id": ORG_ID, "ops_training_type_name": type_id,
             "training_date": training_date, "topics_covered": topics,
-            "trainer_id": trainer_id, "materials_url": materials_url, "notes": notes,
+            "trainer_name": trainer_name, "materials_url": materials_url, "notes": notes,
             "verified_at": verified_at, "verified_by": verified_by,
             "created_by": reported_by, "updated_by": reported_by,
         })
@@ -226,7 +226,7 @@ def migrate_training(supabase, gc):
         signed_at = parse_timestamp(r.get("DigitalSignatureDateTime"))
         attendee_rows.append({
             "org_id": ORG_ID, "ops_training_id": ops_training_id,
-            "hr_employee_id": emp_id, "signed_at": signed_at,
+            "hr_employee_name": emp_id, "signed_at": signed_at,
             "created_by": AUDIT_USER, "updated_by": AUDIT_USER,
         })
 

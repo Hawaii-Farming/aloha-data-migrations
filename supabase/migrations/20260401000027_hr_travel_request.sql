@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS hr_travel_request (
     org_id              TEXT NOT NULL REFERENCES org(id),
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    hr_employee_id         TEXT NOT NULL,
+    hr_employee_name         TEXT NOT NULL,
 
     -- Travel details
     request_type        TEXT,
@@ -27,18 +27,18 @@ CREATE TABLE IF NOT EXISTS hr_travel_request (
 
     -- Named FKs so PostgREST can disambiguate when embedding hr_employee
     CONSTRAINT fk_hr_travel_request_employee
-      FOREIGN KEY (hr_employee_id) REFERENCES hr_employee(id),
+      FOREIGN KEY (hr_employee_name) REFERENCES hr_employee(name),
     CONSTRAINT fk_hr_travel_request_requested_by
-      FOREIGN KEY (requested_by) REFERENCES hr_employee(id),
+      FOREIGN KEY (requested_by) REFERENCES hr_employee(name),
     CONSTRAINT fk_hr_travel_request_reviewed_by
-      FOREIGN KEY (reviewed_by) REFERENCES hr_employee(id)
+      FOREIGN KEY (reviewed_by) REFERENCES hr_employee(name)
 );
 
 COMMENT ON TABLE hr_travel_request IS 'Employee travel requests with a simple approval workflow. Captures trip details, purpose, and dates alongside a pending, approved, or denied status flow.';
 
 CREATE INDEX idx_hr_travel_request_org_id ON hr_travel_request (org_id);
-CREATE INDEX idx_hr_travel_request_employee ON hr_travel_request (hr_employee_id);
+CREATE INDEX idx_hr_travel_request_employee ON hr_travel_request (hr_employee_name);
 CREATE INDEX idx_hr_travel_request_status ON hr_travel_request (org_id, status);
-CREATE INDEX idx_hr_travel_request_dates ON hr_travel_request (hr_employee_id, travel_start_date);
+CREATE INDEX idx_hr_travel_request_dates ON hr_travel_request (hr_employee_name, travel_start_date);
 
 COMMENT ON COLUMN hr_travel_request.status IS 'pending, approved, denied';

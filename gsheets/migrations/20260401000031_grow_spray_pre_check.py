@@ -192,7 +192,7 @@ def ensure_template(supabase):
             "id": question_uuid(qtext),
             "org_id": ORG_ID,
             "farm_name": FARM_ID,
-            "ops_template_id": TEMPLATE_ID,
+            "ops_template_name": TEMPLATE_ID,
             "question_text": qtext,
             "response_type": rtype,
             "is_required": True,
@@ -208,17 +208,17 @@ def ensure_template(supabase):
     print(f"  Upserted {len(question_rows)} questions")
 
     print(f"\n--- ops_task_template (link) ---")
-    # Unique constraint on (ops_task_name, ops_template_id) — use it for upsert conflict
+    # Unique constraint on (ops_task_name, ops_template_name) — use it for upsert conflict
     supabase.table("ops_task_template").upsert(
         {
             "org_id": ORG_ID,
             "farm_name": FARM_ID,
             "ops_task_name": OPS_TASK_ID,
-            "ops_template_id": TEMPLATE_ID,
+            "ops_template_name": TEMPLATE_ID,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
         },
-        on_conflict="ops_task_name,ops_template_id",
+        on_conflict="ops_task_name,ops_template_name",
     ).execute()
     print(f"  Linked '{OPS_TASK_ID}' task to '{TEMPLATE_ID}' template")
 
@@ -301,7 +301,7 @@ def build_rows(sheet_row):
                 "org_id": ORG_ID,
                 "farm_name": FARM_ID,
                 "ops_task_tracker_id": tracker_id,
-                "ops_template_id": TEMPLATE_ID,
+                "ops_template_name": TEMPLATE_ID,
                 "ops_template_question_id": question_uuid(qtext),
                 "site_id": None,
                 "equipment_name": tank_id,

@@ -264,7 +264,7 @@ def reseed_questions(supabase):
     print("\nClearing existing questions for these templates...")
     for t in TEMPLATES:
         supabase.table("ops_template_question").delete().eq(
-            "ops_template_id", t["id"]
+            "ops_template_name", t["id"]
         ).execute()
     print("  Cleared")
 
@@ -274,7 +274,7 @@ def reseed_questions(supabase):
             rows.append(audit({
                 "org_id": ORG_ID,
                 "farm_name": FARM_ID,
-                "ops_template_id": t["id"],
+                "ops_template_name": t["id"],
                 "question_text": q_text,
                 "response_type": "boolean",
                 "boolean_pass_value": True,
@@ -288,7 +288,7 @@ def reseed_questions(supabase):
     # Build lookup map: (template_id, question_text) -> id
     q_map = {}
     for r in inserted:
-        q_map[(r["ops_template_id"], r["question_text"])] = r["id"]
+        q_map[(r["ops_template_name"], r["question_text"])] = r["id"]
     return q_map
 
 
@@ -297,7 +297,7 @@ def upsert_task_template_links(supabase):
     # Clear any existing links for these templates first (UUID PK so we can't upsert by template)
     for t in TEMPLATES:
         supabase.table("ops_task_template").delete().eq(
-            "ops_template_id", t["id"]
+            "ops_template_name", t["id"]
         ).eq("ops_task_name", TASK_ID).execute()
 
     rows = []
@@ -306,7 +306,7 @@ def upsert_task_template_links(supabase):
             "org_id": ORG_ID,
             "farm_name": FARM_ID,
             "ops_task_name": TASK_ID,
-            "ops_template_id": t["id"],
+            "ops_template_name": t["id"],
         }))
     insert_rows(supabase, "ops_task_template", rows)
 
@@ -316,7 +316,7 @@ def upsert_task_template_links(supabase):
 # ---------------------------------------------------------------------------
 
 def load_employee_email_map(supabase):
-    """Return {company_email_lower: hr_employee_id}."""
+    """Return {company_email_lower: hr_employee_name}."""
     employees = paginate_select(supabase, "hr_employee", "id, company_email")
     return {
         (r["company_email"] or "").lower(): r["id"]
@@ -372,12 +372,12 @@ def clear_existing_data(supabase):
 
     # Results
     for tid in template_ids:
-        supabase.table("ops_template_result").delete().eq("ops_template_id", tid).execute()
+        supabase.table("ops_template_result").delete().eq("ops_template_name", tid).execute()
     print("  Cleared ops_template_result")
 
-    # Corrective actions (none expected, but tied via ops_template_id)
+    # Corrective actions (none expected, but tied via ops_template_name)
     for tid in template_ids:
-        supabase.table("ops_corrective_action_taken").delete().eq("ops_template_id", tid).execute()
+        supabase.table("ops_corrective_action_taken").delete().eq("ops_template_name", tid).execute()
     print("  Cleared ops_corrective_action_taken (if any)")
 
     # Trackers — scope to cuke food_safety_log task
@@ -496,7 +496,7 @@ def migrate_template(supabase, gc, template_def, q_map, known_sites, email_map, 
             "org_id": ORG_ID,
             "farm_name": FARM_ID,
             "ops_task_tracker_id": tracker["id"],
-            "ops_template_id": template_id,
+            "ops_template_name": template_id,
             "ops_template_question_id": q_id,
             "site_id": tracker["site_id"],
             "response_boolean": response,

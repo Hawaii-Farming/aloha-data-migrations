@@ -4,7 +4,7 @@ WITH schedule_base AS (
     -- Planned schedule entries only (no tracker linked).
     -- Derives the task date from start_time and the Sunday-anchored week start date.
     SELECT
-        s.hr_employee_id,
+        s.hr_employee_name,
         s.ops_task_name,
         s.org_id,
         s.farm_name,
@@ -22,9 +22,9 @@ WITH schedule_base AS (
 SELECT
     sb.org_id,
     sb.week_start_date,
-    e.id                                                                    AS hr_employee_id,
-    e.hr_department_id,
-    e.hr_work_authorization_id,
+    e.name                                                                  AS hr_employee_name,
+    e.hr_department_name,
+    e.hr_work_authorization_name,
     t.name                                                                  AS task,
 
     -- Day columns — formatted as "HH:MM - HH:MM"; null when employee is not scheduled that day
@@ -95,17 +95,17 @@ SELECT
          ELSE false END                                                     AS is_over_ot_threshold
 
 FROM schedule_base sb
-JOIN hr_employee e  ON e.id = sb.hr_employee_id
+JOIN hr_employee e  ON e.name = sb.hr_employee_name
 JOIN ops_task    t  ON t.name = sb.ops_task_name
 GROUP BY
     sb.week_start_date,
     sb.org_id,
     sb.farm_name,
-    e.id,
-    e.hr_department_id,
-    e.hr_work_authorization_id,
+    e.name,
+    e.hr_department_name,
+    e.hr_work_authorization_name,
     e.overtime_threshold,
     t.name
 ORDER BY
     sb.week_start_date,
-    e.id;
+    e.name;

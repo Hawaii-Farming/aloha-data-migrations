@@ -3,8 +3,8 @@ CREATE TABLE IF NOT EXISTS fsafe_test_hold (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     farm_name         TEXT NOT NULL REFERENCES org_farm(name),
     pack_lot_id     UUID NOT NULL REFERENCES pack_lot(id),
-    sales_customer_group_id TEXT REFERENCES sales_customer_group(id),
-    sales_customer_id       TEXT REFERENCES sales_customer(id),
+    sales_customer_group_name TEXT REFERENCES sales_customer_group(name),
+    sales_customer_name       TEXT REFERENCES sales_customer(name),
     fsafe_lab_name    TEXT REFERENCES fsafe_lab(name),
     lab_test_id     TEXT,
 
@@ -23,6 +23,6 @@ COMMENT ON TABLE fsafe_test_hold IS 'Test-and-hold header. One record per pack l
 CREATE INDEX idx_fsafe_test_hold_org      ON fsafe_test_hold (org_id);
 CREATE INDEX idx_fsafe_test_hold_farm     ON fsafe_test_hold (farm_name);
 CREATE INDEX idx_fsafe_test_hold_lot      ON fsafe_test_hold (pack_lot_id);
-CREATE INDEX idx_fsafe_test_hold_customer ON fsafe_test_hold (sales_customer_id);
-COMMENT ON COLUMN fsafe_test_hold.sales_customer_id IS 'Pre-filled from the linked sales_po customer; editable';
-COMMENT ON COLUMN fsafe_test_hold.sales_customer_group_id IS 'Pre-filled from sales_customer.sales_customer_group_id; editable';
+CREATE INDEX idx_fsafe_test_hold_customer ON fsafe_test_hold (sales_customer_name);
+COMMENT ON COLUMN fsafe_test_hold.sales_customer_name IS 'Pre-filled from the linked sales_po customer; editable';
+COMMENT ON COLUMN fsafe_test_hold.sales_customer_group_name IS 'Pre-filled from sales_customer.sales_customer_group_name; editable';

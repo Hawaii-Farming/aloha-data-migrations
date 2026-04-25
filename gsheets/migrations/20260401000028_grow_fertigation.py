@@ -391,15 +391,15 @@ def build_recipe_items(recipe_mix_records, recipe_id_by_name, recipe_farm, item_
         tank_letter = str(r.get("Tank", "")).strip()
         farm = recipe_farm[recipe_name]
         equipment_name = tank_equipment_id(farm, tank_letter)
-        invnt_item_id = item_by_name_lower.get(fert_name.lower())
+        invnt_item_name = item_by_name_lower.get(fert_name.lower())
         notes = str(r.get("Notes", "")).strip() or None
 
         rows.append({
             "org_id": ORG_ID,
             "farm_name": farm,
-            "grow_fertigation_recipe_id": recipe_id_by_name[recipe_name],
+            "grow_fertigation_recipe_name": recipe_id_by_name[recipe_name],
             "equipment_name": equipment_name,
-            "invnt_item_id": invnt_item_id,
+            "invnt_item_name": invnt_item_name,
             "item_name": fert_name,
             "application_uom": uom,
             "application_quantity": qty,
@@ -434,7 +434,7 @@ def build_recipe_sites(sched_records, recipe_id_by_name, known_sites):
             seen[key] = {
                 "org_id": ORG_ID,
                 "farm_name": farm,
-                "grow_fertigation_recipe_id": recipe_id,
+                "grow_fertigation_recipe_name": recipe_id,
                 "site_id": site_id,
                 "created_by": AUDIT_USER,
                 "updated_by": AUDIT_USER,
@@ -524,7 +524,7 @@ def build_events(sched_records, recipe_id_by_name, known_sites):
                     "org_id": ORG_ID,
                     "farm_name": farm,
                     "ops_task_tracker_id": tracker_id,
-                    "grow_fertigation_recipe_id": recipe_id,
+                    "grow_fertigation_recipe_name": recipe_id,
                     "equipment_name": tank_equipment_id(farm, letter),
                     "volume_uom": "gallon",
                     "volume_applied": gallons,
@@ -538,7 +538,7 @@ def build_events(sched_records, recipe_id_by_name, known_sites):
                     "org_id": ORG_ID,
                     "farm_name": farm,
                     "ops_task_tracker_id": tracker_id,
-                    "grow_fertigation_recipe_id": top_up_recipe_id,
+                    "grow_fertigation_recipe_name": top_up_recipe_id,
                     "equipment_name": None,
                     "volume_uom": "hour",
                     "volume_applied": top_up_hours,
@@ -550,7 +550,7 @@ def build_events(sched_records, recipe_id_by_name, known_sites):
                     "org_id": ORG_ID,
                     "farm_name": farm,
                     "ops_task_tracker_id": tracker_id,
-                    "grow_fertigation_recipe_id": flush_recipe_id,
+                    "grow_fertigation_recipe_name": flush_recipe_id,
                     "equipment_name": None,
                     "volume_uom": "gallon",
                     "volume_applied": flush_gallons,
@@ -595,7 +595,7 @@ def clear_existing():
             cur.execute(
                 """
                 DELETE FROM grow_fertigation_recipe_site
-                WHERE grow_fertigation_recipe_id IN (
+                WHERE grow_fertigation_recipe_name IN (
                     SELECT id FROM grow_fertigation_recipe
                     WHERE description = %s
                 )
@@ -607,7 +607,7 @@ def clear_existing():
             cur.execute(
                 """
                 DELETE FROM grow_fertigation_recipe_item
-                WHERE grow_fertigation_recipe_id IN (
+                WHERE grow_fertigation_recipe_name IN (
                     SELECT id FROM grow_fertigation_recipe
                     WHERE description = %s
                 )

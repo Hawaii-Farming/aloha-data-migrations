@@ -349,9 +349,9 @@ def migrate_sales_po(supabase, gc):
 
         row = {
             "org_id": ORG_ID,
-            "sales_customer_group_id": group_id,
-            "sales_customer_id": cust_id,
-            "sales_fob_id": fob_id,
+            "sales_customer_group_name": group_id,
+            "sales_customer_name": cust_id,
+            "sales_fob_name": fob_id,
             "po_number": po_number or None,
             "order_date": order_date,
             "invoice_date": invoice_date,

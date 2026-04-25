@@ -88,7 +88,7 @@ RULES = [
         "Team lead dropdown: sys_access_level_name >= team_lead. "
         "Compensation manager dropdown: sys_access_level_name >= manager.",
         None,
-        '["hr_employee.team_lead_id", "hr_employee.compensation_manager_id"]',
+        '["hr_employee.team_lead_name", "hr_employee.compensation_manager_name"]',
         4,
     ),
     rule(
@@ -134,10 +134,10 @@ RULES = [
     rule(
         "invnt_po_request_types", "business_rule", "inventory",
         "PO field behavior by request type",
-        "inventory_item: invnt_item_id required, category/name/UOM/vendor auto-filled from item. "
-        "non_inventory_item: invnt_item_id hidden, user enters category/name/UOM manually.",
+        "inventory_item: invnt_item_name required, category/name/UOM/vendor auto-filled from item. "
+        "non_inventory_item: invnt_item_name hidden, user enters category/name/UOM manually.",
         None,
-        '["invnt_po.request_type", "invnt_po.invnt_item_id"]',
+        '["invnt_po.request_type", "invnt_po.invnt_item_name"]',
         9,
     ),
     rule(
@@ -175,7 +175,7 @@ RULES = [
         "Templates auto-load when task is selected",
         "All templates linked via ops_task_template load as checklists for the activity session.",
         None,
-        '["ops_task_template.ops_task_name", "ops_task_template.ops_template_id"]',
+        '["ops_task_template.ops_task_name", "ops_task_template.ops_template_name"]',
         13,
     ),
     rule(
@@ -304,11 +304,11 @@ RULES = [
     ),
     rule(
         "pack_invnt_item_filters", "business_rule", "pack",
-        "invnt_item_id filtered by context: Packing vs Seeds",
-        "sales_product.invnt_item_id: filtered to category Packing (packaging material). "
-        "pack_dryer_result.invnt_item_id: filtered to category Seeds (seed variety being dried).",
+        "invnt_item_name filtered by context: Packing vs Seeds",
+        "sales_product.invnt_item_name: filtered to category Packing (packaging material). "
+        "pack_dryer_result.invnt_item_name: filtered to category Seeds (seed variety being dried).",
         None,
-        '["sales_product.invnt_item_id", "pack_dryer_result.invnt_item_id"]',
+        '["sales_product.invnt_item_name", "pack_dryer_result.invnt_item_name"]',
         27,
     ),
     rule(
@@ -403,11 +403,11 @@ RULES = [
     rule(
         "sales_crm_store_customer_link", "business_rule", "sales",
         "Store links to customer but many stores can share one customer",
-        "sales_crm_store.sales_customer_id is nullable. Multiple stores can reference the same "
+        "sales_crm_store.sales_customer_name is nullable. Multiple stores can reference the same "
         "customer (e.g. all Costco locations link to the Costco customer for that island). "
         "Stores without a customer link are tracked for competitive intelligence only.",
         None,
-        '["sales_crm_store.sales_customer_id"]',
+        '["sales_crm_store.sales_customer_name"]',
         37,
     ),
     rule(

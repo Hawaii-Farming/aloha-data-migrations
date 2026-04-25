@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS sales_crm_store_visit (
     sales_crm_store_id      TEXT NOT NULL REFERENCES sales_crm_store(id),
     visit_date              DATE NOT NULL,
     notes                   TEXT,
-    visited_by              TEXT REFERENCES hr_employee(id),
+    visited_by              TEXT REFERENCES hr_employee(name),
     created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by              TEXT,
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT now(),

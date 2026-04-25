@@ -436,7 +436,7 @@ def migrate_invnt_item(supabase, gc):
             "reorder_point_in_burn": reorder_point,
             "reorder_quantity_in_burn": reorder_quantity,
             "site_id": site_id,
-            "invnt_vendor_id": None,
+            "invnt_vendor_name": None,
             "manufacturer": manufacturer,
             "grow_variety_id": variety_id,
             "seed_is_pelleted": seed_is_pelleted,
@@ -557,7 +557,7 @@ def migrate_invnt_po(supabase, gc):
             "farm_name": item.get("farm_name"),
             "request_type": "inventory_item",
             "invnt_category_id": item.get("invnt_category_id") or "packing",
-            "invnt_item_id": item_id,
+            "invnt_item_name": item_id,
             "item_name": item_name,
             "burn_uom": burn_uom or item.get("burn_uom") or order_uom or "unit",
             "order_uom": order_uom or item.get("order_uom") or burn_uom or "unit",
@@ -565,7 +565,7 @@ def migrate_invnt_po(supabase, gc):
             "burn_per_order": safe_numeric(r.get("BurnPerReceivedUnits", "")) or item.get("burn_per_order", 0),
             "total_cost": safe_numeric(r.get("TotalCost", "")) or None,
             "is_freight_included": parse_bool(r.get("PriceIncludesFreight", "")),
-            "invnt_vendor_id": vendor_id,
+            "invnt_vendor_name": vendor_id,
             "expected_delivery_date": parse_date(r.get("ExpectedArrivalDate", "")),
             "request_photos": [],
             "status": status,
@@ -597,7 +597,7 @@ def migrate_invnt_po(supabase, gc):
                         "id": lot_id,
                         "org_id": ORG_ID,
                         "farm_name": item.get("farm_name"),
-                        "invnt_item_id": item_id,
+                        "invnt_item_name": item_id,
                         "lot_number": lot_number,
                         "lot_expiry_date": parse_date(r.get("ExpiryDate", "")),
                     })
@@ -709,13 +709,13 @@ def migrate_invnt_po(supabase, gc):
             "request_type": mapped_type,
             "urgency_level": URGENCY_MAP.get(str(r.get("urgency_level", "")).strip().lower()),
             "invnt_category_id": item.get("invnt_category_id") or "maintenance",
-            "invnt_item_id": item_id,
+            "invnt_item_name": item_id,
             "item_name": item_name,
             "burn_uom": po_burn_uom,
             "order_uom": po_order_uom,
             "order_quantity": safe_numeric(r.get("request_quantity", "")),
             "burn_per_order": po_burn_per_order,
-            "invnt_vendor_id": vendor_id,
+            "invnt_vendor_name": vendor_id,
             "expected_delivery_date": parse_date(r.get("expected_delivery_date", "")),
             "notes": str(r.get("request_notes", "")).strip() or None,
             "request_photos": photos,
@@ -853,7 +853,7 @@ def migrate_invnt_onhand(supabase, gc):
         row = audit({
             "org_id": ORG_ID,
             "farm_name": item.get("farm_name"),
-            "invnt_item_id": item["id"],
+            "invnt_item_name": item["id"],
             "onhand_date": onhand_date,
             "burn_uom": burn_uom,
             "onhand_uom": onhand_uom,
@@ -929,7 +929,7 @@ def migrate_grow_spray_compliance(supabase, gc):
         item = item_by_name.get(item_name.lower()) if item_name else None
         if item_name and not item:
             unresolved_items.add(item_name)
-            print(f"  WARN: Unknown item '{item_name}' — inserting with NULL invnt_item_id")
+            print(f"  WARN: Unknown item '{item_name}' — inserting with NULL invnt_item_name")
 
         # Farm — try sheet, fall back to item, else None
         farm_raw = str(r.get("Farm", "")).strip().lower()
@@ -978,7 +978,7 @@ def migrate_grow_spray_compliance(supabase, gc):
         row = {
             "org_id": ORG_ID,
             "farm_name": farm_name,
-            "invnt_item_id": item["id"] if item else None,
+            "invnt_item_name": item["id"] if item else None,
             "epa_registration": epa_reg,
             "phi_days": phi_days,
             "rei_hours": rei_hours,
@@ -1002,7 +1002,7 @@ def migrate_grow_spray_compliance(supabase, gc):
     if skipped_no_label:
         print(f"  Skipped {skipped_no_label} rows with no LabelLink")
     if unresolved_items:
-        print(f"  Inserted with NULL invnt_item_id ({len(unresolved_items)} unique unknown items): {sorted(unresolved_items)[:5]}...")
+        print(f"  Inserted with NULL invnt_item_name ({len(unresolved_items)} unique unknown items): {sorted(unresolved_items)[:5]}...")
     if unresolved_farms:
         print(f"  Inserted with NULL farm_name ({len(unresolved_farms)} unique unknown farms): {sorted(unresolved_farms)}")
 
@@ -1043,7 +1043,7 @@ def migrate_grow_lettuce_seed_mix(supabase, gc):
             continue
 
         mixes[mix_name]["items"].append({
-            "invnt_item_id": item_id,
+            "invnt_item_name": item_id,
             "percentage": round(ratio, 4),
             "created_by": str(r.get("created_by", "")).strip().lower() or AUDIT_USER,
         })
@@ -1074,8 +1074,8 @@ def migrate_grow_lettuce_seed_mix(supabase, gc):
             item_rows.append({
                 "org_id": ORG_ID,
                 "farm_name": "Lettuce",
-                "grow_lettuce_seed_mix_id": mix_id,
-                "invnt_item_id": item["invnt_item_id"],
+                "grow_lettuce_seed_mix_name": mix_id,
+                "invnt_item_name": item["invnt_item_name"],
                 "percentage": item["percentage"],
                 "created_by": item["created_by"],
                 "updated_by": item["created_by"],

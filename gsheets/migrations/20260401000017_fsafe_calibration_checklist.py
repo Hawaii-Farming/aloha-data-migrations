@@ -336,7 +336,7 @@ def reseed_questions(supabase):
     """Returns: dict of {(template_id, question_text): question_id}"""
     print("\nClearing existing questions for these templates...")
     for farm in FARMS:
-        supabase.table("ops_template_question").delete().eq("ops_template_id", farm["template_id"]).execute()
+        supabase.table("ops_template_question").delete().eq("ops_template_name", farm["template_id"]).execute()
     print("  Cleared")
 
     rows = []
@@ -345,7 +345,7 @@ def reseed_questions(supabase):
             rows.append(audit({
                 "org_id": ORG_ID,
                 "farm_name": farm["farm_name"],
-                "ops_template_id": farm["template_id"],
+                "ops_template_name": farm["template_id"],
                 "question_text": q_text,
                 "response_type": rtype,
                 "is_required": kw.get("is_required", True),
@@ -362,14 +362,14 @@ def reseed_questions(supabase):
     inserted = insert_rows(supabase, "ops_template_question", rows)
     q_map = {}
     for r in inserted:
-        q_map[(r["ops_template_id"], r["question_text"])] = r["id"]
+        q_map[(r["ops_template_name"], r["question_text"])] = r["id"]
     return q_map
 
 
 def upsert_task_template_links(supabase):
     for farm in FARMS:
         supabase.table("ops_task_template").delete().eq(
-            "ops_template_id", farm["template_id"]
+            "ops_template_name", farm["template_id"]
         ).eq("ops_task_name", TASK_ID).execute()
 
     rows = []
@@ -378,7 +378,7 @@ def upsert_task_template_links(supabase):
             "org_id": ORG_ID,
             "farm_name": farm["farm_name"],
             "ops_task_name": TASK_ID,
-            "ops_template_id": farm["template_id"],
+            "ops_template_name": farm["template_id"],
         }))
     insert_rows(supabase, "ops_task_template", rows)
 
@@ -401,15 +401,15 @@ def clear_existing_data(supabase):
         result = (
             supabase.table("ops_template_result")
             .select("ops_task_tracker_id")
-            .eq("ops_template_id", tid)
+            .eq("ops_template_name", tid)
             .execute()
         )
         for r in result.data:
             tracker_ids_to_delete.add(r["ops_task_tracker_id"])
 
     for tid in template_ids:
-        supabase.table("ops_template_result").delete().eq("ops_template_id", tid).execute()
-        supabase.table("ops_corrective_action_taken").delete().eq("ops_template_id", tid).execute()
+        supabase.table("ops_template_result").delete().eq("ops_template_name", tid).execute()
+        supabase.table("ops_corrective_action_taken").delete().eq("ops_template_name", tid).execute()
 
     if tracker_ids_to_delete:
         # Delete in chunks of 100 since IN clauses get unwieldy
@@ -489,7 +489,7 @@ def migrate_farm(supabase, farm, all_records, q_map, email_map, stub_cache):
             "org_id": ORG_ID,
             "farm_name": farm_name,
             "ops_task_tracker_id": tracker["id"],
-            "ops_template_id": template_id,
+            "ops_template_name": template_id,
             "ops_template_question_id": q_id,
             "site_id": None,         # equipment-scoped
             "equipment_name": equipment_name,

@@ -1,8 +1,6 @@
 CREATE TABLE IF NOT EXISTS ops_corrective_action_choice (
     org_id      TEXT        NOT NULL REFERENCES org(id),
-    id          TEXT        PRIMARY KEY,
-
-    name        TEXT        NOT NULL,
+    name        TEXT PRIMARY KEY,
     description TEXT,
 
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),

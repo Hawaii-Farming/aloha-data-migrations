@@ -272,10 +272,10 @@ def migrate_hr_employee(supabase, records, app_users):
             "phone": str(r.get("Phone", "")).strip() or None,
             "company_email": email or None,
             "is_primary_org": True,
-            "hr_department_id": dept or None,
+            "hr_department_name": dept or None,
             "sys_access_level_name": access_level,
             "is_manager": parse_bool(r.get("IsManager", False)),
-            "hr_work_authorization_id": status or None,
+            "hr_work_authorization_name": status or None,
             "start_date": parse_date(r.get("StartDate", "")),
             "end_date": parse_date(r.get("EndDate", "")),
             "payroll_id": str(r.get("employee_id", "")).strip() or None,
@@ -295,8 +295,8 @@ def migrate_hr_employee(supabase, records, app_users):
     # here would re-introduce the legacy id-drift collision on uq_hr_employee_name.
     insert_rows(supabase, "hr_employee", employees, upsert=False)
 
-    # Second pass: update team_lead_id and compensation_manager_id
-    print("  Resolving team_lead_id and compensation_manager_id...")
+    # Second pass: update team_lead_name and compensation_manager_name
+    print("  Resolving team_lead_name and compensation_manager_name...")
     updates = 0
     for r in records:
         full = str(r.get("FullName", "")).strip()
@@ -309,9 +309,9 @@ def migrate_hr_employee(supabase, records, app_users):
 
         patch = {}
         if team_lead and team_lead in name_to_id:
-            patch["team_lead_id"] = name_to_id[team_lead]
+            patch["team_lead_name"] = name_to_id[team_lead]
         if comp_mgr and comp_mgr in name_to_id:
-            patch["compensation_manager_id"] = name_to_id[comp_mgr]
+            patch["compensation_manager_name"] = name_to_id[comp_mgr]
 
         if patch:
             supabase.table("hr_employee").update(patch).eq("id", emp_id).execute()
@@ -344,7 +344,7 @@ def migrate_hr_module_access(supabase, employees, app_users_lookup, module_map):
                 modules_seen.add(mod_id)
                 rows.append(audit({
                     "org_id": ORG_ID,
-                    "hr_employee_id": emp["id"],
+                    "hr_employee_name": emp["id"],
                     "org_module_name": mod_id,
                     "is_enabled": True,
                     "can_edit": True,
@@ -421,7 +421,7 @@ def migrate_hr_time_off_request(supabase, gc, emp_records):
 
         row = {
             "org_id": ORG_ID,
-            "hr_employee_id": emp_id,
+            "hr_employee_name": emp_id,
             "start_date": parse_date(r.get("StartDate", "")),
             "return_date": parse_date(r.get("ReturnDate", "")),
             "non_pto_days": non_pto_days,
@@ -484,7 +484,7 @@ def migrate_hr_travel_request(supabase, gc, emp_records):
 
         row = {
             "org_id": ORG_ID,
-            "hr_employee_id": emp_id,
+            "hr_employee_name": emp_id,
             "request_type": proper_case(r.get("travel_type", "")) or None,
             "travel_from": proper_case(r.get("flight_from", "")) or None,
             "travel_to": proper_case(r.get("flight_to", "")) or None,

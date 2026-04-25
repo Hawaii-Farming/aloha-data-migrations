@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS invnt_onhand (
     org_id                 TEXT NOT NULL REFERENCES org(id),
     id                     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     farm_name                TEXT REFERENCES org_farm(name),
-    invnt_item_id          TEXT NOT NULL REFERENCES invnt_item(id),
+    invnt_item_name          TEXT NOT NULL REFERENCES invnt_item(name),
     onhand_date            DATE NOT NULL,
     burn_uom               TEXT REFERENCES sys_uom(code),
     onhand_uom             TEXT REFERENCES sys_uom(code),
@@ -30,5 +30,5 @@ COMMENT ON COLUMN invnt_onhand.onhand_uom IS 'Pre-filled from invnt_item.onhand_
 COMMENT ON COLUMN invnt_onhand.burn_per_onhand IS 'Snapshot from invnt_item.burn_per_onhand at record creation time';
 
 CREATE INDEX idx_invnt_onhand_org_id ON invnt_onhand (org_id);
-CREATE INDEX idx_invnt_onhand_item ON invnt_onhand (invnt_item_id, onhand_date);
+CREATE INDEX idx_invnt_onhand_item ON invnt_onhand (invnt_item_name, onhand_date);
 

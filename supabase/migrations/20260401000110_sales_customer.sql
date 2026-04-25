@@ -1,10 +1,9 @@
 CREATE TABLE IF NOT EXISTS sales_customer (
     org_id          TEXT NOT NULL REFERENCES org(id),
-    id              TEXT PRIMARY KEY,
-    sales_customer_group_id   TEXT REFERENCES sales_customer_group(id),
-    sales_fob_id          TEXT REFERENCES sales_fob(id),
+    sales_customer_group_name   TEXT REFERENCES sales_customer_group(name),
+    sales_fob_name          TEXT REFERENCES sales_fob(name),
     qb_account     TEXT,
-    name            TEXT NOT NULL,
+    name            TEXT PRIMARY KEY,
     email           TEXT,
     cc_emails       JSONB NOT NULL DEFAULT '[]',
     billing_address TEXT,
@@ -21,6 +20,6 @@ COMMENT ON TABLE sales_customer IS 'Stores an organization''s customers with the
 
 CREATE INDEX idx_sales_customer_org_id ON sales_customer (org_id);
 
-COMMENT ON COLUMN sales_customer.sales_customer_group_id IS 'Cascades to sales_po.sales_customer_group_id when an order is created for this customer';
-COMMENT ON COLUMN sales_customer.sales_fob_id IS 'Default FOB delivery point; cascades to sales_po.sales_fob_id when an order is created for this customer';
+COMMENT ON COLUMN sales_customer.sales_customer_group_name IS 'Cascades to sales_po.sales_customer_group_name when an order is created for this customer';
+COMMENT ON COLUMN sales_customer.sales_fob_name IS 'Default FOB delivery point; cascades to sales_po.sales_fob_name when an order is created for this customer';
 COMMENT ON COLUMN sales_customer.qb_account IS 'QuickBooks account identifier for accounting integration';

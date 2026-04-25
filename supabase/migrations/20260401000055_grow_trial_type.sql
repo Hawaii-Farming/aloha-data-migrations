@@ -1,8 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_trial_type (
     org_id      TEXT NOT NULL REFERENCES org(id),
-    id          TEXT PRIMARY KEY,
     farm_name     TEXT NOT NULL REFERENCES org_farm(name),
-    name        TEXT NOT NULL,
+    name        TEXT PRIMARY KEY,
     description TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by  TEXT,
@@ -14,7 +13,7 @@ CREATE TABLE IF NOT EXISTS grow_trial_type (
 
 COMMENT ON TABLE grow_trial_type IS 'Lookup table defining types of seeding trials (e.g. new lot, new variety, new seed source). Farm-scoped.';
 
--- Static reference row used by grow_cuke_seed_batch.grow_trial_type_id on
+-- Static reference row used by grow_cuke_seed_batch.grow_trial_type_name on
 -- the 13 historical trial blocks migrated from grow_C_seeding. Retired
 -- migration 024 used to re-seed this nightly; with that gone, the row
 -- needs to live here.

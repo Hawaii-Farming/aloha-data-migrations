@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS hr_payroll (
     org_id                      TEXT NOT NULL REFERENCES org(id),
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    hr_employee_id              TEXT NOT NULL REFERENCES hr_employee(id),
+    hr_employee_name              TEXT NOT NULL REFERENCES hr_employee(name),
     payroll_id                  TEXT NOT NULL,
 
     -- Pay period
@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS hr_payroll (
 
     -- Employee snapshot at time of processing
     employee_name               TEXT NOT NULL,
-    hr_department_id            TEXT REFERENCES hr_department(id),
-    hr_work_authorization_id    TEXT REFERENCES hr_work_authorization(id),
+    hr_department_name            TEXT REFERENCES hr_department(name),
+    hr_work_authorization_name    TEXT REFERENCES hr_work_authorization(name),
     wc                          TEXT,
     pay_structure               TEXT,
     hourly_rate                 NUMERIC,
@@ -84,9 +84,9 @@ COMMENT ON TABLE hr_payroll IS 'Merged payroll data imported from external payro
 COMMENT ON COLUMN hr_payroll.payroll_id IS 'Employee ID as it appears in the payroll processor system; used to match records during import';
 COMMENT ON COLUMN hr_payroll.payroll_processor IS 'Payroll processor identifier (e.g. HRB, HF)';
 COMMENT ON COLUMN hr_payroll.is_standard IS 'Auto-set: true if invoice total hours > 5000; false for off-cycle or adjustment runs';
-COMMENT ON COLUMN hr_payroll.employee_name IS 'Name as it appears in the payroll processor data; hr_employee_id is matched by the import script';
-COMMENT ON COLUMN hr_payroll.hr_department_id IS 'Snapshot from hr_employee.hr_department_id at time of import';
-COMMENT ON COLUMN hr_payroll.hr_work_authorization_id IS 'Snapshot from hr_employee.hr_work_authorization_id at time of import';
+COMMENT ON COLUMN hr_payroll.employee_name IS 'Name as it appears in the payroll processor data; hr_employee_name is matched by the import script';
+COMMENT ON COLUMN hr_payroll.hr_department_name IS 'Snapshot from hr_employee.hr_department_name at time of import';
+COMMENT ON COLUMN hr_payroll.hr_work_authorization_name IS 'Snapshot from hr_employee.hr_work_authorization_name at time of import';
 COMMENT ON COLUMN hr_payroll.wc IS 'Snapshot from hr_employee.wc at time of import';
 COMMENT ON COLUMN hr_payroll.pay_structure IS 'Snapshot from hr_employee.pay_structure at time of import';
 COMMENT ON COLUMN hr_payroll.hourly_rate IS 'Snapshot from payroll processor NetPay data';
@@ -99,6 +99,6 @@ COMMENT ON COLUMN hr_payroll.hawaii_get IS 'Hawaii General Excise Tax';
 COMMENT ON COLUMN hr_payroll.tdi IS 'Temporary Disability Insurance — employer portion';
 
 CREATE INDEX idx_hr_payroll_org ON hr_payroll (org_id);
-CREATE INDEX idx_hr_payroll_employee ON hr_payroll (hr_employee_id);
+CREATE INDEX idx_hr_payroll_employee ON hr_payroll (hr_employee_name);
 CREATE INDEX idx_hr_payroll_check_date ON hr_payroll (org_id, check_date);
 CREATE INDEX idx_hr_payroll_period ON hr_payroll (org_id, pay_period_start, pay_period_end);

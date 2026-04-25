@@ -33,9 +33,9 @@ CREATE TABLE IF NOT EXISTS fsafe_result (
 
     -- Named FKs so PostgREST can disambiguate when embedding hr_employee
     CONSTRAINT fk_fsafe_result_sampled_by
-      FOREIGN KEY (sampled_by) REFERENCES hr_employee(id),
+      FOREIGN KEY (sampled_by) REFERENCES hr_employee(name),
     CONSTRAINT fk_fsafe_result_verified_by
-      FOREIGN KEY (verified_by) REFERENCES hr_employee(id)
+      FOREIGN KEY (verified_by) REFERENCES hr_employee(name)
 );
 
 COMMENT ON TABLE fsafe_result IS 'Unified food safety test results table. Result type is derived from existing fields: EMP (site_id set, fsafe_test_hold_id null, zone != water), Test-and-Hold (fsafe_test_hold_id set), Water (site_id set, zone = water). Retests and vector tests link back to the original via fsafe_result_id_original.';

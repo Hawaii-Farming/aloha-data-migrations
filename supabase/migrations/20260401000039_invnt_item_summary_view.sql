@@ -1,18 +1,18 @@
 CREATE OR REPLACE VIEW invnt_item_summary AS
 WITH latest_onhand AS (
-    SELECT DISTINCT ON (invnt_item_id)
-        invnt_item_id,
+    SELECT DISTINCT ON (invnt_item_name)
+        invnt_item_name,
         onhand_quantity,
         onhand_uom,
         burn_per_onhand,
         onhand_date
     FROM invnt_onhand
     WHERE is_deleted = false
-    ORDER BY invnt_item_id, onhand_date DESC, created_at DESC
+    ORDER BY invnt_item_name, onhand_date DESC, created_at DESC
 ),
 open_orders AS (
     SELECT
-        po.invnt_item_id,
+        po.invnt_item_name,
         COALESCE(SUM(po.order_quantity * po.burn_per_order), 0) AS ordered_quantity_in_burn,
         COALESCE(SUM(r.received_quantity_in_burn), 0) AS received_quantity_in_burn
     FROM invnt_po po
@@ -25,18 +25,18 @@ open_orders AS (
         GROUP BY invnt_po_id
     ) r ON r.invnt_po_id = po.id
     WHERE po.is_deleted = false
-      AND po.invnt_item_id IS NOT NULL
+      AND po.invnt_item_name IS NOT NULL
       AND po.status IN ('approved', 'ordered', 'partial')
-    GROUP BY po.invnt_item_id
+    GROUP BY po.invnt_item_name
 )
 SELECT
     -- Item identification
     i.org_id,
     i.farm_name,
-    i.id AS invnt_item_id,
+    i.name AS invnt_item_name,
     i.invnt_category_id,
     i.invnt_subcategory_id,
-    i.invnt_vendor_id,
+    i.invnt_vendor_name,
 
     -- Item UOMs & conversions
     i.burn_uom,
@@ -83,6 +83,6 @@ SELECT
     END AS next_order_date
 
 FROM invnt_item i
-LEFT JOIN latest_onhand lo ON lo.invnt_item_id = i.id
-LEFT JOIN open_orders oo ON oo.invnt_item_id = i.id
+LEFT JOIN latest_onhand lo ON lo.invnt_item_name = i.name
+LEFT JOIN open_orders oo ON oo.invnt_item_name = i.name
 WHERE i.is_deleted = false;

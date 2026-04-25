@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS pack_dryer_result (
     farm_name                         TEXT NOT NULL REFERENCES org_farm(name),
     site_id                         TEXT NOT NULL REFERENCES org_site(id),
     grow_lettuce_seed_batch_id      UUID REFERENCES grow_lettuce_seed_batch(id),
-    invnt_item_id                   TEXT REFERENCES invnt_item(id),
+    invnt_item_name                   TEXT REFERENCES invnt_item(name),
 
     check_at                        TIMESTAMPTZ NOT NULL,
     temperature_uom                 TEXT NOT NULL REFERENCES sys_uom(code),

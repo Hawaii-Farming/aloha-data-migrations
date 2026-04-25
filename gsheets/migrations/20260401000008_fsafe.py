@@ -244,7 +244,7 @@ def ensure_foreign_material_template(supabase):
     existing_results = (
         supabase.table("ops_template_result")
         .select("id,ops_task_tracker_id")
-        .eq("ops_template_id", FM_TEMPLATE_ID)
+        .eq("ops_template_name", FM_TEMPLATE_ID)
         .execute()
         .data
     )
@@ -257,17 +257,17 @@ def ensure_foreign_material_template(supabase):
             ).execute()
         # Then the results
         supabase.table("ops_template_result").delete().eq(
-            "ops_template_id", FM_TEMPLATE_ID
+            "ops_template_name", FM_TEMPLATE_ID
         ).execute()
         print(f"  Cleared {len(result_ids)} existing foreign_material_event results + photos")
 
     supabase.table("ops_template_question").delete().eq(
-        "ops_template_id", FM_TEMPLATE_ID
+        "ops_template_name", FM_TEMPLATE_ID
     ).execute()
     inserted_q = supabase.table("ops_template_question").insert(audit({
         "org_id": ORG_ID,
         "farm_name": None,
-        "ops_template_id": FM_TEMPLATE_ID,
+        "ops_template_name": FM_TEMPLATE_ID,
         "question_text": "Type of foreign material",
         "response_type": "enum",
         "is_required": True,
@@ -281,13 +281,13 @@ def ensure_foreign_material_template(supabase):
 
     # Idempotent task->template link (org-scoped, no farm_name)
     supabase.table("ops_task_template").delete().eq(
-        "ops_template_id", FM_TEMPLATE_ID
+        "ops_template_name", FM_TEMPLATE_ID
     ).eq("ops_task_name", TASK_ID).execute()
     supabase.table("ops_task_template").insert(audit({
         "org_id": ORG_ID,
         "farm_name": None,
         "ops_task_name": TASK_ID,
-        "ops_template_id": FM_TEMPLATE_ID,
+        "ops_template_name": FM_TEMPLATE_ID,
     })).execute()
     print(f"  Linked template to {TASK_ID}")
 

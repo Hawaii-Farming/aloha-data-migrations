@@ -346,8 +346,8 @@ def ensure_compliance_records(supabase, sheet_records, item_lookup):
     create a row using PHI/REI and target/UOM from the first sheet row where it
     appears.
     """
-    existing = paginate_select(supabase, "grow_spray_compliance", "id,farm_name,invnt_item_id")
-    by_pair = {(c["farm_name"], c["invnt_item_id"]): c["id"] for c in existing}
+    existing = paginate_select(supabase, "grow_spray_compliance", "id,farm_name,invnt_item_name")
+    by_pair = {(c["farm_name"], c["invnt_item_name"]): c["id"] for c in existing}
 
     # For each (farm, item_id) needed, grab PHI/REI/target/uom from first sheet row
     needed = {}  # (farm, item_id) -> defaults
@@ -393,7 +393,7 @@ def ensure_compliance_records(supabase, sheet_records, item_lookup):
             "id": new_id,
             "org_id": ORG_ID,
             "farm_name": farm,
-            "invnt_item_id": item_id,
+            "invnt_item_name": item_id,
             "epa_registration": "LEGACY_UNKNOWN",
             "phi_days": d["phi"],
             "rei_hours": d["rei"],
@@ -555,7 +555,7 @@ def build_event_rows(
             "farm_name": farm,
             "ops_task_tracker_id": tracker_id,
             "grow_spray_compliance_id": compliance_id,
-            "invnt_item_id": item_id,
+            "invnt_item_name": item_id,
             "invnt_lot_id": None,
             "target_pest_disease": json.dumps(targets),
             "application_uom": uom,

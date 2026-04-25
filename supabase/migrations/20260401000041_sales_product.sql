@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS sales_product (
     grow_grade_id              TEXT REFERENCES grow_grade(code),
     name                       TEXT NOT NULL,
     description                TEXT,
-    invnt_item_id         TEXT REFERENCES invnt_item(id),
+    invnt_item_name         TEXT REFERENCES invnt_item(name),
 
     -- Packaging hierarchy: item -> pack -> case -> pallet
     item_uom                   TEXT REFERENCES sys_uom(code),
@@ -64,7 +64,7 @@ COMMENT ON TABLE sales_product IS 'The sellable products from each farm. Combine
 
 CREATE INDEX idx_sales_product_farm_id ON sales_product (farm_name);
 
-COMMENT ON COLUMN sales_product.invnt_item_id IS 'Filtered to packaging items in inventory';
+COMMENT ON COLUMN sales_product.invnt_item_name IS 'Filtered to packaging items in inventory';
 COMMENT ON COLUMN sales_product.item_uom IS 'Smallest countable unit of the product (e.g. count, lb, oz)';
 COMMENT ON COLUMN sales_product.pack_uom IS 'Intermediate packaging unit (e.g. bag, tray)';
 COMMENT ON COLUMN sales_product.item_per_pack IS 'Number of items per pack unit';

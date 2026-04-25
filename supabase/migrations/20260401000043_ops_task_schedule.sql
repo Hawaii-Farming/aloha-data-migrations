@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS ops_task_schedule (
     farm_name                 TEXT REFERENCES org_farm(name),
     ops_task_name             TEXT NOT NULL REFERENCES ops_task(name),
     ops_task_tracker_id     UUID REFERENCES ops_task_tracker(id),
-    hr_employee_id          TEXT NOT NULL REFERENCES hr_employee(id),
+    hr_employee_name          TEXT NOT NULL REFERENCES hr_employee(name),
     start_time              TIMESTAMPTZ NOT NULL,
     stop_time               TIMESTAMPTZ,
     -- Lunch-adjusted hours sourced from the schedule capture (sheet's daily
@@ -33,12 +33,12 @@ COMMENT ON COLUMN ops_task_schedule.start_time IS 'Inherited from ops_task_track
 COMMENT ON COLUMN ops_task_schedule.stop_time IS 'Inherited from ops_task_tracker.stop_time when linked to a tracker; user-selected for planned entries';
 
 -- Executed: one employee per tracker
-CREATE UNIQUE INDEX uq_ops_task_schedule_executed ON ops_task_schedule (ops_task_tracker_id, hr_employee_id) WHERE ops_task_tracker_id IS NOT NULL;
+CREATE UNIQUE INDEX uq_ops_task_schedule_executed ON ops_task_schedule (ops_task_tracker_id, hr_employee_name) WHERE ops_task_tracker_id IS NOT NULL;
 -- Planned: one employee per task per start_time
-CREATE UNIQUE INDEX uq_ops_task_schedule_planned ON ops_task_schedule (ops_task_name, hr_employee_id, start_time) WHERE ops_task_tracker_id IS NULL;
+CREATE UNIQUE INDEX uq_ops_task_schedule_planned ON ops_task_schedule (ops_task_name, hr_employee_name, start_time) WHERE ops_task_tracker_id IS NULL;
 
 CREATE INDEX idx_ops_task_schedule_task     ON ops_task_schedule (ops_task_name);
 CREATE INDEX idx_ops_task_schedule_tracker  ON ops_task_schedule (ops_task_tracker_id);
-CREATE INDEX idx_ops_task_schedule_employee ON ops_task_schedule (hr_employee_id);
+CREATE INDEX idx_ops_task_schedule_employee ON ops_task_schedule (hr_employee_name);
 CREATE INDEX idx_ops_task_schedule_org_id   ON ops_task_schedule (org_id);
 

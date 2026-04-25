@@ -592,9 +592,9 @@ def migrate_test_hold(supabase, wb, sampled_by_lookup):
         # Delivered to lab
         delivered_to_lab_on = parse_date(str(r.get("DeliveredToLabOn", "")).strip())
 
-        # Costco submissions get sales_customer_group_id
+        # Costco submissions get sales_customer_group_name
         customer_raw = str(r.get("Customer", "")).strip().lower()
-        sales_customer_group_id = costco_group_id if "costco" in customer_raw else None
+        sales_customer_group_name = costco_group_id if "costco" in customer_raw else None
 
         hold_row = {
             "org_id": ORG_ID,
@@ -603,7 +603,7 @@ def migrate_test_hold(supabase, wb, sampled_by_lookup):
             "fsafe_lab_name": fsafe_lab_name,
             "lab_test_id": lab_test_id,
             "delivered_to_lab_on": delivered_to_lab_on,
-            "sales_customer_group_id": sales_customer_group_id,
+            "sales_customer_group_name": sales_customer_group_name,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
         }

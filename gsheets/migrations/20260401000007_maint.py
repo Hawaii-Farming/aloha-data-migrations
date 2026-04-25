@@ -638,7 +638,7 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
 
         # Fixer
         fixer_raw = str(r.get("Fixer", "")).strip()
-        fixer_id = resolve_fixer(fixer_raw)
+        fixer_name = resolve_fixer(fixer_raw)
 
         # Fixer comments
         fixer_desc = str(r.get("FixerComments", "")).strip() or None
@@ -668,7 +668,7 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
             "recurring_frequency": recurring,
             "due_date": due_date,
             "completed_at": completed_at,
-            "fixer_id": fixer_id,
+            "fixer_name": fixer_name,
             "fixer_description": fixer_desc,
             "requested_at": requested_at,
             "requested_by": requested_by,
@@ -689,7 +689,7 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
                 qty = safe_numeric(r.get("QuantityUsed", ""))
                 invnt_item_rows.append((req_index, {
                     "org_id": ORG_ID,
-                    "invnt_item_id": item["id"],
+                    "invnt_item_name": item["id"],
                     "uom": item.get("burn_uom"),
                     "quantity_used": qty if qty else None,
                     "created_by": req_email or AUDIT_USER,
@@ -934,7 +934,7 @@ def migrate_house_inspections(supabase, client):
         supabase.table("ops_task_template").insert({
             "org_id": ORG_ID,
             "ops_task_name": task_id,
-            "ops_template_id": tmpl_id,
+            "ops_template_name": tmpl_id,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
         }).execute()
@@ -944,7 +944,7 @@ def migrate_house_inspections(supabase, client):
         for i, (q_text, resp_type, min_val, max_val) in enumerate(tmpl["questions"]):
             q_row = {
                 "org_id": ORG_ID,
-                "ops_template_id": tmpl_id,
+                "ops_template_name": tmpl_id,
                 "question_text": q_text,
                 "response_type": resp_type,
                 "is_required": True,
@@ -1039,7 +1039,7 @@ def migrate_house_inspections(supabase, client):
 
             result_row = {
                 "org_id": ORG_ID,
-                "ops_template_id": tmpl_id,
+                "ops_template_name": tmpl_id,
                 "ops_template_question_id": q_id,
                 "created_by": inspector_email or AUDIT_USER,
                 "updated_by": inspector_email or AUDIT_USER,

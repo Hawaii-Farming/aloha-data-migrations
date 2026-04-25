@@ -1,7 +1,6 @@
 CREATE TABLE IF NOT EXISTS sales_fob (
     org_id     TEXT NOT NULL REFERENCES org(id),
-    id         TEXT PRIMARY KEY,
-    name       TEXT NOT NULL,
+    name       TEXT PRIMARY KEY,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by TEXT,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),

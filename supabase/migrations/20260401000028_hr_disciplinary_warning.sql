@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS hr_disciplinary_warning (
     org_id                          TEXT NOT NULL REFERENCES org(id),
     id                              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    hr_employee_id                     TEXT NOT NULL,
+    hr_employee_name                     TEXT NOT NULL,
 
     -- Warning details
     warning_date                    DATE,
@@ -33,19 +33,19 @@ CREATE TABLE IF NOT EXISTS hr_disciplinary_warning (
 
     -- Named FKs so PostgREST can disambiguate when embedding hr_employee
     CONSTRAINT fk_hr_disciplinary_warning_employee
-      FOREIGN KEY (hr_employee_id) REFERENCES hr_employee(id),
+      FOREIGN KEY (hr_employee_name) REFERENCES hr_employee(name),
     CONSTRAINT fk_hr_disciplinary_warning_reported_by
-      FOREIGN KEY (reported_by) REFERENCES hr_employee(id),
+      FOREIGN KEY (reported_by) REFERENCES hr_employee(name),
     CONSTRAINT fk_hr_disciplinary_warning_reviewed_by
-      FOREIGN KEY (reviewed_by) REFERENCES hr_employee(id)
+      FOREIGN KEY (reviewed_by) REFERENCES hr_employee(name)
 );
 
 COMMENT ON TABLE hr_disciplinary_warning IS 'Employee disciplinary warning records. Tracks the offense, action plan, and employee acknowledgment alongside a pending to reviewed workflow.';
 
 CREATE INDEX idx_hr_disciplinary_warning_org_id ON hr_disciplinary_warning (org_id);
-CREATE INDEX idx_hr_disciplinary_warning_employee ON hr_disciplinary_warning (hr_employee_id);
+CREATE INDEX idx_hr_disciplinary_warning_employee ON hr_disciplinary_warning (hr_employee_name);
 CREATE INDEX idx_hr_disciplinary_warning_status ON hr_disciplinary_warning (org_id, status);
-CREATE INDEX idx_hr_disciplinary_warning_date ON hr_disciplinary_warning (hr_employee_id, warning_date);
+CREATE INDEX idx_hr_disciplinary_warning_date ON hr_disciplinary_warning (hr_employee_name, warning_date);
 
 COMMENT ON COLUMN hr_disciplinary_warning.warning_type IS 'verbal_warning, written_warning, final_warning';
 COMMENT ON COLUMN hr_disciplinary_warning.status IS 'pending, reviewed';

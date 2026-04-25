@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS ops_task_tracker (
     number_of_people INTEGER,
     notes           TEXT,
     verified_at     TIMESTAMPTZ,
-    verified_by     TEXT REFERENCES hr_employee(id),
+    verified_by     TEXT REFERENCES hr_employee(name),
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by      TEXT,
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),

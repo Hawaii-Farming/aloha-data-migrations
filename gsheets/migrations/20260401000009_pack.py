@@ -891,7 +891,7 @@ def parse_time(time_str):
 def migrate_pack_dryer_result(supabase, gc):
     """Migrate pack_L_moisture_checks → pack_dryer_result for lettuce farm.
 
-    Parses site_id from notes (pond references) and maps seed_name to invnt_item_id.
+    Parses site_id from notes (pond references) and maps seed_name to invnt_item_name.
     """
     wb = gc.open_by_key(PACK_SHEET_ID)
     data = wb.worksheet("pack_L_moisture_checks").get_all_records()
@@ -920,10 +920,10 @@ def migrate_pack_dryer_result(supabase, gc):
         site_id = parse_site_from_notes(notes) or "gh"
 
         seed_name = str(r.get("seed_name", "")).strip()
-        invnt_item_id = SEED_NAME_MAP.get(seed_name.lower()) if seed_name else None
+        invnt_item_name = SEED_NAME_MAP.get(seed_name.lower()) if seed_name else None
 
         # If seed_name has no invnt_item match, prepend it to notes
-        if seed_name and not invnt_item_id:
+        if seed_name and not invnt_item_name:
             notes = f"[{seed_name}] {notes}" if notes else f"[{seed_name}]"
 
         # Parse moisture percentages (strip % sign)
@@ -936,7 +936,7 @@ def migrate_pack_dryer_result(supabase, gc):
             "org_id": ORG_ID,
             "farm_name": "Lettuce",
             "site_id": site_id,
-            "invnt_item_id": invnt_item_id,
+            "invnt_item_name": invnt_item_name,
             "check_at": check_at,
             "temperature_uom": "fahrenheit",
             "dryer_temperature": safe_numeric(r.get("dryer_temperature"), default=None),

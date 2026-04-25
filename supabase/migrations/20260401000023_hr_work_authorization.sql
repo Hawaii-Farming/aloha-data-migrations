@@ -3,7 +3,7 @@
 -- TEXT PK is the display name verbatim.
 CREATE TABLE IF NOT EXISTS hr_work_authorization (
     org_id      TEXT        NOT NULL REFERENCES org(id),
-    id          TEXT        PRIMARY KEY,
+    name          TEXT        PRIMARY KEY,
     description TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by  TEXT,

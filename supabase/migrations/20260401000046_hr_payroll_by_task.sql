@@ -25,12 +25,12 @@ WITH (security_invoker = true) AS
 WITH payroll_agg AS (
     SELECT
         p.org_id,
-        p.hr_employee_id,
+        p.hr_employee_name,
         p.check_date,
         p.pay_period_start,
         p.pay_period_end,
-        p.hr_department_id,
-        p.hr_work_authorization_id,
+        p.hr_department_name,
+        p.hr_work_authorization_name,
         p.wc,
         SUM(p.total_hours)                        AS total_hours,
         SUM(p.regular_hours)                      AS regular_hours,
@@ -50,9 +50,9 @@ WITH payroll_agg AS (
 ),
 sched_by_acct AS (
     SELECT
-        pa.hr_employee_id,
+        pa.hr_employee_name,
         pa.check_date,
-        COALESCE(t.qb_account, pa.hr_department_id) AS acct,
+        COALESCE(t.qb_account, pa.hr_department_name) AS acct,
         -- Use lunch-adjusted total_hours captured from the sheet's daily
         -- Hours column; fall back to stop-start when unavailable.
         SUM(COALESCE(
@@ -62,14 +62,14 @@ sched_by_acct AS (
     FROM payroll_agg pa
     JOIN ops_task_schedule s
       ON s.org_id = pa.org_id
-     AND s.hr_employee_id = pa.hr_employee_id
+     AND s.hr_employee_name = pa.hr_employee_name
      AND s.start_time::date BETWEEN pa.pay_period_start AND pa.pay_period_end
      AND NOT s.is_deleted
     LEFT JOIN ops_task t ON t.name = s.ops_task_name
     GROUP BY 1, 2, 3
 ),
 sched_totals AS (
-    SELECT hr_employee_id, check_date, SUM(scheduled_hours) AS sched_total
+    SELECT hr_employee_name, check_date, SUM(scheduled_hours) AS sched_total
     FROM sched_by_acct
     GROUP BY 1, 2
 ),
@@ -82,23 +82,23 @@ with_schedule AS (
         st.sched_total
     FROM payroll_agg pa
     JOIN sched_by_acct sa
-      ON sa.hr_employee_id = pa.hr_employee_id
+      ON sa.hr_employee_name = pa.hr_employee_name
      AND sa.check_date = pa.check_date
     JOIN sched_totals st
-      ON st.hr_employee_id = pa.hr_employee_id
+      ON st.hr_employee_name = pa.hr_employee_name
      AND st.check_date = pa.check_date
 ),
 -- Rows with no schedule: single synthetic row bucketed to department
 without_schedule AS (
     SELECT
         pa.*,
-        pa.hr_department_id AS acct,
+        pa.hr_department_name AS acct,
         0::numeric          AS scheduled_hours,
         NULL::numeric       AS sched_total
     FROM payroll_agg pa
     WHERE NOT EXISTS (
         SELECT 1 FROM sched_by_acct sa
-        WHERE sa.hr_employee_id = pa.hr_employee_id
+        WHERE sa.hr_employee_name = pa.hr_employee_name
           AND sa.check_date = pa.check_date
     )
 ),
@@ -109,11 +109,11 @@ allocated AS (
 )
 SELECT
     a.org_id,
-    a.hr_employee_id,
+    a.hr_employee_name,
     a.check_date,
     e.is_manager,
-    e.compensation_manager_id,
-    a.hr_work_authorization_id                          AS status,
+    e.compensation_manager_name,
+    a.hr_work_authorization_name                          AS status,
     a.wc                                                AS workers_compensation_code,
     a.acct                                              AS task,
     ROUND(a.scheduled_hours::numeric, 2)                AS scheduled_hours,
@@ -159,7 +159,7 @@ SELECT
             ELSE 0
         END::numeric, 2)                                AS discretionary_overtime_pay
 FROM allocated a
-JOIN hr_employee e ON e.id = a.hr_employee_id;
+JOIN hr_employee e ON e.name = a.hr_employee_name;
 
 GRANT SELECT ON hr_payroll_by_task TO authenticated;
 

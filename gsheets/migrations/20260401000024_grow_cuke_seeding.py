@@ -205,7 +205,7 @@ def normalize_gh(raw):
 
 def ensure_trial_type(supabase):
     """Seed a single legacy_trial row in grow_trial_type so trial seeds can
-    be flagged via grow_trial_type_id. Farm-scoped to cuke."""
+    be flagged via grow_trial_type_name. Farm-scoped to cuke."""
     print("\n--- grow_trial_type ---")
     row = audit({
         "id": TRIAL_TYPE_ID,
@@ -359,7 +359,7 @@ def build_main_batch(sheet_row, letter, item_lookup, status, site_id, reported_b
         "farm_name": FARM_ID,
         "site_id": site_id,
         "batch_code": f"{cycle}{letter}P",
-        "invnt_item_id": item_id,
+        "invnt_item_name": item_id,
         "seeding_uom": "bag",
         "number_of_units": number_of_units,
         "seeds_per_unit": plants_per_bag,
@@ -428,8 +428,8 @@ def build_trial_batches(sheet_row, item_lookup, status, site_id, reported_by):
             "farm_name": FARM_ID,
             "site_id": site_id,
             "batch_code": code,
-            "invnt_item_id": item_id,
-            "grow_trial_type_id": TRIAL_TYPE_ID,
+            "invnt_item_name": item_id,
+            "grow_trial_type_name": TRIAL_TYPE_ID,
             "seeding_uom": "bag",
             "number_of_units": number_of_units,
             "seeds_per_unit": seeds_per_unit,

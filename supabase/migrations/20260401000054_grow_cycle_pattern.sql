@@ -1,8 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_cycle_pattern (
     org_id              TEXT NOT NULL REFERENCES org(id),
-    id                  TEXT PRIMARY KEY,
     farm_name             TEXT NOT NULL REFERENCES org_farm(name),
-    name                TEXT NOT NULL,
+    name                TEXT PRIMARY KEY,
     description         TEXT,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by          TEXT,

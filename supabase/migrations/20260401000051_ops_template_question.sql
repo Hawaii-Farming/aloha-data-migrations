@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS ops_template_question (
     org_id              TEXT        NOT NULL REFERENCES org(id),
     id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     farm_name             TEXT        REFERENCES org_farm(name),
-    ops_template_id     TEXT        NOT NULL REFERENCES ops_template(id),
+    ops_template_name     TEXT        NOT NULL REFERENCES ops_template(name),
 
     question_text       TEXT        NOT NULL,
     response_type       TEXT        NOT NULL CHECK (response_type IN ('boolean', 'numeric', 'enum')),
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS ops_template_question (
 COMMENT ON TABLE ops_template_question IS 'Questions within a checklist template. Ordered by display_order within each template.';
 
 CREATE INDEX idx_ops_template_question_org_id   ON ops_template_question (org_id);
-CREATE INDEX idx_ops_template_question_template ON ops_template_question (ops_template_id, display_order);
+CREATE INDEX idx_ops_template_question_template ON ops_template_question (ops_template_name, display_order);
 
 COMMENT ON COLUMN ops_template_question.response_type IS 'boolean, numeric, enum';
 COMMENT ON COLUMN ops_template_question.boolean_pass_value IS 'The boolean value that constitutes a pass';

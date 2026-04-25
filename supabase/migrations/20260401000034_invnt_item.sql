@@ -1,10 +1,9 @@
 CREATE TABLE IF NOT EXISTS invnt_item (
     org_id                   TEXT NOT NULL REFERENCES org(id),
-    id                       TEXT PRIMARY KEY,
     farm_name                  TEXT REFERENCES org_farm(name),
     invnt_category_id        TEXT REFERENCES invnt_category(id),
     invnt_subcategory_id     TEXT REFERENCES invnt_category(id),
-    name                     TEXT NOT NULL,
+    name                     TEXT PRIMARY KEY,
     qb_account            TEXT,
     description              TEXT,
 
@@ -39,7 +38,7 @@ CREATE TABLE IF NOT EXISTS invnt_item (
     equipment_name   TEXT REFERENCES org_equipment(name),
 
     -- Item details
-    invnt_vendor_id          TEXT REFERENCES invnt_vendor(id),
+    invnt_vendor_name          TEXT REFERENCES invnt_vendor(name),
     manufacturer             TEXT,
     grow_variety_id          TEXT REFERENCES grow_variety(code),
     seed_is_pelleted         BOOLEAN,
@@ -63,7 +62,7 @@ CREATE TABLE IF NOT EXISTS invnt_item (
 COMMENT ON TABLE invnt_item IS 'The main inventory record. Items belong to an organization and optionally to a specific farm. Classification is handled by the category/subcategory structure. All item details are proper columns grouped by logical sections. Seed-specific fields are prefixed seed_; maintenance part fields are prefixed maint_.';
 
 CREATE INDEX idx_invnt_item_org_id ON invnt_item (org_id);
-CREATE INDEX idx_invnt_item_vendor      ON invnt_item (invnt_vendor_id);
+CREATE INDEX idx_invnt_item_vendor      ON invnt_item (invnt_vendor_name);
 CREATE INDEX idx_invnt_item_category    ON invnt_item (invnt_category_id);
 CREATE INDEX idx_invnt_item_subcategory ON invnt_item (invnt_subcategory_id);
 CREATE INDEX idx_invnt_item_site ON invnt_item (site_id);

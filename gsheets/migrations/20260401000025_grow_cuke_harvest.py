@@ -15,7 +15,7 @@ Seed batch linkage (after 2026-04-17 cuke split):
   where YY/MM come from seeding_date, GH from site_id (uppercased), and
   VARIETY from the linked invnt_item.grow_variety_id (uppercased). Trial
   vs production is NOT baked into the code — it comes from
-  grow_trial_type_id (non-null = trial). The lookup key is therefore
+  grow_trial_type_name (non-null = trial). The lookup key is therefore
   (code, is_trial) so we don't confuse a trial cycle with a production
   cycle at the same GH/month/variety.
 
@@ -244,7 +244,7 @@ def ensure_containers(supabase):
 
 def derive_cycle_code(seeding_date, site_id, variety_id):
     """Legacy cycle code, derived: {YY}{MM}{GH}{VARIETY}. No P/T suffix —
-    trial/production is tracked separately via grow_trial_type_id."""
+    trial/production is tracked separately via grow_trial_type_name."""
     yy = seeding_date.year % 100
     mm = seeding_date.month
     gh = str(site_id or "").upper()
@@ -263,10 +263,10 @@ def build_batch_lookup(supabase):
               sb.id,
               sb.seeding_date,
               sb.site_id,
-              sb.grow_trial_type_id,
+              sb.grow_trial_type_name,
               i.grow_variety_id AS variety_id
             FROM grow_cuke_seed_batch sb
-            LEFT JOIN invnt_item i ON i.id = sb.invnt_item_id
+            LEFT JOIN invnt_item i ON i.id = sb.invnt_item_name
             WHERE sb.is_deleted = false
         """)
     lookup = {}
@@ -274,7 +274,7 @@ def build_batch_lookup(supabase):
         if not b["seeding_date"] or not b["variety_id"]:
             continue
         code = derive_cycle_code(b["seeding_date"], b["site_id"], b["variety_id"])
-        key = (code, bool(b["grow_trial_type_id"]))
+        key = (code, bool(b["grow_trial_type_name"]))
         lookup.setdefault(key, []).append(b["id"])
     return lookup
 

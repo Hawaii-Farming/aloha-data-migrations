@@ -189,8 +189,8 @@ def migrate_sales_customer(supabase, gc):
         customer_rows.append(audit({
             "id": cust_id,
             "org_id": ORG_ID,
-            "sales_customer_group_id": group_id,
-            "sales_fob_id": fob_id,
+            "sales_customer_group_name": group_id,
+            "sales_fob_name": fob_id,
             "qb_account": qb_account,
             "name": proper_case(name),
             "email": email,
@@ -236,9 +236,9 @@ def migrate_sales_product_price(supabase, gc):
     """Migrate sales_product_prices tab → sales_product_price.
 
     SpecialPricing resolution:
-      - "Default" → sales_customer_group_id = null, sales_customer_id = null
-      - Check sales_customer_group first → sales_customer_group_id
-      - Fall back to sales_customer → sales_customer_id
+      - "Default" → sales_customer_group_name = null, sales_customer_name = null
+      - Check sales_customer_group first → sales_customer_group_name
+      - Fall back to sales_customer → sales_customer_name
     """
     wb = gc.open_by_key(SALES_SHEET_ID)
     data = wb.worksheet("sales_product_prices").get_all_records()
@@ -297,14 +297,14 @@ def migrate_sales_product_price(supabase, gc):
             "org_id": ORG_ID,
             "farm_name": farm_name,
             "sales_product_id": sales_product_id,
-            "sales_fob_id": fob_id,
+            "sales_fob_name": fob_id,
             "price_per_case": price,
             "effective_from": "2024-01-01",
         }
         if group_id:
-            row["sales_customer_group_id"] = group_id
+            row["sales_customer_group_name"] = group_id
         if cust_id:
-            row["sales_customer_id"] = cust_id
+            row["sales_customer_name"] = cust_id
 
         rows.append(audit(row))
 

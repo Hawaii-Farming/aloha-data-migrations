@@ -175,7 +175,7 @@ def ensure_missing_employees(supabase, data, emp_by_pid, emp_by_name):
             "last_name": last,
             "is_primary_org": True,
             "sys_access_level_name": "Employee",
-            "hr_department_id": info["department"],
+            "hr_department_name": info["department"],
             "payroll_id": info["payroll_id"],
             "wc": info["wc"],
             "payroll_processor": info["source"],
@@ -214,8 +214,8 @@ def migrate_payroll(supabase, gc):
 
     # Build employee lookups
     emps = supabase.table("hr_employee").select(
-        "id, first_name, last_name, payroll_id, hr_department_id, "
-        "hr_work_authorization_id, wc, pay_structure, overtime_threshold"
+        "id, first_name, last_name, payroll_id, hr_department_name, "
+        "hr_work_authorization_name, wc, pay_structure, overtime_threshold"
     ).execute()
 
     emp_by_pid = {}
@@ -232,8 +232,8 @@ def migrate_payroll(supabase, gc):
 
     # Refresh lookups after auto-create
     emps = supabase.table("hr_employee").select(
-        "id, first_name, last_name, payroll_id, hr_department_id, "
-        "hr_work_authorization_id, wc, pay_structure, overtime_threshold"
+        "id, first_name, last_name, payroll_id, hr_department_name, "
+        "hr_work_authorization_name, wc, pay_structure, overtime_threshold"
     ).execute()
     emp_by_pid = {}
     emp_by_name = {}
@@ -335,10 +335,10 @@ def migrate_payroll(supabase, gc):
 
         # Snapshot fields from employee record
         dept = str(r.get("department", "")).strip().lower()
-        dept_id = DEPT_MAP.get(dept) or emp.get("hr_department_id")
+        dept_id = DEPT_MAP.get(dept) or emp.get("hr_department_name")
 
         status = str(r.get("status", "")).strip()
-        wa_id = wa_by_name.get(status.lower()) or emp.get("hr_work_authorization_id")
+        wa_id = wa_by_name.get(status.lower()) or emp.get("hr_work_authorization_name")
 
         wc = str(r.get("workers_compensation_code", "")).strip() or emp.get("wc")
         pay_structure = str(r.get("pay_structure", "")).strip().lower() or emp.get("pay_structure")
@@ -351,7 +351,7 @@ def migrate_payroll(supabase, gc):
 
         row = {
             "org_id": ORG_ID,
-            "hr_employee_id": emp["id"],
+            "hr_employee_name": emp["id"],
             "payroll_id": eid or emp.get("payroll_id") or emp["id"],
             "pay_period_start": pay_period_start,
             "pay_period_end": pay_period_end,
@@ -360,8 +360,8 @@ def migrate_payroll(supabase, gc):
             "payroll_processor": source,
             "is_standard": str(r.get("is_standard", "")).strip().lower() == "true",
             "employee_name": proper_case(name),
-            "hr_department_id": dept_id,
-            "hr_work_authorization_id": wa_id,
+            "hr_department_name": dept_id,
+            "hr_work_authorization_name": wa_id,
             "wc": wc if wc else None,
             "pay_structure": pay_structure,
             "hourly_rate": hourly_rate,

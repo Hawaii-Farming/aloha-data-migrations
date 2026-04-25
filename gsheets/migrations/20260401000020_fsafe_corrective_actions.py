@@ -220,7 +220,7 @@ def build_lookup_for_template(supabase, gc, template_id, source_tab, farm_name):
     result_rows = fetch_all(
         supabase, "ops_template_result",
         "ops_task_tracker_id",
-        filters={"ops_template_id": template_id},
+        filters={"ops_template_name": template_id},
     )
     tracker_ids = sorted({r["ops_task_tracker_id"] for r in result_rows})
     if not tracker_ids:
@@ -474,7 +474,7 @@ def migrate(supabase, gc, email_map):
 
         # Resolve link target by kind
         farm_name = src["farm_name"]
-        ops_template_id = src["template_id"]
+        ops_template_name = src["template_id"]
         ops_template_result_id = None
         fsafe_result_id = None
         fsafe_pest_result_id = None
@@ -508,7 +508,7 @@ def migrate(supabase, gc, email_map):
         rows.append({
             "org_id": ORG_ID,
             "farm_name": farm_name,
-            "ops_template_id": ops_template_id,
+            "ops_template_name": ops_template_name,
             "ops_template_result_id": ops_template_result_id,
             "fsafe_result_id": fsafe_result_id,
             "fsafe_pest_result_id": fsafe_pest_result_id,

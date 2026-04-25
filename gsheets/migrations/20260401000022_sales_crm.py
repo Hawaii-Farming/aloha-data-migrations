@@ -173,7 +173,7 @@ def migrate_stores(supabase, gc):
         rows.append(audit({
             "id": store_id,
             "org_id": ORG_ID,
-            "sales_customer_id": cust_id,
+            "sales_customer_name": cust_id,
             "chain": str(r.get("Chain", "")).strip() or None,
             "name": store_name,
             "location": str(r.get("Location", "")).strip() or None,

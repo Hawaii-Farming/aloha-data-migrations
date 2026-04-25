@@ -355,13 +355,13 @@ def migrate_schedule(supabase, gc, task_map: dict):
 
         reported_by = str(r.get("UpdatedBy", "")).strip().lower() or AUDIT_USER
 
-        # Deduplicate by (ops_task_name, hr_employee_id, start_time) — last row wins
+        # Deduplicate by (ops_task_name, hr_employee_name, start_time) — last row wins
         dedup_key = (ops_task_name, emp_id, start_time)
         row = {
             "org_id": ORG_ID,
             "farm_name": farm_name,
             "ops_task_name": ops_task_name,
-            "hr_employee_id": emp_id,
+            "hr_employee_name": emp_id,
             "start_time": start_time,
             "stop_time": stop_time,
             "total_hours": total_hours,

@@ -17,8 +17,8 @@ Setup (upserted):
 
 Per-row inserts:
   - grow_lettuce_seed_batch: one per sheet row (batch_code = seedingcycle verbatim)
-    Uses grow_lettuce_seed_mix_id when seedname matches a mix (e.g. "Mixed Version 2.0")
-    Otherwise uses invnt_item_id. CHECK constraint enforces XOR.
+    Uses grow_lettuce_seed_mix_name when seedname matches a mix (e.g. "Mixed Version 2.0")
+    Otherwise uses invnt_item_name. CHECK constraint enforces XOR.
   - grow_harvest_weight: one per harvested row (harvestdate AND
     greenhousenetweight both populated). number_of_containers=1
     (representative weigh-in of one board); gross_weight=net_weight
@@ -228,7 +228,7 @@ def ensure_cycle_patterns(supabase, records):
 def ensure_items(supabase, records, mix_names_lower):
     """Build seedname -> invnt_item.id lookup. Auto-create missing.
 
-    Skips seednames that match a mix (those get grow_lettuce_seed_mix_id instead).
+    Skips seednames that match a mix (those get grow_lettuce_seed_mix_name instead).
     Returns: {seedname_lower: invnt_item.id}
     """
     # Load existing lettuce seed items (paginated — 186 rows today, near cap)
@@ -333,10 +333,10 @@ def ensure_lots(supabase, records, item_by_name_lower, mix_names_lower):
 
     # Check which of these already exist in invnt_lot
     existing = paginate_select(
-        supabase, "invnt_lot", "id,lot_number,invnt_item_id",
+        supabase, "invnt_lot", "id,lot_number,invnt_item_name",
         eq_filters={"farm_name": FARM_ID},
     )
-    existing_by_key = {(e["invnt_item_id"], e["lot_number"]): e["id"] for e in existing}
+    existing_by_key = {(e["invnt_item_name"], e["lot_number"]): e["id"] for e in existing}
 
     rows = []
     lot_lookup = {}  # (seedname_lower, seedlot) -> lot_id
@@ -351,7 +351,7 @@ def ensure_lots(supabase, records, item_by_name_lower, mix_names_lower):
             "id": lot_id,
             "org_id": ORG_ID,
             "farm_name": FARM_ID,
-            "invnt_item_id": spec["item_id"],
+            "invnt_item_name": spec["item_id"],
             "lot_number": sl,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
@@ -437,12 +437,12 @@ def build_rows(
     seedname_lower = seedname.lower()
     is_mix = seedname_lower in mix_lookup
     if is_mix:
-        invnt_item_id = None
-        grow_lettuce_seed_mix_id = mix_lookup[seedname_lower]
+        invnt_item_name = None
+        grow_lettuce_seed_mix_name = mix_lookup[seedname_lower]
     else:
-        invnt_item_id = item_by_name_lower.get(seedname_lower)
-        grow_lettuce_seed_mix_id = None
-        if not invnt_item_id:
+        invnt_item_name = item_by_name_lower.get(seedname_lower)
+        grow_lettuce_seed_mix_name = None
+        if not invnt_item_name:
             return {"_skip": "unknown_seedname", "_detail": seedname}
 
     seedlot = str(sheet_row.get("seedlot", "")).strip()
@@ -450,10 +450,10 @@ def build_rows(
 
     is_trial = parse_bool(sheet_row.get("istrial"))
     trial_type_raw = str(sheet_row.get("trialtype", "")).strip()
-    grow_trial_type_id = trial_type_lookup.get(trial_type_raw) if (is_trial and trial_type_raw) else None
+    grow_trial_type_name = trial_type_lookup.get(trial_type_raw) if (is_trial and trial_type_raw) else None
 
     pattern_raw = str(sheet_row.get("harvestdayspattern", "")).strip()
-    grow_cycle_pattern_id = cycle_pattern_lookup.get(pattern_raw) if pattern_raw else None
+    grow_cycle_pattern_name = cycle_pattern_lookup.get(pattern_raw) if pattern_raw else None
 
     transplant_date = parse_date(sheet_row.get("ponddate")) or (seeding_date + timedelta(days=2))
     est_harvest_date = parse_date(sheet_row.get("expectedharvestdate")) or (seeding_date + timedelta(days=21))
@@ -480,10 +480,10 @@ def build_rows(
         "site_id": pond_raw,
         "ops_task_tracker_id": None,
         "batch_code": cycle,
-        "grow_cycle_pattern_id": grow_cycle_pattern_id,
-        "grow_trial_type_id": grow_trial_type_id,
-        "grow_lettuce_seed_mix_id": grow_lettuce_seed_mix_id,
-        "invnt_item_id": invnt_item_id,
+        "grow_cycle_pattern_name": grow_cycle_pattern_name,
+        "grow_trial_type_name": grow_trial_type_name,
+        "grow_lettuce_seed_mix_name": grow_lettuce_seed_mix_name,
+        "invnt_item_name": invnt_item_name,
         "invnt_lot_id": invnt_lot_id,
         "seeding_uom": "board",
         "number_of_units": parse_int(sheet_row.get("boardsperpond"), default=-1),

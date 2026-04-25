@@ -21,7 +21,7 @@ SELECT
     h.farm_name
 FROM grow_harvest_weight h
 LEFT JOIN grow_lettuce_seed_batch b ON b.id = h.grow_lettuce_seed_batch_id
-LEFT JOIN invnt_item i ON i.id = b.invnt_item_id
+LEFT JOIN invnt_item i ON i.name = b.invnt_item_name
 WHERE h.farm_name = 'lettuce' AND h.is_deleted = false;
 
 COMMENT ON VIEW grow_lettuce_harvest IS 'Lettuce harvest weigh-ins with pond name uppercased (P1/P2/..) and seed cultivar name joined from invnt_item. boards_per_pond = number_of_containers, pounds_per_board = net_weight / number_of_containers.';

@@ -360,7 +360,7 @@ def upsert_templates(supabase):
 def reseed_questions(supabase):
     print("\nClearing existing questions for these templates...")
     for t in TEMPLATES:
-        supabase.table("ops_template_question").delete().eq("ops_template_id", t["id"]).execute()
+        supabase.table("ops_template_question").delete().eq("ops_template_name", t["id"]).execute()
     print("  Cleared")
 
     rows = []
@@ -369,7 +369,7 @@ def reseed_questions(supabase):
             rows.append(audit({
                 "org_id": ORG_ID,
                 "farm_name": FARM_ID,
-                "ops_template_id": t["id"],
+                "ops_template_name": t["id"],
                 "question_text": q_text,
                 "response_type": rtype,
                 "is_required": kw.get("is_required", True),
@@ -386,14 +386,14 @@ def reseed_questions(supabase):
     inserted = insert_rows(supabase, "ops_template_question", rows)
     q_map = {}
     for r in inserted:
-        q_map[(r["ops_template_id"], r["question_text"])] = r["id"]
+        q_map[(r["ops_template_name"], r["question_text"])] = r["id"]
     return q_map
 
 
 def upsert_task_template_links(supabase):
     for t in TEMPLATES:
         supabase.table("ops_task_template").delete().eq(
-            "ops_template_id", t["id"]
+            "ops_template_name", t["id"]
         ).eq("ops_task_name", TASK_ID).execute()
 
     rows = []
@@ -402,7 +402,7 @@ def upsert_task_template_links(supabase):
             "org_id": ORG_ID,
             "farm_name": FARM_ID,
             "ops_task_name": TASK_ID,
-            "ops_template_id": t["id"],
+            "ops_template_name": t["id"],
         }))
     insert_rows(supabase, "ops_task_template", rows)
 
@@ -416,11 +416,11 @@ def clear_existing_data(supabase):
     print("\nClearing existing checklist data for these templates...")
 
     for tid in template_ids:
-        supabase.table("ops_template_result").delete().eq("ops_template_id", tid).execute()
+        supabase.table("ops_template_result").delete().eq("ops_template_name", tid).execute()
     print("  Cleared ops_template_result")
 
     for tid in template_ids:
-        supabase.table("ops_corrective_action_taken").delete().eq("ops_template_id", tid).execute()
+        supabase.table("ops_corrective_action_taken").delete().eq("ops_template_name", tid).execute()
     print("  Cleared ops_corrective_action_taken")
 
     supabase.table("ops_task_tracker").delete().eq("ops_task_name", TASK_ID).eq("farm_name", FARM_ID).eq("site_id", SITE_ID).execute()
@@ -493,7 +493,7 @@ def migrate_template(supabase, gc, template_def, q_map, email_map, stub_cache):
             "org_id": ORG_ID,
             "farm_name": FARM_ID,
             "ops_task_tracker_id": tracker["id"],
-            "ops_template_id": template_id,
+            "ops_template_name": template_id,
             "ops_template_question_id": q_id,
             "site_id": SITE_ID,
             "created_by": tracker["created_by"],
