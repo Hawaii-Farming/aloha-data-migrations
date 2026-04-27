@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS ops_corrective_action_choice (
-    name        TEXT PRIMARY KEY,
+    id        TEXT PRIMARY KEY,
     org_id      TEXT        NOT NULL REFERENCES org(id),
     description TEXT,
 
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS ops_corrective_action_choice (
     updated_by  TEXT,
     is_deleted   BOOLEAN     NOT NULL DEFAULT false,
 
-    CONSTRAINT uq_ops_corrective_action_choice UNIQUE (org_id, name)
+    CONSTRAINT uq_ops_corrective_action_choice UNIQUE (org_id, id)
 );
 
 COMMENT ON TABLE ops_corrective_action_choice IS 'Org-defined reusable corrective action options available for selection when logging a corrective action. Users pick from this dropdown; if the action isn''t listed they provide a custom description instead.';

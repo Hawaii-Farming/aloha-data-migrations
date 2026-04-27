@@ -311,7 +311,7 @@ def create_stub_employee(supabase, email):
         "last_name": last,
         "company_email": email,
         "is_primary_org": True,
-        "sys_access_level_name": "Employee",
+        "sys_access_level_id": "Employee",
         "is_deleted": True,
     })
     try:
@@ -353,7 +353,7 @@ def build_site_matcher(supabase):
     result = (
         supabase.table("org_site")
         .select("id,name,site_id_parent")
-        .eq("farm_name", FARM_ID)
+        .eq("farm_id", FARM_ID)
         .eq("org_site_category_id", "food_safety")
         .execute()
     )
@@ -397,7 +397,7 @@ def auto_create_atp_site(supabase, raw_name, candidates):
     row = audit({
         "id": new_id,
         "org_id": ORG_ID,
-        "farm_name": FARM_ID,
+        "farm_id": FARM_ID,
         "name": display_name,
         "org_site_category_id": "food_safety",
         "site_id_parent": SITE_ID,
@@ -423,9 +423,9 @@ def upsert_templates(supabase):
         rows.append(audit({
             "id": t["id"],
             "org_id": ORG_ID,
-            "farm_name": FARM_ID,
-            "name": t["name"],
-            "org_module_name": "food_safety",
+            "farm_id": FARM_ID,
+            "id": t["name"],
+            "org_module_id": "food_safety",
             "description": t["description"],
             "display_order": next_order,
         }))
@@ -436,7 +436,7 @@ def upsert_templates(supabase):
 def reseed_questions(supabase):
     print("\nClearing existing questions for these templates...")
     for t in TEMPLATES:
-        supabase.table("ops_template_question").delete().eq("ops_template_name", t["id"]).execute()
+        supabase.table("ops_template_question").delete().eq("ops_template_id", t["id"]).execute()
     print("  Cleared")
 
     rows = []
@@ -444,8 +444,8 @@ def reseed_questions(supabase):
         for order, (q_text, rtype, kw) in enumerate(t["questions"], start=1):
             rows.append(audit({
                 "org_id": ORG_ID,
-                "farm_name": FARM_ID,
-                "ops_template_name": t["id"],
+                "farm_id": FARM_ID,
+                "ops_template_id": t["id"],
                 "question_text": q_text,
                 "response_type": rtype,
                 "is_required": kw.get("is_required", True),
@@ -462,23 +462,23 @@ def reseed_questions(supabase):
     inserted = insert_rows(supabase, "ops_template_question", rows)
     q_map = {}
     for r in inserted:
-        q_map[(r["ops_template_name"], r["question_text"])] = r["id"]
+        q_map[(r["ops_template_id"], r["question_text"])] = r["id"]
     return q_map
 
 
 def upsert_task_template_links(supabase):
     for t in TEMPLATES:
         supabase.table("ops_task_template").delete().eq(
-            "ops_template_name", t["id"]
-        ).eq("ops_task_name", TASK_ID).execute()
+            "ops_template_id", t["id"]
+        ).eq("ops_task_id", TASK_ID).execute()
 
     rows = []
     for t in TEMPLATES:
         rows.append(audit({
             "org_id": ORG_ID,
-            "farm_name": FARM_ID,
-            "ops_task_name": TASK_ID,
-            "ops_template_name": t["id"],
+            "farm_id": FARM_ID,
+            "ops_task_id": TASK_ID,
+            "ops_template_id": t["id"],
         }))
     insert_rows(supabase, "ops_task_template", rows)
 
@@ -499,7 +499,7 @@ def load_foreign_material_question_id(supabase):
     result = (
         supabase.table("ops_template_question")
         .select("id")
-        .eq("ops_template_name", FM_TEMPLATE_ID)
+        .eq("ops_template_id", FM_TEMPLATE_ID)
         .eq("question_text", "Type of foreign material")
         .execute()
     )
@@ -529,7 +529,7 @@ def clear_existing_data(supabase):
         result = (
             supabase.table("ops_template_result")
             .select("ops_task_tracker_id")
-            .eq("ops_template_name", tid)
+            .eq("ops_template_id", tid)
             .execute()
         )
         for r in result.data:
@@ -538,8 +538,8 @@ def clear_existing_data(supabase):
     fm_result_rows = (
         supabase.table("ops_template_result")
         .select("id,ops_task_tracker_id")
-        .eq("ops_template_name", FM_TEMPLATE_ID)
-        .eq("farm_name", FARM_ID)
+        .eq("ops_template_id", FM_TEMPLATE_ID)
+        .eq("farm_id", FARM_ID)
         .execute()
         .data
     )
@@ -556,15 +556,15 @@ def clear_existing_data(supabase):
         print(f"  Cleared {len(fm_result_ids)} foreign material photos")
 
     for tid in template_ids:
-        supabase.table("ops_template_result").delete().eq("ops_template_name", tid).execute()
+        supabase.table("ops_template_result").delete().eq("ops_template_id", tid).execute()
     print("  Cleared ops_template_result (PH templates)")
 
     # Foreign material event results scoped to lettuce farm
-    supabase.table("ops_template_result").delete().eq("ops_template_name", FM_TEMPLATE_ID).eq("farm_name", FARM_ID).execute()
+    supabase.table("ops_template_result").delete().eq("ops_template_id", FM_TEMPLATE_ID).eq("farm_id", FARM_ID).execute()
     print("  Cleared ops_template_result (foreign_material_event, lettuce)")
 
     for tid in template_ids:
-        supabase.table("ops_corrective_action_taken").delete().eq("ops_template_name", tid).execute()
+        supabase.table("ops_corrective_action_taken").delete().eq("ops_template_id", tid).execute()
     print("  Cleared ops_corrective_action_taken")
 
     # Delete the captured trackers in chunks
@@ -575,7 +575,7 @@ def clear_existing_data(supabase):
             supabase.table("ops_task_tracker").delete().in_("id", chunk).execute()
         print(f"  Cleared {len(ids)} lettuce PH trackers")
 
-    supabase.table("fsafe_result").delete().eq("fsafe_lab_test_name", ATP_TEST_ID).eq("farm_name", FARM_ID).execute()
+    supabase.table("fsafe_result").delete().eq("fsafe_lab_test_id", ATP_TEST_ID).eq("farm_id", FARM_ID).execute()
     print(f"  Cleared fsafe_result (atp_rlu, lettuce)")
 
 
@@ -611,9 +611,9 @@ def migrate_template(supabase, gc, template_def, q_map, email_map, stub_cache):
         tracker_idx = len(trackers)
         trackers.append({
             "org_id": ORG_ID,
-            "farm_name": FARM_ID,
+            "farm_id": FARM_ID,
             "site_id": SITE_ID,
-            "ops_task_name": TASK_ID,
+            "ops_task_id": TASK_ID,
             "start_time": reported,
             "stop_time": reported,
             "is_completed": True,
@@ -640,9 +640,9 @@ def migrate_template(supabase, gc, template_def, q_map, email_map, stub_cache):
         tracker = inserted_trackers[tracker_idx]
         row = {
             "org_id": ORG_ID,
-            "farm_name": FARM_ID,
+            "farm_id": FARM_ID,
             "ops_task_tracker_id": tracker["id"],
-            "ops_template_name": template_id,
+            "ops_template_id": template_id,
             "ops_template_question_id": q_id,
             "site_id": SITE_ID,
             "created_by": tracker["created_by"],
@@ -713,14 +713,14 @@ def migrate_atp(supabase, gc, email_map, stub_cache):
 
             rows.append({
                 "org_id": ORG_ID,
-                "farm_name": FARM_ID,
+                "farm_id": FARM_ID,
                 "site_id": site_id,
-                "fsafe_lab_name": ATP_LAB_ID,
-                "fsafe_lab_test_name": ATP_TEST_ID,
+                "fsafe_lab_id": ATP_LAB_ID,
+                "fsafe_lab_test_id": ATP_TEST_ID,
                 "result_numeric": value,
                 "result_pass": result_pass,
-                "status": "completed",
-                "initial_retest_vector": "initial",
+                "status": "Completed",
+                "initial_retest_vector": "Initial",
                 "sampled_at": sampled_at,
                 "sampled_by": verified_by_id,
                 "completed_at": sampled_at,
@@ -805,9 +805,9 @@ def migrate_foreign_material(supabase, gc, fm_question_id, email_map, stub_cache
             tracker_idx = len(trackers)
             trackers.append({
                 "org_id": ORG_ID,
-                "farm_name": FARM_ID,
+                "farm_id": FARM_ID,
                 "site_id": SITE_ID,
-                "ops_task_name": TASK_ID,
+                "ops_task_id": TASK_ID,
                 "start_time": sampled_at,
                 "stop_time": sampled_at,
                 "is_completed": True,
@@ -842,9 +842,9 @@ def migrate_foreign_material(supabase, gc, fm_question_id, email_map, stub_cache
         tracker = inserted_trackers[p["tracker_idx"]]
         result_rows.append({
             "org_id": ORG_ID,
-            "farm_name": FARM_ID,
+            "farm_id": FARM_ID,
             "ops_task_tracker_id": tracker["id"],
-            "ops_template_name": FM_TEMPLATE_ID,
+            "ops_template_id": FM_TEMPLATE_ID,
             "ops_template_question_id": fm_question_id,
             "site_id": SITE_ID,
             "response_enum": p["mapped_enum"],
@@ -860,7 +860,7 @@ def migrate_foreign_material(supabase, gc, fm_question_id, email_map, stub_cache
         for url in p["photo_urls"]:
             photo_rows.append({
                 "org_id": ORG_ID,
-                "farm_name": FARM_ID,
+                "farm_id": FARM_ID,
                 "ops_template_result_id": result_row["id"],
                 "photo_url": url,
                 "created_by": p["reported_by"],

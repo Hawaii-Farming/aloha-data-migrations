@@ -1,11 +1,11 @@
 CREATE TABLE IF NOT EXISTS ops_template_question (
     id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id              TEXT        NOT NULL REFERENCES org(id),
-    farm_name             TEXT        REFERENCES org_farm(name),
-    ops_template_name     TEXT        NOT NULL REFERENCES ops_template(name),
+    farm_id             TEXT        REFERENCES org_farm(id),
+    ops_template_id     TEXT        NOT NULL REFERENCES ops_template(id),
 
     question_text       TEXT        NOT NULL,
-    response_type       TEXT        NOT NULL CHECK (response_type IN ('boolean', 'numeric', 'enum')),
+    response_type       TEXT        NOT NULL CHECK (response_type IN ('Boolean', 'Numeric', 'Enum')),
     is_required         BOOLEAN     NOT NULL DEFAULT true,
 
     -- Boolean response settings
@@ -35,11 +35,11 @@ CREATE TABLE IF NOT EXISTS ops_template_question (
 COMMENT ON TABLE ops_template_question IS 'Questions within a checklist template. Ordered by display_order within each template.';
 
 CREATE INDEX idx_ops_template_question_org_id   ON ops_template_question (org_id);
-CREATE INDEX idx_ops_template_question_template ON ops_template_question (ops_template_name, display_order);
+CREATE INDEX idx_ops_template_question_template ON ops_template_question (ops_template_id, display_order);
 
 COMMENT ON COLUMN ops_template_question.response_type IS 'boolean, numeric, enum';
 COMMENT ON COLUMN ops_template_question.boolean_pass_value IS 'The boolean value that constitutes a pass';
 COMMENT ON COLUMN ops_template_question.enum_options IS 'JSON array of available options when response_type is enum';
 COMMENT ON COLUMN ops_template_question.enum_pass_options IS 'JSON array of enum values that constitute a pass';
 COMMENT ON COLUMN ops_template_question.ops_corrective_action_choice_ids IS 'JSON array of suggested corrective action choice IDs when this question fails';
-COMMENT ON COLUMN ops_template_question.farm_name IS 'Inherited from ops_template.farm_name when question is created';
+COMMENT ON COLUMN ops_template_question.farm_id IS 'Inherited from ops_template.farm_id when question is created';

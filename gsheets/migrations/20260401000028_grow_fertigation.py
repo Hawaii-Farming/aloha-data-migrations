@@ -8,18 +8,18 @@ Source: https://docs.google.com/spreadsheets/d/1VtEecYn-W1pbnIU1hRHfxIpkH2DtK7hj
   - grow_fert_sched (~1,329 rows)    -> grow_fertigation_recipe_site + ops_task_tracker + grow_fertigation
 
 Setup (upserted):
-  - 8 org_equipment tanks: {lettuce,cuke}_tank_{a,b,c,d} (type='tank')
+  - 8 org_equipment tanks: {lettuce,cuke}_tank_{a,b,c,d} (type='Tank')
   - invnt_item auto-create for unknown FertilizerName (category=fertilizers)
 
 Recipes (from grow_fert_recipe_mix + any orphan recipe names in sched):
   - grow_fertigation_recipe: one per unique RecipeName (farm determined by sched usage)
   - grow_fertigation_recipe_item: one per recipe_mix row
-      equipment_name = {farm}_tank_{letter} from sheet Tank (NULL for water recipes with blank Tank)
+      equipment_id = {farm}_tank_{letter} from sheet Tank (NULL for water recipes with blank Tank)
 
 Applications (from grow_fert_sched):
   Each row fans out over concatenated sites (P2+P3+P4 -> 3 trackers).
   - grow_fertigation_recipe_site: unique (recipe, site) pairs
-  - ops_task_tracker: one per (row, site), ops_task_name='fertigation'
+  - ops_task_tracker: one per (row, site), ops_task_id='fertigation'
   - grow_fertigation (per tracker):
       - one per tank with gallons > 0 (uom=gallon, equipment={farm}_tank_{letter})
       - one if TopUpWaterHours > 0 (uom=hour, equipment=NULL, recipe=Top Up Water (Hours))
@@ -190,9 +190,9 @@ def ensure_tanks(supabase):
             rows.append({
                 "id": f"{farm}_tank_{letter}",
                 "org_id": ORG_ID,
-                "farm_name": farm,
+                "farm_id": farm,
                 "name": f"{farm.title()} Tank {letter.upper()}",
-                "type": "tank",
+                "type": "Tank",
                 "created_by": AUDIT_USER,
                 "updated_by": AUDIT_USER,
             })
@@ -207,10 +207,10 @@ def ensure_items(supabase, recipe_mix_records):
     """
     # Load ALL existing items (not just fertilizers — fertilizers may have been
     # categorized as chemicals_pesticides or other categories).
-    existing = paginate_select(supabase, "invnt_item", "id,name,farm_name,invnt_category_id")
+    existing = paginate_select(supabase, "invnt_item", "id,name,farm_id,invnt_category_id")
     by_name_lower = {}
     for it in existing:
-        key = it["name"].lower()
+        key = it["id"].lower()
         # Prefer fertilizer items when there's a duplicate name across categories
         if key in by_name_lower:
             if it.get("invnt_category_id") == FERTILIZER_CATEGORY_ID:
@@ -246,7 +246,7 @@ def ensure_items(supabase, recipe_mix_records):
         rows.append({
             "id": final_id,
             "org_id": ORG_ID,
-            "farm_name": "Lettuce",
+            "farm_id": "Lettuce",
             "invnt_category_id": FERTILIZER_CATEGORY_ID,
             "name": name,
             "qb_account": "1. Growing:Fertilizers",
@@ -290,7 +290,7 @@ def ensure_items(supabase, recipe_mix_records):
 def build_recipe_farm_map(sched_records, recipe_mix_names):
     """Determine each recipe's farm from sched sheet usage.
 
-    Returns dict: recipe_name -> farm_name (lowercase 'lettuce' or 'cuke').
+    Returns dict: recipe_name -> farm_id (lowercase 'lettuce' or 'cuke').
     Falls back to 'lettuce' for recipes never in sched.
     """
     from collections import Counter
@@ -351,7 +351,7 @@ def ensure_recipes(supabase, recipe_mix_records, sched_records):
         rows.append({
             "id": final_id,
             "org_id": ORG_ID,
-            "farm_name": recipe_farm[name],
+            "farm_id": recipe_farm[name],
             "name": name,
             "description": NOTES_MARKER,
             "created_by": AUDIT_USER,
@@ -390,16 +390,16 @@ def build_recipe_items(recipe_mix_records, recipe_id_by_name, recipe_farm, item_
 
         tank_letter = str(r.get("Tank", "")).strip()
         farm = recipe_farm[recipe_name]
-        equipment_name = tank_equipment_id(farm, tank_letter)
-        invnt_item_name = item_by_name_lower.get(fert_name.lower())
+        equipment_id = tank_equipment_id(farm, tank_letter)
+        invnt_item_id = item_by_name_lower.get(fert_name.lower())
         notes = str(r.get("Notes", "")).strip() or None
 
         rows.append({
             "org_id": ORG_ID,
-            "farm_name": farm,
-            "grow_fertigation_recipe_name": recipe_id_by_name[recipe_name],
-            "equipment_name": equipment_name,
-            "invnt_item_name": invnt_item_name,
+            "farm_id": farm,
+            "grow_fertigation_recipe_id": recipe_id_by_name[recipe_name],
+            "equipment_id": equipment_id,
+            "invnt_item_id": invnt_item_id,
             "item_name": fert_name,
             "application_uom": uom,
             "application_quantity": qty,
@@ -433,8 +433,8 @@ def build_recipe_sites(sched_records, recipe_id_by_name, known_sites):
                 continue
             seen[key] = {
                 "org_id": ORG_ID,
-                "farm_name": farm,
-                "grow_fertigation_recipe_name": recipe_id,
+                "farm_id": farm,
+                "grow_fertigation_recipe_id": recipe_id,
                 "site_id": site_id,
                 "created_by": AUDIT_USER,
                 "updated_by": AUDIT_USER,
@@ -507,9 +507,9 @@ def build_events(sched_records, recipe_id_by_name, known_sites):
             trackers.append({
                 "id": tracker_id,
                 "org_id": ORG_ID,
-                "farm_name": farm,
+                "farm_id": farm,
                 "site_id": site_id,
-                "ops_task_name": OPS_TASK_ID,
+                "ops_task_id": OPS_TASK_ID,
                 "start_time": effective_start.isoformat(),
                 "stop_time": stop_time.isoformat() if stop_time else None,
                 "is_completed": is_completed,
@@ -522,24 +522,24 @@ def build_events(sched_records, recipe_id_by_name, known_sites):
             for letter, gallons in tank_values.items():
                 fertigations.append({
                     "org_id": ORG_ID,
-                    "farm_name": farm,
+                    "farm_id": farm,
                     "ops_task_tracker_id": tracker_id,
-                    "grow_fertigation_recipe_name": recipe_id,
-                    "equipment_name": tank_equipment_id(farm, letter),
+                    "grow_fertigation_recipe_id": recipe_id,
+                    "equipment_id": tank_equipment_id(farm, letter),
                     "volume_uom": "gallon",
                     "volume_applied": gallons,
                     "created_by": reporter,
                     "updated_by": reporter,
                 })
 
-            # Water add-ons (always equipment_name = NULL, separate recipes)
+            # Water add-ons (always equipment_id = NULL, separate recipes)
             if top_up_hours and top_up_hours > 0 and top_up_recipe_id:
                 fertigations.append({
                     "org_id": ORG_ID,
-                    "farm_name": farm,
+                    "farm_id": farm,
                     "ops_task_tracker_id": tracker_id,
-                    "grow_fertigation_recipe_name": top_up_recipe_id,
-                    "equipment_name": None,
+                    "grow_fertigation_recipe_id": top_up_recipe_id,
+                    "equipment_id": None,
                     "volume_uom": "hour",
                     "volume_applied": top_up_hours,
                     "created_by": reporter,
@@ -548,10 +548,10 @@ def build_events(sched_records, recipe_id_by_name, known_sites):
             if flush_gallons and flush_gallons > 0 and flush_recipe_id:
                 fertigations.append({
                     "org_id": ORG_ID,
-                    "farm_name": farm,
+                    "farm_id": farm,
                     "ops_task_tracker_id": tracker_id,
-                    "grow_fertigation_recipe_name": flush_recipe_id,
-                    "equipment_name": None,
+                    "grow_fertigation_recipe_id": flush_recipe_id,
+                    "equipment_id": None,
                     "volume_uom": "gallon",
                     "volume_applied": flush_gallons,
                     "created_by": reporter,
@@ -576,7 +576,7 @@ def clear_existing():
                 DELETE FROM grow_fertigation
                 WHERE ops_task_tracker_id IN (
                     SELECT id FROM ops_task_tracker
-                    WHERE ops_task_name = %s AND notes LIKE %s
+                    WHERE ops_task_id = %s AND notes LIKE %s
                 )
                 """,
                 (OPS_TASK_ID, f"%{NOTES_MARKER}%"),
@@ -586,7 +586,7 @@ def clear_existing():
             cur.execute(
                 """
                 DELETE FROM ops_task_tracker
-                WHERE ops_task_name = %s AND notes LIKE %s
+                WHERE ops_task_id = %s AND notes LIKE %s
                 """,
                 (OPS_TASK_ID, f"%{NOTES_MARKER}%"),
             )
@@ -595,7 +595,7 @@ def clear_existing():
             cur.execute(
                 """
                 DELETE FROM grow_fertigation_recipe_site
-                WHERE grow_fertigation_recipe_name IN (
+                WHERE grow_fertigation_recipe_id IN (
                     SELECT id FROM grow_fertigation_recipe
                     WHERE description = %s
                 )
@@ -607,7 +607,7 @@ def clear_existing():
             cur.execute(
                 """
                 DELETE FROM grow_fertigation_recipe_item
-                WHERE grow_fertigation_recipe_name IN (
+                WHERE grow_fertigation_recipe_id IN (
                     SELECT id FROM grow_fertigation_recipe
                     WHERE description = %s
                 )
@@ -642,17 +642,17 @@ def main():
 
     # Load known pond sites (both farms)
     sites = paginate_select(
-        supabase, "org_site", "id,farm_name",
+        supabase, "org_site", "id,farm_id",
         eq_filters={"org_site_subcategory_id": "pond"},
     )
-    known_sites = {s["id"]: s["farm_name"] for s in sites}
+    known_sites = {s["id"]: s["farm_id"] for s in sites}
     # Also include cuke greenhouse sites for cuke fertigation events
     cuke_gh = paginate_select(
-        supabase, "org_site", "id,farm_name",
-        eq_filters={"farm_name": "Cuke", "org_site_subcategory_id": "greenhouse"},
+        supabase, "org_site", "id,farm_id",
+        eq_filters={"farm_id": "Cuke", "org_site_subcategory_id": "greenhouse"},
     )
     for s in cuke_gh:
-        known_sites[s["id"]] = s["farm_name"]
+        known_sites[s["id"]] = s["farm_id"]
     print(f"\n  Known sites: {len(known_sites)} (ponds + cuke greenhouses)")
 
     wb = gc.open_by_key(GROW_SHEET_ID)

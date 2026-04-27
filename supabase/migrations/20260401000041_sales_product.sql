@@ -1,34 +1,34 @@
 CREATE TABLE IF NOT EXISTS sales_product (
-    code                       TEXT PRIMARY KEY,
+    id                       TEXT PRIMARY KEY,
     org_id                     TEXT NOT NULL REFERENCES org(id),
-    farm_name                    TEXT NOT NULL REFERENCES org_farm(name),
-    grow_grade_id              TEXT REFERENCES grow_grade(code),
+    farm_id                    TEXT NOT NULL REFERENCES org_farm(id),
+    grow_grade_id              TEXT REFERENCES grow_grade(id),
     name                       TEXT NOT NULL,
     description                TEXT,
-    invnt_item_name         TEXT REFERENCES invnt_item(name),
+    invnt_item_id         TEXT REFERENCES invnt_item(id),
 
     -- Packaging hierarchy: item -> pack -> case -> pallet
-    item_uom                   TEXT REFERENCES sys_uom(code),
-    pack_uom                   TEXT REFERENCES sys_uom(code),
+    item_uom                   TEXT REFERENCES sys_uom(id),
+    pack_uom                   TEXT REFERENCES sys_uom(id),
     item_per_pack              NUMERIC,
     pack_per_case              NUMERIC,
     maximum_case_per_pallet    NUMERIC,
 
     -- Net weights (all in weight_uom)
-    weight_uom                 TEXT REFERENCES sys_uom(code),
+    weight_uom                 TEXT REFERENCES sys_uom(id),
     pack_net_weight            NUMERIC,
     case_net_weight            NUMERIC,
     pallet_net_weight          NUMERIC,
 
     -- Case dimensions (all in dimension_uom)
-    dimension_uom              TEXT REFERENCES sys_uom(code),
+    dimension_uom              TEXT REFERENCES sys_uom(id),
     case_length                NUMERIC,
     case_width                 NUMERIC,
     case_height                NUMERIC,
 
     -- Storage & shelf life
     manufacturer_storage_method TEXT,
-    temperature_uom            TEXT REFERENCES sys_uom(code),
+    temperature_uom            TEXT REFERENCES sys_uom(id),
     minimum_storage_temperature NUMERIC,
     maximum_storage_temperature NUMERIC,
     shelf_life_days            INT,
@@ -57,14 +57,14 @@ CREATE TABLE IF NOT EXISTS sales_product (
     updated_by                 TEXT,
     is_deleted                 BOOLEAN NOT NULL DEFAULT false,
 
-    CONSTRAINT uq_sales_product_name UNIQUE (farm_name, name)
+    CONSTRAINT uq_sales_product_name UNIQUE (farm_id, name)
 );
 
 COMMENT ON TABLE sales_product IS 'The sellable products from each farm. Combines a grade with a full packaging hierarchy (item → pack → case → pallet). The sale unit is always a case; the shipping unit is always a pallet.';
 
-CREATE INDEX idx_sales_product_farm_id ON sales_product (farm_name);
+CREATE INDEX idx_sales_product_farm_id ON sales_product (farm_id);
 
-COMMENT ON COLUMN sales_product.invnt_item_name IS 'Filtered to packaging items in inventory';
+COMMENT ON COLUMN sales_product.invnt_item_id IS 'Filtered to packaging items in inventory';
 COMMENT ON COLUMN sales_product.item_uom IS 'Smallest countable unit of the product (e.g. count, lb, oz)';
 COMMENT ON COLUMN sales_product.pack_uom IS 'Intermediate packaging unit (e.g. bag, tray)';
 COMMENT ON COLUMN sales_product.item_per_pack IS 'Number of items per pack unit';

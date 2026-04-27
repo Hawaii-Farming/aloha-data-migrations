@@ -157,7 +157,7 @@ def migrate_hr_department(supabase, records):
 
     rows = [
         audit({
-            "name": d,
+            "id": d,
             "org_id": ORG_ID,
         })
         for d in departments
@@ -175,7 +175,7 @@ def migrate_hr_work_authorization(supabase, records):
 
     rows = [
         audit({
-            "name": s,
+            "id": s,
             "org_id": ORG_ID,
         })
         for s in statuses
@@ -233,7 +233,7 @@ def migrate_hr_employee(supabase, records, app_users):
 
         # Gender
         gender = str(r.get("Gender", "")).strip().lower()
-        if gender not in ("male", "female"):
+        if gender not in ("Male", "Female"):
             gender = None
 
         # Pay structure
@@ -260,7 +260,7 @@ def migrate_hr_employee(supabase, records, app_users):
             wc = None
 
         emp = {
-            "name": emp_id,
+            "id": emp_id,
             "org_id": ORG_ID,
             "first_name": first,
             "last_name": last,
@@ -272,10 +272,10 @@ def migrate_hr_employee(supabase, records, app_users):
             "phone": str(r.get("Phone", "")).strip() or None,
             "company_email": email or None,
             "is_primary_org": True,
-            "hr_department_name": dept or None,
-            "sys_access_level_name": access_level,
+            "hr_department_id": dept or None,
+            "sys_access_level_id": access_level,
             "is_manager": parse_bool(r.get("IsManager", False)),
-            "hr_work_authorization_name": status or None,
+            "hr_work_authorization_id": status or None,
             "start_date": parse_date(r.get("StartDate", "")),
             "end_date": parse_date(r.get("EndDate", "")),
             "payroll_id": str(r.get("employee_id", "")).strip() or None,
@@ -284,7 +284,7 @@ def migrate_hr_employee(supabase, records, app_users):
             "wc": wc,
             "payroll_processor": str(r.get("Source", "")).strip() or None,
             "pay_delivery_method": proper_case(r.get("Check", "")) or None,
-            "housing_name": site_id,
+            "housing_id": site_id,
             "is_deleted": not parse_bool(r.get("IsActive", True)),
         }
         employees.append(audit(emp))
@@ -295,8 +295,8 @@ def migrate_hr_employee(supabase, records, app_users):
     # here would re-introduce the legacy id-drift collision on uq_hr_employee_name.
     insert_rows(supabase, "hr_employee", employees, upsert=False)
 
-    # Second pass: update team_lead_name and compensation_manager_name
-    print("  Resolving team_lead_name and compensation_manager_name...")
+    # Second pass: update team_lead_id and compensation_manager_id
+    print("  Resolving team_lead_id and compensation_manager_id...")
     updates = 0
     for r in records:
         full = str(r.get("FullName", "")).strip()
@@ -309,12 +309,12 @@ def migrate_hr_employee(supabase, records, app_users):
 
         patch = {}
         if team_lead and team_lead in name_to_id:
-            patch["team_lead_name"] = name_to_id[team_lead]
+            patch["team_lead_id"] = name_to_id[team_lead]
         if comp_mgr and comp_mgr in name_to_id:
-            patch["compensation_manager_name"] = name_to_id[comp_mgr]
+            patch["compensation_manager_id"] = name_to_id[comp_mgr]
 
         if patch:
-            supabase.table("hr_employee").update(patch).eq("name", emp_id).execute()
+            supabase.table("hr_employee").update(patch).eq("id", emp_id).execute()
             updates += 1
 
     print(f"  Updated {updates} employees with team_lead/compensation_manager")
@@ -344,8 +344,8 @@ def migrate_hr_module_access(supabase, employees, app_users_lookup, module_map):
                 modules_seen.add(mod_id)
                 rows.append(audit({
                     "org_id": ORG_ID,
-                    "hr_employee_name": emp["name"],
-                    "org_module_name": mod_id,
+                    "hr_employee_id": emp["id"],
+                    "org_module_id": mod_id,
                     "is_enabled": True,
                     "can_edit": True,
                     "can_delete": False,
@@ -399,7 +399,7 @@ def migrate_hr_time_off_request(supabase, gc, emp_records):
 
         # Status
         raw_status = str(r.get("RequestStatus", "")).strip().lower()
-        status = status_map.get(raw_status, "pending")
+        status = status_map.get(raw_status, "Pending")
 
         # Parse numeric fields
         pto = r.get("PTODays", "")
@@ -412,7 +412,7 @@ def migrate_hr_time_off_request(supabase, gc, emp_records):
         sick_days = float(sick) if sick and str(sick).strip() else None
 
         # reviewed_at only if not pending
-        reviewed_at = parse_timestamp(r.get("UpdatedDateTime", "")) if status != "pending" else None
+        reviewed_at = parse_timestamp(r.get("UpdatedDateTime", "")) if status != "Pending" else None
 
         # Check if employee is deleted
         emp_is_deleted = not parse_bool(
@@ -421,7 +421,7 @@ def migrate_hr_time_off_request(supabase, gc, emp_records):
 
         row = {
             "org_id": ORG_ID,
-            "hr_employee_name": emp_id,
+            "hr_employee_id": emp_id,
             "start_date": parse_date(r.get("StartDate", "")),
             "return_date": parse_date(r.get("ReturnDate", "")),
             "non_pto_days": non_pto_days,
@@ -433,7 +433,7 @@ def migrate_hr_time_off_request(supabase, gc, emp_records):
             "requested_at": parse_timestamp(r.get("RequestDateTime", "")),
             "requested_by": requested_by or emp_id,
             "reviewed_at": reviewed_at,
-            "reviewed_by": reviewed_by if status != "pending" else None,
+            "reviewed_by": reviewed_by if status != "Pending" else None,
             "is_deleted": emp_is_deleted,
         }
         rows.append(audit(row))
@@ -480,11 +480,11 @@ def migrate_hr_travel_request(supabase, gc, emp_records):
 
         status = str(r.get("request_status", "")).strip().lower()
         status_map = {"requested": "pending", "ordered": "approved"}
-        mapped_status = status_map.get(status, "pending")
+        mapped_status = status_map.get(status, "Pending")
 
         row = {
             "org_id": ORG_ID,
-            "hr_employee_name": emp_id,
+            "hr_employee_id": emp_id,
             "request_type": proper_case(r.get("travel_type", "")) or None,
             "travel_from": proper_case(r.get("flight_from", "")) or None,
             "travel_to": proper_case(r.get("flight_to", "")) or None,

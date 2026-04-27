@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS sys_uom (
-    code         TEXT PRIMARY KEY,
+    id         TEXT PRIMARY KEY,
     name         TEXT NOT NULL,
     category     TEXT NOT NULL,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),

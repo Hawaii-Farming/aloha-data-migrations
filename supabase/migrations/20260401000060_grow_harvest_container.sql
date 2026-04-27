@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS grow_harvest_container (
-    name       TEXT PRIMARY KEY,
+    id       TEXT PRIMARY KEY,
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_name         TEXT NOT NULL REFERENCES org_farm(name),
-    grow_variety_id TEXT REFERENCES grow_variety(code),
-    grow_grade_id   TEXT REFERENCES grow_grade(code),
-    weight_uom      TEXT NOT NULL REFERENCES sys_uom(code),
+    farm_id         TEXT NOT NULL REFERENCES org_farm(id),
+    grow_variety_id TEXT REFERENCES grow_variety(id),
+    grow_grade_id   TEXT REFERENCES grow_grade(id),
+    weight_uom      TEXT NOT NULL REFERENCES sys_uom(id),
     -- Tare is either a fixed weight (is_tare_calculated=false, tare_weight set)
     -- or derived from a formula applied to the gross weight at weigh-in time
     -- (is_tare_calculated=true, tare_formula set). The cuke pallets use the
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS grow_harvest_container (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by      TEXT,
     is_deleted      BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT uq_grow_harvest_container UNIQUE (org_id, farm_name, name, grow_variety_id, grow_grade_id)
+    CONSTRAINT uq_grow_harvest_container UNIQUE (org_id, farm_id, id, grow_variety_id, grow_grade_id)
 );
 
 COMMENT ON TABLE grow_harvest_container IS 'Harvest container definitions with tare weight per container type, optionally specific to variety and grade. Used to auto-calculate tare during weigh-ins.';

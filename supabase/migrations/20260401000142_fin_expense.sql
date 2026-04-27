@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS fin_expense (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id              TEXT NOT NULL REFERENCES org(id),
-    farm_name             TEXT REFERENCES org_farm(name),
+    farm_id             TEXT REFERENCES org_farm(id),
     txn_date            DATE NOT NULL,
     payee_name          TEXT,
     description         TEXT,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS fin_expense (
 
 COMMENT ON TABLE fin_expense IS 'Financial expense transactions sourced from QuickBooks (nightly-synced from the invoices/expense spreadsheet today, moving to direct QB API later). One row per line item on a QB expense transaction.';
 
-COMMENT ON COLUMN fin_expense.farm_name IS 'Nullable — the expense spreadsheet does not currently carry a Farm column. Populated later when expenses are farm-tagged (likely derivable from class_name)';
+COMMENT ON COLUMN fin_expense.farm_id IS 'Nullable — the expense spreadsheet does not currently carry a Farm column. Populated later when expenses are farm-tagged (likely derivable from class_name)';
 COMMENT ON COLUMN fin_expense.txn_date IS 'Transaction date from QB (Txn Date column in the expense sheet)';
 COMMENT ON COLUMN fin_expense.payee_name IS 'Free-text payee; Payee Ref.name from QB. Nullable since some expenses are line items without a distinct payee';
 COMMENT ON COLUMN fin_expense.description IS 'Line-item description from QB (Line Item.description)';
@@ -35,7 +35,7 @@ COMMENT ON COLUMN fin_expense.effective_amount IS 'Signed amount used by dashboa
 COMMENT ON COLUMN fin_expense.macro_category IS 'Top-level QB account category (Macro), e.g. "3. R&M", "6. Office", derived from account_name';
 
 CREATE INDEX idx_fin_expense_org ON fin_expense (org_id);
-CREATE INDEX idx_fin_expense_farm ON fin_expense (farm_name);
+CREATE INDEX idx_fin_expense_farm ON fin_expense (farm_id);
 CREATE INDEX idx_fin_expense_txn_date ON fin_expense (txn_date);
 
 -- View exposes derived date parts + applies soft-delete filter. Dashboards query this.

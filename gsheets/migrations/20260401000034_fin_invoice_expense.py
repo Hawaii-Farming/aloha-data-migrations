@@ -17,7 +17,7 @@ Column drops (all derivable from txn/invoice dates):
   Dashboards should read from sales_invoice_v / fin_expense_v to get these back.
 
 Farm mapping on invoices: sheet "Farm" column (Cuke / Lettuce) -> org_farm.id
-(cuke / lettuce). Expense sheet has no farm column; farm_name left null.
+(cuke / lettuce). Expense sheet has no farm column; farm_id left null.
 
 Usage:
     python migrations/20260417000010_fin_invoice_expense.py
@@ -167,7 +167,7 @@ def transform_invoice(r: dict) -> dict | None:
     farm_raw = (r.get("Farm") or "").strip().lower()
     return audit({
         "org_id":         ORG_ID,
-        "farm_name":        FARM_MAP.get(farm_raw),
+        "farm_id":        FARM_MAP.get(farm_raw),
         "invoice_number": invoice_number,
         "invoice_date":   date.isoformat(),
         "customer_name":  customer,
@@ -212,7 +212,7 @@ def transform_expense(r: dict) -> dict | None:
         effective = -amount if is_credit else amount
     return audit({
         "org_id":           ORG_ID,
-        "farm_name":          None,
+        "farm_id":          None,
         "txn_date":         date.isoformat(),
         "payee_name":       clean(r.get("Payee Ref.name")),
         "description":      clean(r.get("Line Item.description")),

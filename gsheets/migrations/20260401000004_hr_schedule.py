@@ -122,7 +122,7 @@ def get_sheets():
 # ─────────────────────────────────────────────────────────────
 
 def derive_farm_id(task_name: str) -> str | None:
-    """Infer farm_name from a task name prefix.
+    """Infer farm_id from a task name prefix.
 
     "Cuke *" → "Cuke", "Lettuce *" → "Lettuce", else None.
     """
@@ -141,13 +141,13 @@ def seed_tasks_from_sheet(supabase, gc) -> dict:
       id         = slugified Task (e.g. "Cuke Service A" → "cuke_service_a")
       name       = Task as-is (display)
       qb_account = QuickBooksAccount (empty string → None)
-      farm_name    = derived from name prefix (Cuke/Lettuce), else None
+      farm_id    = derived from name prefix (Cuke/Lettuce), else None
 
     Uses upsert so the seed can overlay rows already created by org.py defaults
     (e.g. "maintenance") without conflict. Returns a lookup map used by the
     schedule migration to resolve task names.
 
-    Returns: {task_name.lower(): (ops_task_name, farm_name)}
+    Returns: {task_name.lower(): (ops_task_id, farm_id)}
     """
     ws = gc.open_by_key(HR_SHEET_ID).worksheet("hr_ee_tasks")
     raw = ws.get_all_records()
@@ -159,17 +159,17 @@ def seed_tasks_from_sheet(supabase, gc) -> dict:
         if not task_name:
             continue
         qb_account = str(r.get("QuickBooksAccount", "")).strip() or None
-        farm_name = derive_farm_id(task_name)
+        farm_id = derive_farm_id(task_name)
 
         rows.append({
             "org_id": ORG_ID,
-            "name": task_name,
+            "id": task_name,
             "qb_account": qb_account,
-            "farm_name": farm_name,
+            "farm_id": farm_id,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
         })
-        task_map[task_name.lower()] = (task_name, farm_name)
+        task_map[task_name.lower()] = (task_name, farm_id)
 
     print("\n--- ops_task (seed from hr_ee_tasks tab) ---")
     for row in rows:
@@ -186,7 +186,7 @@ def seed_tasks_from_sheet(supabase, gc) -> dict:
 def _resolve_or_create_task(
     supabase, task_name: str, task_map: dict, task_cache: dict
 ) -> tuple[str, str | None]:
-    """Resolve a sheet task name to (ops_task_name, farm_name).
+    """Resolve a sheet task name to (ops_task_id, farm_id).
 
     task_map is the tab-sourced seed (authoritative). task_cache tracks
     auto-created tasks discovered in this run to avoid duplicate upserts.
@@ -198,12 +198,12 @@ def _resolve_or_create_task(
     if key in task_cache:
         return task_cache[key]
 
-    farm_name = derive_farm_id(task_name)
+    farm_id = derive_farm_id(task_name)
     try:
         supabase.table("ops_task").upsert({
             "org_id": ORG_ID,
-            "name": task_name,
-            "farm_name": farm_name,
+            "id": task_name,
+            "farm_id": farm_id,
             "description": f"Auto-created from legacy schedule (task name: {task_name!r})",
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
@@ -214,7 +214,7 @@ def _resolve_or_create_task(
         return task_cache[key]
 
     print(f"  Auto-created ops_task: {task_name!r}")
-    task_cache[key] = (task_name, farm_name)
+    task_cache[key] = (task_name, farm_id)
     return task_cache[key]
 
 
@@ -245,12 +245,12 @@ def _resolve_or_create_employee(supabase, full_name: str, emp_by_name: dict) -> 
 
     try:
         supabase.table("hr_employee").upsert({
-            "name": emp_id,
+            "id": emp_id,
             "org_id": ORG_ID,
             "first_name": first,
             "last_name": last,
             "is_primary_org": True,
-            "sys_access_level_name": "Employee",
+            "sys_access_level_id": "Employee",
             "is_deleted": True,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
@@ -276,7 +276,7 @@ def proper_case(val):
 def migrate_schedule(supabase, gc, task_map: dict):
     """Migrate hr_ee_sched_daily → ops_task_schedule (planned mode).
 
-    task_map is the tab-sourced {task_name_lower: (ops_task_name, farm_name)}
+    task_map is the tab-sourced {task_name_lower: (ops_task_id, farm_id)}
     from seed_tasks_from_sheet. Auto-creates missing ops_task records and
     inactive hr_employee stubs inline rather than dropping rows. Time-off
     rows (PTO/Request Off/Sick Leave) and rows with unparseable dates are
@@ -288,16 +288,16 @@ def migrate_schedule(supabase, gc, task_map: dict):
     print(f"\nProcessing {len(data)} schedule rows...")
 
     # Build employee lookup by full name (uppercase in sheet)
-    emp_result = supabase.table("hr_employee").select("name, first_name, last_name").execute()
+    emp_result = supabase.table("hr_employee").select("id, first_name, last_name").execute()
     emp_by_name = {}
     for e in emp_result.data:
         full = f"{e['last_name']} {e['first_name']}".upper()
-        emp_by_name[full] = e["name"]
+        emp_by_name[full] = e["id"]
         # Also try last_name only for partial matches
-        emp_by_name[e["last_name"].upper()] = e["name"]
+        emp_by_name[e["last_name"].upper()] = e["id"]
 
-    task_cache = {}  # task_name.lower() -> (ops_task_name, farm_name)  [auto-created only]
-    dedup_map = {}   # (ops_task_name, emp_id, start_time) → row
+    task_cache = {}  # task_name.lower() -> (ops_task_id, farm_id)  [auto-created only]
+    dedup_map = {}   # (ops_task_id, emp_id, start_time) → row
     skipped_timeoff = 0
     skipped_no_date = 0
     skipped_no_emp = 0
@@ -317,9 +317,9 @@ def migrate_schedule(supabase, gc, task_map: dict):
         # Resolve task (auto-create if unmapped)
         key = task_name.lower()
         was_known = key in task_map or key in task_cache
-        ops_task_name, farm_name = _resolve_or_create_task(supabase, task_name, task_map, task_cache)
+        ops_task_id, farm_id = _resolve_or_create_task(supabase, task_name, task_map, task_cache)
         if not was_known:
-            auto_created_tasks.add(ops_task_name)
+            auto_created_tasks.add(ops_task_id)
 
         # Resolve employee (auto-create stub if unknown)
         full_name = str(r.get("FullName", "")).strip().upper()
@@ -349,13 +349,13 @@ def migrate_schedule(supabase, gc, task_map: dict):
 
         reported_by = str(r.get("UpdatedBy", "")).strip().lower() or AUDIT_USER
 
-        # Deduplicate by (ops_task_name, hr_employee_name, start_time) — last row wins
-        dedup_key = (ops_task_name, emp_id, start_time)
+        # Deduplicate by (ops_task_id, hr_employee_id, start_time) — last row wins
+        dedup_key = (ops_task_id, emp_id, start_time)
         row = {
             "org_id": ORG_ID,
-            "farm_name": farm_name,
-            "ops_task_name": ops_task_name,
-            "hr_employee_name": emp_id,
+            "farm_id": farm_id,
+            "ops_task_id": ops_task_id,
+            "hr_employee_id": emp_id,
             "start_time": start_time,
             "stop_time": stop_time,
             "total_hours": total_hours,

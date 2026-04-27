@@ -1,16 +1,16 @@
 CREATE TABLE IF NOT EXISTS invnt_item (
-    name                     TEXT PRIMARY KEY,
+    id                     TEXT PRIMARY KEY,
     org_id                   TEXT NOT NULL REFERENCES org(id),
-    farm_name                  TEXT REFERENCES org_farm(name),
+    farm_id                  TEXT REFERENCES org_farm(id),
     invnt_category_id        TEXT REFERENCES invnt_category(id),
     invnt_subcategory_id     TEXT REFERENCES invnt_category(id),
     qb_account            TEXT,
     description              TEXT,
 
     -- Three-unit system
-    burn_uom                 TEXT REFERENCES sys_uom(code),
-    onhand_uom               TEXT REFERENCES sys_uom(code),
-    order_uom                TEXT REFERENCES sys_uom(code),
+    burn_uom                 TEXT REFERENCES sys_uom(id),
+    onhand_uom               TEXT REFERENCES sys_uom(id),
+    order_uom                TEXT REFERENCES sys_uom(id),
     burn_per_onhand     NUMERIC NOT NULL DEFAULT 0,
     burn_per_order      NUMERIC NOT NULL DEFAULT 0,
 
@@ -35,12 +35,12 @@ CREATE TABLE IF NOT EXISTS invnt_item (
 
     -- Site references
     site_id              TEXT REFERENCES org_site(id),
-    equipment_name   TEXT REFERENCES org_equipment(name),
+    equipment_id   TEXT REFERENCES org_equipment(id),
 
     -- Item details
-    invnt_vendor_name          TEXT REFERENCES invnt_vendor(name),
+    invnt_vendor_id          TEXT REFERENCES invnt_vendor(id),
     manufacturer             TEXT,
-    grow_variety_id          TEXT REFERENCES grow_variety(code),
+    grow_variety_id          TEXT REFERENCES grow_variety(id),
     seed_is_pelleted         BOOLEAN,
     maint_part_type          TEXT,
     maint_part_number        TEXT,
@@ -56,17 +56,17 @@ CREATE TABLE IF NOT EXISTS invnt_item (
     updated_by               TEXT,
     is_deleted                BOOLEAN NOT NULL DEFAULT false,
 
-    CONSTRAINT uq_invnt_item UNIQUE (org_id, name)
+    CONSTRAINT uq_invnt_item UNIQUE (org_id, id)
 );
 
 COMMENT ON TABLE invnt_item IS 'The main inventory record. Items belong to an organization and optionally to a specific farm. Classification is handled by the category/subcategory structure. All item details are proper columns grouped by logical sections. Seed-specific fields are prefixed seed_; maintenance part fields are prefixed maint_.';
 
 CREATE INDEX idx_invnt_item_org_id ON invnt_item (org_id);
-CREATE INDEX idx_invnt_item_vendor      ON invnt_item (invnt_vendor_name);
+CREATE INDEX idx_invnt_item_vendor      ON invnt_item (invnt_vendor_id);
 CREATE INDEX idx_invnt_item_category    ON invnt_item (invnt_category_id);
 CREATE INDEX idx_invnt_item_subcategory ON invnt_item (invnt_subcategory_id);
 CREATE INDEX idx_invnt_item_site ON invnt_item (site_id);
-CREATE INDEX idx_invnt_item_equipment ON invnt_item (equipment_name);
+CREATE INDEX idx_invnt_item_equipment ON invnt_item (equipment_id);
 
 COMMENT ON COLUMN invnt_item.invnt_category_id IS 'References invnt_category rows where sub_category_name IS NULL';
 COMMENT ON COLUMN invnt_item.invnt_subcategory_id IS 'References invnt_category rows where sub_category_name IS NOT NULL';

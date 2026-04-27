@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS invnt_po_received (
     id                     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                 TEXT NOT NULL REFERENCES org(id),
-    farm_name                TEXT REFERENCES org_farm(name),
+    farm_id                TEXT REFERENCES org_farm(id),
     invnt_po_id            UUID NOT NULL REFERENCES invnt_po(id),
     received_date          DATE NOT NULL,
-    received_uom           TEXT NOT NULL REFERENCES sys_uom(code),
+    received_uom           TEXT NOT NULL REFERENCES sys_uom(id),
     received_quantity      NUMERIC NOT NULL,
     burn_per_received      NUMERIC NOT NULL DEFAULT 0,
 
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS invnt_po_received (
 
 COMMENT ON TABLE invnt_po_received IS 'Individual deliveries received against a purchase order. One order can have multiple received records to handle partial deliveries. References invnt_lot for lot tracking.';
 
-COMMENT ON COLUMN invnt_po_received.farm_name IS 'Inherited from invnt_po.farm_name when receiving against a PO';
+COMMENT ON COLUMN invnt_po_received.farm_id IS 'Inherited from invnt_po.farm_id when receiving against a PO';
 COMMENT ON COLUMN invnt_po_received.received_uom IS 'Pre-filled from invnt_po.order_uom; editable at receive time';
 COMMENT ON COLUMN invnt_po_received.burn_per_received IS 'Snapshot from invnt_po.burn_per_order at receive time';
 COMMENT ON COLUMN invnt_po_received.received_photos IS 'Photos taken at delivery for audit and quality verification';

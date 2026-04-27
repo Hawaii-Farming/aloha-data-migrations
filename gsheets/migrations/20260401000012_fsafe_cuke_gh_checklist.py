@@ -219,7 +219,7 @@ def ensure_catch_all_site(supabase):
     row = audit({
         "id": CATCH_ALL_SITE_ID,
         "org_id": ORG_ID,
-        "farm_name": FARM_ID,
+        "farm_id": FARM_ID,
         "name": "Cuke GHs",
         "org_site_category_id": "growing",
         "is_deleted": True,
@@ -234,7 +234,7 @@ def load_known_sites(supabase):
     result = (
         supabase.table("org_site")
         .select("id")
-        .eq("farm_name", FARM_ID)
+        .eq("farm_id", FARM_ID)
         .execute()
     )
     return {r["id"] for r in result.data}
@@ -247,9 +247,9 @@ def upsert_templates(supabase):
         rows.append(audit({
             "id": t["id"],
             "org_id": ORG_ID,
-            "farm_name": FARM_ID,
-            "name": t["name"],
-            "org_module_name": "food_safety",
+            "farm_id": FARM_ID,
+            "id": t["name"],
+            "org_module_id": "food_safety",
             "description": f"Cuke greenhouse {'pre' if 'pre' in t['id'] else 'post'}-operations checklist (migrated from legacy fsafe sheet)",
             "display_order": i + 1,
         }))
@@ -264,7 +264,7 @@ def reseed_questions(supabase):
     print("\nClearing existing questions for these templates...")
     for t in TEMPLATES:
         supabase.table("ops_template_question").delete().eq(
-            "ops_template_name", t["id"]
+            "ops_template_id", t["id"]
         ).execute()
     print("  Cleared")
 
@@ -273,10 +273,10 @@ def reseed_questions(supabase):
         for order, q_text in enumerate(t["questions"], start=1):
             rows.append(audit({
                 "org_id": ORG_ID,
-                "farm_name": FARM_ID,
-                "ops_template_name": t["id"],
+                "farm_id": FARM_ID,
+                "ops_template_id": t["id"],
                 "question_text": q_text,
-                "response_type": "boolean",
+                "response_type": "Boolean",
                 "boolean_pass_value": True,
                 "is_required": True,
                 "include_photo": False,
@@ -288,7 +288,7 @@ def reseed_questions(supabase):
     # Build lookup map: (template_id, question_text) -> id
     q_map = {}
     for r in inserted:
-        q_map[(r["ops_template_name"], r["question_text"])] = r["id"]
+        q_map[(r["ops_template_id"], r["question_text"])] = r["id"]
     return q_map
 
 
@@ -297,16 +297,16 @@ def upsert_task_template_links(supabase):
     # Clear any existing links for these templates first (UUID PK so we can't upsert by template)
     for t in TEMPLATES:
         supabase.table("ops_task_template").delete().eq(
-            "ops_template_name", t["id"]
-        ).eq("ops_task_name", TASK_ID).execute()
+            "ops_template_id", t["id"]
+        ).eq("ops_task_id", TASK_ID).execute()
 
     rows = []
     for t in TEMPLATES:
         rows.append(audit({
             "org_id": ORG_ID,
-            "farm_name": FARM_ID,
-            "ops_task_name": TASK_ID,
-            "ops_template_name": t["id"],
+            "farm_id": FARM_ID,
+            "ops_task_id": TASK_ID,
+            "ops_template_id": t["id"],
         }))
     insert_rows(supabase, "ops_task_template", rows)
 
@@ -316,7 +316,7 @@ def upsert_task_template_links(supabase):
 # ---------------------------------------------------------------------------
 
 def load_employee_email_map(supabase):
-    """Return {company_email_lower: hr_employee_name}."""
+    """Return {company_email_lower: hr_employee_id}."""
     employees = paginate_select(supabase, "hr_employee", "id, company_email")
     return {
         (r["company_email"] or "").lower(): r["id"]
@@ -346,7 +346,7 @@ def create_stub_employee(supabase, email):
         "last_name": last,
         "company_email": email,
         "is_primary_org": True,
-        "sys_access_level_name": "Employee",
+        "sys_access_level_id": "Employee",
         "is_deleted": True,
     })
     try:
@@ -372,16 +372,16 @@ def clear_existing_data(supabase):
 
     # Results
     for tid in template_ids:
-        supabase.table("ops_template_result").delete().eq("ops_template_name", tid).execute()
+        supabase.table("ops_template_result").delete().eq("ops_template_id", tid).execute()
     print("  Cleared ops_template_result")
 
-    # Corrective actions (none expected, but tied via ops_template_name)
+    # Corrective actions (none expected, but tied via ops_template_id)
     for tid in template_ids:
-        supabase.table("ops_corrective_action_taken").delete().eq("ops_template_name", tid).execute()
+        supabase.table("ops_corrective_action_taken").delete().eq("ops_template_id", tid).execute()
     print("  Cleared ops_corrective_action_taken (if any)")
 
     # Trackers — scope to cuke food_safety_log task
-    supabase.table("ops_task_tracker").delete().eq("ops_task_name", TASK_ID).eq("farm_name", FARM_ID).execute()
+    supabase.table("ops_task_tracker").delete().eq("ops_task_id", TASK_ID).eq("farm_id", FARM_ID).execute()
     print("  Cleared ops_task_tracker (cuke food_safety_log)")
 
 
@@ -454,9 +454,9 @@ def migrate_template(supabase, gc, template_def, q_map, known_sites, email_map, 
             tracker_idx = len(trackers)
             trackers.append({
                 "org_id": ORG_ID,
-                "farm_name": FARM_ID,
+                "farm_id": FARM_ID,
                 "site_id": site_id,
-                "ops_task_name": TASK_ID,
+                "ops_task_id": TASK_ID,
                 "start_time": reported,
                 "stop_time": reported,
                 "is_completed": True,
@@ -494,9 +494,9 @@ def migrate_template(supabase, gc, template_def, q_map, known_sites, email_map, 
         tracker = inserted_trackers[tracker_idx]
         result_rows.append({
             "org_id": ORG_ID,
-            "farm_name": FARM_ID,
+            "farm_id": FARM_ID,
             "ops_task_tracker_id": tracker["id"],
-            "ops_template_name": template_id,
+            "ops_template_id": template_id,
             "ops_template_question_id": q_id,
             "site_id": tracker["site_id"],
             "response_boolean": response,

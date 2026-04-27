@@ -133,7 +133,7 @@ def migrate_external_products(supabase):
         audit({
             "id": to_id(name),
             "org_id": ORG_ID,
-            "name": name,
+            "id": name,
         })
         for name in products
     ]
@@ -152,8 +152,8 @@ def migrate_stores(supabase, gc):
     print(f"\nProcessing {len(data)} store rows...")
 
     # Build customer lookup
-    cust_result = supabase.table("sales_customer").select("id, name").eq("org_id", ORG_ID).execute()
-    cust_by_name = {c["name"].lower(): c["id"] for c in cust_result.data}
+    cust_result = supabase.table("sales_customer").select("id").eq("org_id", ORG_ID).execute()
+    cust_by_name = {c["id"].lower(): c["id"] for c in cust_result.data}
 
     rows = []
     seen = set()
@@ -173,9 +173,9 @@ def migrate_stores(supabase, gc):
         rows.append(audit({
             "id": store_id,
             "org_id": ORG_ID,
-            "sales_customer_name": cust_id,
+            "sales_customer_id": cust_id,
             "chain": str(r.get("Chain", "")).strip() or None,
-            "name": store_name,
+            "id": store_name,
             "location": str(r.get("Location", "")).strip() or None,
             "island": str(r.get("Island", "")).strip() or None,
             "contact_name": str(r.get("ContactName", "")).strip() or None,
@@ -199,12 +199,12 @@ def migrate_visits(supabase, gc):
     print(f"\nProcessing {len(data)} visit rows...")
 
     # Build store lookup
-    store_result = supabase.table("sales_crm_store").select("id, name").eq("org_id", ORG_ID).execute()
-    store_by_name = {s["name"].lower(): s["id"] for s in store_result.data}
+    store_result = supabase.table("sales_crm_store").select("id").eq("org_id", ORG_ID).execute()
+    store_by_name = {s["id"].lower(): s["id"] for s in store_result.data}
 
     # Build employee lookup for visited_by
-    emp_result = supabase.table("hr_employee").select("name, company_email").execute()
-    emp_by_email = {e["company_email"]: e["name"] for e in emp_result.data if e.get("company_email")}
+    emp_result = supabase.table("hr_employee").select("id, company_email").execute()
+    emp_by_email = {e["company_email"]: e["id"] for e in emp_result.data if e.get("company_email")}
 
     visit_rows = []
     visit_meta = []  # parallel: (store_name, row) for photo pass
@@ -234,7 +234,7 @@ def migrate_visits(supabase, gc):
 
         visit_rows.append({
             "org_id": ORG_ID,
-            "sales_crm_store_name": store_id,
+            "sales_crm_store_id": store_id,
             "visit_date": visit_date,
             "notes": notes,
             "visited_by": visited_by,
@@ -288,18 +288,18 @@ def migrate_visit_results(supabase, gc):
     print(f"\nProcessing {len(data)} price observation rows...")
 
     # Build store lookup
-    store_result = supabase.table("sales_crm_store").select("id, name").eq("org_id", ORG_ID).execute()
-    store_by_name = {s["name"].lower(): s["id"] for s in store_result.data}
+    store_result = supabase.table("sales_crm_store").select("id").eq("org_id", ORG_ID).execute()
+    store_by_name = {s["id"].lower(): s["id"] for s in store_result.data}
 
     # Build external product lookup
-    ext_result = supabase.table("sales_crm_external_product").select("name").execute()
-    ext_by_name = {e["name"].lower(): e["name"] for e in ext_result.data}
+    ext_result = supabase.table("sales_crm_external_product").select("id").execute()
+    ext_by_name = {e["id"].lower(): e["id"] for e in ext_result.data}
 
     # Build visit lookup by (store_id, visit_date)
-    visit_result = supabase.table("sales_crm_store_visit").select("id, sales_crm_store_name, visit_date").execute()
+    visit_result = supabase.table("sales_crm_store_visit").select("id, sales_crm_store_id, visit_date").execute()
     visit_by_store_date = {}
     for v in visit_result.data:
-        visit_by_store_date[(v["sales_crm_store_name"], v["visit_date"])] = v["id"]
+        visit_by_store_date[(v["sales_crm_store_id"], v["visit_date"])] = v["id"]
 
     # Stock level normalization
     stock_map = {
@@ -366,7 +366,7 @@ def migrate_visit_results(supabase, gc):
             rows.append({
                 "org_id": ORG_ID,
                 "sales_crm_store_visit_id": visit_id,
-                "sales_crm_external_product_name": ext_id,
+                "sales_crm_external_product_id": ext_id,
                 "shelf_price": price,
                 "best_by_date": best_by,
                 "stock_level": stock,
@@ -398,7 +398,7 @@ def main():
     supabase.table("sales_crm_store_visit_photo").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
     supabase.table("sales_crm_store_visit").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
     supabase.table("sales_crm_store").delete().neq("id", "__none__").execute()
-    supabase.table("sales_crm_external_product").delete().neq("name", "__none__").execute()
+    supabase.table("sales_crm_external_product").delete().neq("id", "__none__").execute()
     print("  Cleared")
 
     # Step 1: External products

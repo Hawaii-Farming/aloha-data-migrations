@@ -145,7 +145,7 @@ def migrate_invnt_vendor(supabase, gc):
     rows = [
         audit({
             "org_id": ORG_ID,
-            "name": proper_case(v),
+            "id": proper_case(v),
         })
         for v in vendors
     ]
@@ -346,7 +346,7 @@ def migrate_invnt_item(supabase, gc):
 
         # Farm — "HF" is the org, not a farm; skip it
         farm = str(r.get("Farm", "")).strip()
-        farm_name = proper_case(farm) if farm and farm.upper() != "HF" else None
+        farm_id = proper_case(farm) if farm and farm.upper() != "HF" else None
 
         # UOMs
         burn_uom = map_uom(r.get("BurnUnits", ""))
@@ -415,10 +415,10 @@ def migrate_invnt_item(supabase, gc):
 
         row = {
             "org_id": ORG_ID,
-            "farm_name": farm_name,
+            "farm_id": farm_id,
             "invnt_category_id": cat_id,
             "invnt_subcategory_id": sub_id,
-            "name": proper_case(name),
+            "id": proper_case(name),
             "qb_account": qb or None,
             "burn_uom": burn_uom,
             "onhand_uom": onhand_uom,
@@ -434,7 +434,7 @@ def migrate_invnt_item(supabase, gc):
             "reorder_point_in_burn": reorder_point,
             "reorder_quantity_in_burn": reorder_quantity,
             "site_id": site_id,
-            "invnt_vendor_name": None,
+            "invnt_vendor_id": None,
             "manufacturer": manufacturer,
             "grow_variety_id": variety_id,
             "seed_is_pelleted": seed_is_pelleted,
@@ -453,24 +453,24 @@ def migrate_invnt_po(supabase, gc):
     """Migrate POs from both invnt_item_po (historical) and proc_requests (active)."""
 
     # Build employee email -> id lookup from Supabase
-    employees = paginate_select(supabase, "hr_employee", "name, company_email")
+    employees = paginate_select(supabase, "hr_employee", "id, company_email")
     email_to_emp = {}
     for e in employees:
         if e.get("company_email"):
-            email_to_emp[e["company_email"].lower()] = e["name"]
+            email_to_emp[e["company_email"].lower()] = e["id"]
 
     # Fallback employee for unresolved emails
     FALLBACK_EMP = email_to_emp.get("data@hawaiifarming.com") or email_to_emp.get("admin@hawaiifarming.com")
 
     # Build item name -> id lookup
-    items = paginate_select(supabase, "invnt_item", "name, invnt_category_id, burn_uom, order_uom, burn_per_order, farm_name, is_active")
+    items = paginate_select(supabase, "invnt_item", "id, invnt_category_id, burn_uom, order_uom, burn_per_order, farm_id, is_active")
     item_by_name = {}
     for it in items:
-        item_by_name[it["name"].lower()] = it
+        item_by_name[it["id"].lower()] = it
 
     # Build vendor name -> id lookup
-    vendors = paginate_select(supabase, "invnt_vendor", "name")
-    vendor_by_name = {v["name"].lower(): v["name"] for v in vendors}
+    vendors = paginate_select(supabase, "invnt_vendor", "id")
+    vendor_by_name = {v["id"].lower(): v["id"] for v in vendors}
 
     # UOM mapping
     UOM_MAP = {
@@ -530,7 +530,7 @@ def migrate_invnt_po(supabase, gc):
 
         # Status
         raw_status = str(r.get("OrderStatus", "")).strip().lower()
-        status = STATUS_MAP.get(raw_status, "received")
+        status = STATUS_MAP.get(raw_status, "Received")
 
         # Vendor
         vendor_name = str(r.get("SupplierName", "")).strip()
@@ -550,10 +550,10 @@ def migrate_invnt_po(supabase, gc):
         # PO row
         po = {
             "org_id": ORG_ID,
-            "farm_name": item.get("farm_name"),
-            "request_type": "inventory_item",
+            "farm_id": item.get("farm_id"),
+            "request_type": "Inventory Item",
             "invnt_category_id": item.get("invnt_category_id") or "packing",
-            "invnt_item_name": item_id,
+            "invnt_item_id": item_id,
             "item_name": item_name,
             "burn_uom": burn_uom or item.get("burn_uom") or order_uom or "unit",
             "order_uom": order_uom or item.get("order_uom") or burn_uom or "unit",
@@ -561,7 +561,7 @@ def migrate_invnt_po(supabase, gc):
             "burn_per_order": safe_numeric(r.get("BurnPerReceivedUnits", "")) or item.get("burn_per_order", 0),
             "total_cost": safe_numeric(r.get("TotalCost", "")) or None,
             "is_freight_included": parse_bool(r.get("PriceIncludesFreight", "")),
-            "invnt_vendor_name": vendor_id,
+            "invnt_vendor_id": vendor_id,
             "expected_delivery_date": parse_date(r.get("ExpectedArrivalDate", "")),
             "request_photos": [],
             "status": status,
@@ -592,8 +592,8 @@ def migrate_invnt_po(supabase, gc):
                     lot_row = audit({
                         "id": lot_id,
                         "org_id": ORG_ID,
-                        "farm_name": item.get("farm_name"),
-                        "invnt_item_name": item_id,
+                        "farm_id": item.get("farm_id"),
+                        "invnt_item_id": item_id,
                         "lot_number": lot_number,
                         "lot_expiry_date": parse_date(r.get("ExpiryDate", "")),
                     })
@@ -602,7 +602,7 @@ def migrate_invnt_po(supabase, gc):
                     lot_rows.append(lot_row)
 
         # Received record (only if status implies receipt)
-        if status in ("received", "partial"):
+        if status in ("Received", "Partial"):
             arrival = parse_date(r.get("ArrivalDate", ""))
             if arrival:
                 photo = str(r.get("DeliveryPhoto", "")).strip()
@@ -612,7 +612,7 @@ def migrate_invnt_po(supabase, gc):
                     photo = photo.replace("images/invnt/", "images/invnt_po_received/")
                 recv = {
                     "org_id": ORG_ID,
-                    "farm_name": item.get("farm_name"),
+                    "farm_id": item.get("farm_id"),
                     "received_date": arrival,
                     "received_uom": received_uom or order_uom,
                     "received_quantity": safe_numeric(r.get("ReceivedQuantity", "")),
@@ -676,7 +676,7 @@ def migrate_invnt_po(supabase, gc):
 
         # Status
         raw_status = str(r.get("request_status", "")).strip().lower()
-        status = PROC_STATUS_MAP.get(raw_status, "requested")
+        status = PROC_STATUS_MAP.get(raw_status, "Requested")
 
         # Photos
         # Normalize legacy sheet paths to the unified 'images/' bucket layout
@@ -701,27 +701,27 @@ def migrate_invnt_po(supabase, gc):
         # For completed orders: updated_by is the orderer/reviewer, created_by is the receiver
         po = {
             "org_id": ORG_ID,
-            "farm_name": item.get("farm_name"),
+            "farm_id": item.get("farm_id"),
             "request_type": mapped_type,
             "urgency_level": URGENCY_MAP.get(str(r.get("urgency_level", "")).strip().lower()),
             "invnt_category_id": item.get("invnt_category_id") or "maintenance",
-            "invnt_item_name": item_id,
+            "invnt_item_id": item_id,
             "item_name": item_name,
             "burn_uom": po_burn_uom,
             "order_uom": po_order_uom,
             "order_quantity": safe_numeric(r.get("request_quantity", "")),
             "burn_per_order": po_burn_per_order,
-            "invnt_vendor_name": vendor_id,
+            "invnt_vendor_id": vendor_id,
             "expected_delivery_date": parse_date(r.get("expected_delivery_date", "")),
             "notes": str(r.get("request_notes", "")).strip() or None,
             "request_photos": photos,
             "status": status,
             "requested_at": parse_timestamp(r.get("created_on", "")),
             "requested_by": requested_by or FALLBACK_EMP,
-            "reviewed_at": parse_timestamp(r.get("updated_on", "")) if status != "requested" else None,
-            "reviewed_by": reviewed_by if status != "requested" else None,
-            "ordered_at": parse_timestamp(r.get("updated_on", "")) if status in ("ordered", "received") else None,
-            "ordered_by": reviewed_by if status in ("ordered", "received") else None,
+            "reviewed_at": parse_timestamp(r.get("updated_on", "")) if status != "Requested" else None,
+            "reviewed_by": reviewed_by if status != "Requested" else None,
+            "ordered_at": parse_timestamp(r.get("updated_on", "")) if status in ("Ordered", "Received") else None,
+            "ordered_by": reviewed_by if status in ("Ordered", "Received") else None,
         }
         po_row = audit(po)
         po_row["created_by"] = created_email or AUDIT_USER
@@ -762,10 +762,10 @@ def migrate_invnt_onhand(supabase, gc):
     records = ws.get_all_records()
 
     # Build item name -> record lookup from Supabase
-    items = paginate_select(supabase, "invnt_item", "name, farm_name, burn_uom, onhand_uom, burn_per_onhand, is_active")
+    items = paginate_select(supabase, "invnt_item", "id, farm_id, burn_uom, onhand_uom, burn_per_onhand, is_active")
     item_by_name = {}
     for it in items:
-        item_by_name[it["name"].lower()] = it
+        item_by_name[it["id"].lower()] = it
 
     # Build lot lookup: lot_number -> lot_id (only active-item lots)
     lots = paginate_select(supabase, "invnt_lot", "id, lot_number")
@@ -848,8 +848,8 @@ def migrate_invnt_onhand(supabase, gc):
 
         row = audit({
             "org_id": ORG_ID,
-            "farm_name": item.get("farm_name"),
-            "invnt_item_name": item["name"],
+            "farm_id": item.get("farm_id"),
+            "invnt_item_id": item["id"],
             "onhand_date": onhand_date,
             "burn_uom": burn_uom,
             "onhand_uom": onhand_uom,
@@ -874,10 +874,10 @@ def migrate_grow_spray_compliance(supabase, gc):
     records = ws.get_all_records()
 
     # Build item name -> record lookup
-    items = paginate_select(supabase, "invnt_item", "name, burn_uom, farm_name")
+    items = paginate_select(supabase, "invnt_item", "id, burn_uom, farm_id")
     item_by_name = {}
     for it in items:
-        item_by_name[it["name"].lower()] = it
+        item_by_name[it["id"].lower()] = it
 
     # Farm mapping
     FARM_MAP = {
@@ -925,12 +925,12 @@ def migrate_grow_spray_compliance(supabase, gc):
         item = item_by_name.get(item_name.lower()) if item_name else None
         if item_name and not item:
             unresolved_items.add(item_name)
-            print(f"  WARN: Unknown item '{item_name}' — inserting with NULL invnt_item_name")
+            print(f"  WARN: Unknown item '{item_name}' — inserting with NULL invnt_item_id")
 
         # Farm — try sheet, fall back to item, else None
         farm_raw = str(r.get("Farm", "")).strip().lower()
-        farm_name = FARM_MAP.get(farm_raw) or (item.get("farm_name") if item else None)
-        if not farm_name:
+        farm_id = FARM_MAP.get(farm_raw) or (item.get("farm_id") if item else None)
+        if not farm_id:
             unresolved_farms.add(farm_raw or "(blank)")
 
         # Registration — preserve when present, null when missing
@@ -973,8 +973,8 @@ def migrate_grow_spray_compliance(supabase, gc):
 
         row = {
             "org_id": ORG_ID,
-            "farm_name": farm_name,
-            "invnt_item_name": item["name"] if item else None,
+            "farm_id": farm_id,
+            "invnt_item_id": item["id"] if item else None,
             "epa_registration": epa_reg,
             "phi_days": phi_days,
             "rei_hours": rei_hours,
@@ -998,9 +998,9 @@ def migrate_grow_spray_compliance(supabase, gc):
     if skipped_no_label:
         print(f"  Skipped {skipped_no_label} rows with no LabelLink")
     if unresolved_items:
-        print(f"  Inserted with NULL invnt_item_name ({len(unresolved_items)} unique unknown items): {sorted(unresolved_items)[:5]}...")
+        print(f"  Inserted with NULL invnt_item_id ({len(unresolved_items)} unique unknown items): {sorted(unresolved_items)[:5]}...")
     if unresolved_farms:
-        print(f"  Inserted with NULL farm_name ({len(unresolved_farms)} unique unknown farms): {sorted(unresolved_farms)}")
+        print(f"  Inserted with NULL farm_id ({len(unresolved_farms)} unique unknown farms): {sorted(unresolved_farms)}")
 
 
 def migrate_grow_lettuce_seed_mix(supabase, gc):
@@ -1015,8 +1015,8 @@ def migrate_grow_lettuce_seed_mix(supabase, gc):
     print(f"\nProcessing {len(records)} seed mix ratio rows...")
 
     # Build invnt_item lookup — name is now the PK
-    items = paginate_select(supabase, "invnt_item", "name")
-    item_by_name = {it["name"].lower(): it["name"] for it in items}
+    items = paginate_select(supabase, "invnt_item", "id")
+    item_by_name = {it["id"].lower(): it["id"] for it in items}
 
     # Group by mix name
     mixes = {}
@@ -1039,7 +1039,7 @@ def migrate_grow_lettuce_seed_mix(supabase, gc):
             continue
 
         mixes[mix_name]["items"].append({
-            "invnt_item_name": item_id,
+            "invnt_item_id": item_id,
             "percentage": round(ratio, 4),
             "created_by": str(r.get("created_by", "")).strip().lower() or AUDIT_USER,
         })
@@ -1053,8 +1053,8 @@ def migrate_grow_lettuce_seed_mix(supabase, gc):
         mix_rows.append({
 
             "org_id": ORG_ID,
-            "farm_name": "Lettuce",
-            "name": proper_case(mix_name),
+            "farm_id": "Lettuce",
+            "id": proper_case(mix_name),
             "created_by": info["created_by"],
             "updated_by": info["created_by"],
         })
@@ -1068,9 +1068,9 @@ def migrate_grow_lettuce_seed_mix(supabase, gc):
         for item in info["items"]:
             item_rows.append({
                 "org_id": ORG_ID,
-                "farm_name": "Lettuce",
-                "grow_lettuce_seed_mix_name": proper_case(mix_name),
-                "invnt_item_name": item["invnt_item_name"],
+                "farm_id": "Lettuce",
+                "grow_lettuce_seed_mix_id": proper_case(mix_name),
+                "invnt_item_id": item["invnt_item_id"],
                 "percentage": item["percentage"],
                 "created_by": item["created_by"],
                 "updated_by": item["created_by"],

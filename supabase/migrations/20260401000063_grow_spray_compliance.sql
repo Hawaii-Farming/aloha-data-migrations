@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS grow_spray_compliance (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
-    farm_name                     TEXT REFERENCES org_farm(name),
-    invnt_item_name               TEXT REFERENCES invnt_item(name),
+    farm_id                     TEXT REFERENCES org_farm(id),
+    invnt_item_id               TEXT REFERENCES invnt_item(id),
 
     -- Regulatory Information — legacy label rows often lack these fields.
     -- Keep the columns nullable so the full regulatory archive can be
@@ -16,9 +16,9 @@ CREATE TABLE IF NOT EXISTS grow_spray_compliance (
     -- Application & Usage
     application_method          JSONB NOT NULL DEFAULT '[]',
     target_pest_disease         JSONB NOT NULL DEFAULT '[]',
-    application_uom             TEXT REFERENCES sys_uom(code),
+    application_uom             TEXT REFERENCES sys_uom(id),
     maximum_quantity_per_acre   NUMERIC,
-    burn_uom                    TEXT REFERENCES sys_uom(code),
+    burn_uom                    TEXT REFERENCES sys_uom(id),
     application_per_burn        NUMERIC NOT NULL DEFAULT 1,
 
     -- Label & Compliance
@@ -38,9 +38,9 @@ CREATE TABLE IF NOT EXISTS grow_spray_compliance (
 COMMENT ON TABLE grow_spray_compliance IS 'Chemical label registry storing regulatory information per product. One row per chemical/fertilizer item with REI, PHI, label rates, and application restrictions.';
 
 
-CREATE INDEX idx_grow_spray_compliance_item ON grow_spray_compliance (invnt_item_name);
+CREATE INDEX idx_grow_spray_compliance_item ON grow_spray_compliance (invnt_item_id);
 
-COMMENT ON COLUMN grow_spray_compliance.invnt_item_name IS 'The chemical or fertilizer product this compliance record applies to';
+COMMENT ON COLUMN grow_spray_compliance.invnt_item_id IS 'The chemical or fertilizer product this compliance record applies to';
 COMMENT ON COLUMN grow_spray_compliance.epa_registration IS 'EPA registration number from the product label';
 COMMENT ON COLUMN grow_spray_compliance.phi_days IS 'Pre-Harvest Interval in days; minimum days between last application and harvest';
 COMMENT ON COLUMN grow_spray_compliance.rei_hours IS 'Restricted Entry Interval in hours; minimum hours before workers can re-enter treated area';

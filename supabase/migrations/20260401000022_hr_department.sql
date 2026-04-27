@@ -2,7 +2,7 @@
 -- Org-specific departments used to classify employees (e.g. GH, PH, Lettuce).
 -- TEXT PK is the display name verbatim.
 CREATE TABLE IF NOT EXISTS hr_department (
-    name          TEXT        PRIMARY KEY,
+    id          TEXT        PRIMARY KEY,
     org_id      TEXT        NOT NULL REFERENCES org(id),
     description TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),

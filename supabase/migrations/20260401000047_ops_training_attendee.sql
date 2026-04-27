@@ -1,9 +1,9 @@
 CREATE TABLE IF NOT EXISTS ops_training_attendee (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
-    farm_name                     TEXT REFERENCES org_farm(name),
+    farm_id                     TEXT REFERENCES org_farm(id),
     ops_training_id             UUID NOT NULL REFERENCES ops_training(id),
-    hr_employee_name              TEXT NOT NULL REFERENCES hr_employee(name),
+    hr_employee_id              TEXT NOT NULL REFERENCES hr_employee(id),
 
     signed_at                   TIMESTAMPTZ,
 
@@ -21,14 +21,14 @@ CREATE TABLE IF NOT EXISTS ops_training_attendee (
     updated_by          TEXT,
     is_deleted           BOOLEAN NOT NULL DEFAULT false,
 
-    CONSTRAINT uq_ops_training_attendee UNIQUE (ops_training_id, hr_employee_name)
+    CONSTRAINT uq_ops_training_attendee UNIQUE (ops_training_id, hr_employee_id)
 );
 
 COMMENT ON TABLE ops_training_attendee IS 'Individual attendance and certification records for each employee per training session. One row per employee per training.';
 
-COMMENT ON COLUMN ops_training_attendee.farm_name IS 'Inherited from ops_training.farm_name when attendee record is created';
+COMMENT ON COLUMN ops_training_attendee.farm_id IS 'Inherited from ops_training.farm_id when attendee record is created';
 
 CREATE INDEX idx_ops_training_attendee_training ON ops_training_attendee (ops_training_id);
-CREATE INDEX idx_ops_training_attendee_employee ON ops_training_attendee (hr_employee_name);
+CREATE INDEX idx_ops_training_attendee_employee ON ops_training_attendee (hr_employee_id);
 CREATE INDEX idx_ops_training_attendee_org      ON ops_training_attendee (org_id);
 

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS org_business_rule (
     id                  TEXT PRIMARY KEY,
     org_id              TEXT NOT NULL REFERENCES org(id),
-    rule_type           TEXT NOT NULL CHECK (rule_type IN ('business_rule', 'workflow', 'calculation', 'requirement', 'definition')),
+    rule_type           TEXT NOT NULL CHECK (rule_type IN ('Business Rule', 'Workflow', 'Calculation', 'Requirement', 'Definition')),
     module              TEXT,
     title               TEXT NOT NULL,
     description         TEXT NOT NULL,

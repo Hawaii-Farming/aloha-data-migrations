@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_monitoring_result (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
-    farm_name                     TEXT NOT NULL REFERENCES org_farm(name),
+    farm_id                     TEXT NOT NULL REFERENCES org_farm(id),
     site_id                     TEXT NOT NULL REFERENCES org_site(id),
     ops_task_tracker_id         UUID NOT NULL REFERENCES ops_task_tracker(id),
     grow_monitoring_metric_id    TEXT NOT NULL REFERENCES grow_monitoring_metric(id),

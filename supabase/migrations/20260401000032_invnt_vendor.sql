@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS invnt_vendor (
-    name           TEXT PRIMARY KEY,
+    id           TEXT PRIMARY KEY,
     org_id         TEXT NOT NULL REFERENCES org(id),
     contact_person TEXT,
     email          TEXT,
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS invnt_vendor (
     updated_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by     TEXT,
     is_deleted      BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT uq_invnt_vendor UNIQUE (org_id, name)
+    CONSTRAINT uq_invnt_vendor UNIQUE (org_id, id)
 );
 
 COMMENT ON TABLE invnt_vendor IS 'Organization-level suppliers used for procurement across all farms. Stores contact details, address, and payment terms.';

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS sales_invoice (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id              TEXT NOT NULL REFERENCES org(id),
-    farm_name             TEXT REFERENCES org_farm(name),
+    farm_id             TEXT REFERENCES org_farm(id),
     invoice_number      TEXT NOT NULL,
     invoice_date        DATE NOT NULL,
     customer_name       TEXT NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS sales_invoice (
 
 COMMENT ON TABLE sales_invoice IS 'QuickBooks invoice line items (nightly-synced from the invoices spreadsheet today, moving to direct QB API later). One row per line item — a single invoice_number can appear across multiple rows with different product_code/variety/grade combinations. No uniqueness constraint until QB line-item numbers are included in the pull, at which point (org_id, invoice_number, line_number) will be unique.';
 
-COMMENT ON COLUMN sales_invoice.farm_name IS 'Derived from the Farm column in the sheet (e.g. "Cuke" -> cuke, "Lettuce" -> lettuce)';
+COMMENT ON COLUMN sales_invoice.farm_id IS 'Derived from the Farm column in the sheet (e.g. "Cuke" -> cuke, "Lettuce" -> lettuce)';
 COMMENT ON COLUMN sales_invoice.invoice_number IS 'QB invoice number; not unique on its own because one invoice spans multiple line items';
 COMMENT ON COLUMN sales_invoice.invoice_date IS 'Date the invoice was issued';
 COMMENT ON COLUMN sales_invoice.customer_name IS 'Customer display name from QB';
@@ -35,7 +35,7 @@ COMMENT ON COLUMN sales_invoice.pounds IS 'Weight in pounds on the invoice line'
 COMMENT ON COLUMN sales_invoice.dollars IS 'Line total in dollars';
 
 CREATE INDEX idx_sales_invoice_org ON sales_invoice (org_id);
-CREATE INDEX idx_sales_invoice_farm ON sales_invoice (farm_name);
+CREATE INDEX idx_sales_invoice_farm ON sales_invoice (farm_id);
 CREATE INDEX idx_sales_invoice_date ON sales_invoice (invoice_date);
 CREATE INDEX idx_sales_invoice_number ON sales_invoice (invoice_number);
 CREATE INDEX idx_sales_invoice_customer ON sales_invoice (customer_name);

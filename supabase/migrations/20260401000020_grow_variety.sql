@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_variety (
-    code       TEXT PRIMARY KEY,
+    id       TEXT PRIMARY KEY,
     org_id     TEXT NOT NULL REFERENCES org(id),
-    farm_name    TEXT NOT NULL REFERENCES org_farm(name),
+    farm_id    TEXT NOT NULL REFERENCES org_farm(id),
     name       TEXT NOT NULL,
     description TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS grow_variety (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by TEXT,
     is_deleted  BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT uq_grow_variety_name UNIQUE (farm_name, name)
+    CONSTRAINT uq_grow_variety_name UNIQUE (farm_id, name)
 );
 
 COMMENT ON TABLE grow_variety IS 'Crop varieties grown on a specific farm, each with a short code for quick reference during data entry. Used across seeding, growing, and harvest modules.';

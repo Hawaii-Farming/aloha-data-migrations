@@ -14,7 +14,7 @@ Architecture:
   - tracker.site_id = the parent building (looked up from each trap's
     site_id_parent in org_site)
   - fsafe_pest_result.site_id = the specific trap
-  - pest_type = 'mouse' when Activity=TRUE and Pest Type='Mouse', else null
+  - pest_type = 'Mouse' when Activity=TRUE and Pest Type='Mouse', else null
 
 Site name mapping (sheet -> org_site id prefix):
   Cuke + GH cluster letters (HI/HK/KO/WA) -> cuke_<lower>_trap_<n>
@@ -163,7 +163,7 @@ def create_stub_employee(supabase, email):
         "last_name": last,
         "company_email": email,
         "is_primary_org": True,
-        "sys_access_level_name": "Employee",
+        "sys_access_level_id": "Employee",
         "is_deleted": True,
     })
     try:
@@ -194,12 +194,12 @@ def resolve_verifier(supabase, email, email_map, stub_cache):
 # ---------------------------------------------------------------------------
 
 def load_trap_index(supabase):
-    """Build a lookup: trap_id -> (site_id_parent, farm_name).
+    """Build a lookup: trap_id -> (site_id_parent, farm_id).
 
     Returns dict keyed by org_site.id for all pest_trap rows.
     """
     sites = paginate_select(
-        supabase, "org_site", "id,site_id_parent,farm_name",
+        supabase, "org_site", "id,site_id_parent,farm_id",
         eq_filters={"org_site_category_id": "pest_trap"},
     )
     return {r["id"]: r for r in sites}
@@ -315,9 +315,9 @@ def migrate(supabase, gc, email_map, stub_cache):
 
         # Resolve to canonical pest_type enum
         if activity and pest_type_raw == "mouse":
-            pest_type = "mouse"
+            pest_type = "Mouse"
         elif activity and pest_type_raw == "rat":
-            pest_type = "rat"
+            pest_type = "Rat"
         else:
             pest_type = None
 
@@ -326,7 +326,7 @@ def migrate(supabase, gc, email_map, stub_cache):
         if len(station_codes) > 1:
             fanned_out += 1
 
-        farm_name = farm_raw.lower()  # 'cuke' / 'lettuce'
+        farm_id = farm_raw.lower()  # 'cuke' / 'lettuce'
 
         for station in station_codes:
             trap_id = build_trap_id(farm_raw, site_raw, station)
@@ -337,7 +337,7 @@ def migrate(supabase, gc, email_map, stub_cache):
             parent_site = trap.get("site_id_parent")
             if not parent_site:
                 # Trap has no parent — fall back to the farm parent (gh/bip)
-                parent_site = "gh" if farm_name == "lettuce" else "bip"
+                parent_site = "gh" if farm_id == "lettuce" else "bip"
 
             # Pre-generate tracker UUID so we can assign it to the
             # pest_result row without a DB roundtrip.
@@ -345,9 +345,9 @@ def migrate(supabase, gc, email_map, stub_cache):
             trackers.append({
                 "id": tracker_id,
                 "org_id": ORG_ID,
-                "farm_name": farm_name,
+                "farm_id": farm_id,
                 "site_id": parent_site,
-                "ops_task_name": TASK_ID,
+                "ops_task_id": TASK_ID,
                 "start_time": reported,
                 "stop_time": reported,
                 "is_completed": True,
@@ -363,7 +363,7 @@ def migrate(supabase, gc, email_map, stub_cache):
 
             pending_results.append({
                 "org_id": ORG_ID,
-                "farm_name": farm_name,
+                "farm_id": farm_id,
                 "site_id": trap_id,
                 "ops_task_tracker_id": tracker_id,
                 "pest_type": pest_type,

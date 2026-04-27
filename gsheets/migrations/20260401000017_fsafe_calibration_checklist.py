@@ -61,26 +61,26 @@ TASK_ID = "food_safety_log"
 # ---------------------------------------------------------------------------
 # Per-farm config
 # ---------------------------------------------------------------------------
-# (template_id, farm_name, host_site_id, sheet_farm_value)
+# (template_id, farm_id, host_site_id, sheet_farm_value)
 FARMS = [
-    {"farm_name": "Cuke",    "host_site_id": "bip_ph",     "sheet_farm": "Cuke",
+    {"farm_id": "Cuke",    "host_site_id": "bip_ph",     "sheet_farm": "Cuke",
      "template_id": "cuke_calibration",    "template_name": "Calibration"},
-    {"farm_name": "Lettuce", "host_site_id": "lettuce_ph", "sheet_farm": "Lettuce",
+    {"farm_id": "Lettuce", "host_site_id": "lettuce_ph", "sheet_farm": "Lettuce",
      "template_id": "lettuce_calibration", "template_name": "Calibration"},
 ]
 
 # Equipment definitions per farm. id is farm-prefixed; name is unprefixed
-# since farm_name already scopes the row.
-def equipment_for(farm_name, host_site_id):
+# since farm_id already scopes the row.
+def equipment_for(farm_id, host_site_id):
     rows = []
-    rows.append({"id": f"{farm_name}_cooler_1_thermometer", "name": "Cooler 1 Thermometer"})
-    rows.append({"id": f"{farm_name}_cooler_2_thermometer", "name": "Cooler 2 Thermometer"})
-    rows.append({"id": f"{farm_name}_pack_room_thermometer", "name": "Pack Room Thermometer"})
+    rows.append({"id": f"{farm_id}_cooler_1_thermometer", "name": "Cooler 1 Thermometer"})
+    rows.append({"id": f"{farm_id}_cooler_2_thermometer", "name": "Cooler 2 Thermometer"})
+    rows.append({"id": f"{farm_id}_pack_room_thermometer", "name": "Pack Room Thermometer"})
     for n in range(1, 10):
-        rows.append({"id": f"{farm_name}_scale_{n}", "name": f"Scale {n}"})
-    rows.append({"id": f"{farm_name}_luminometer", "name": "Luminometer"})
+        rows.append({"id": f"{farm_id}_scale_{n}", "name": f"Scale {n}"})
+    rows.append({"id": f"{farm_id}_luminometer", "name": "Luminometer"})
     return [
-        {**r, "farm_name": farm_name, "site_id": host_site_id, "type": "tool"}
+        {**r, "farm_id": farm_id, "site_id": host_site_id, "type": "Tool"}
         for r in rows
     ]
 
@@ -265,7 +265,7 @@ def create_stub_employee(supabase, email):
         "last_name": last,
         "company_email": email,
         "is_primary_org": True,
-        "sys_access_level_name": "Employee",
+        "sys_access_level_id": "Employee",
         "is_deleted": True,
     })
     try:
@@ -298,14 +298,14 @@ def resolve_verifier(supabase, email, email_map, stub_cache):
 def upsert_equipment(supabase):
     rows = []
     for farm in FARMS:
-        for eq in equipment_for(farm["farm_name"], farm["host_site_id"]):
+        for eq in equipment_for(farm["farm_id"], farm["host_site_id"]):
             rows.append(audit({
                 "id": eq["id"],
                 "org_id": ORG_ID,
-                "farm_name": eq["farm_name"],
+                "farm_id": eq["farm_id"],
                 "site_id": eq["site_id"],
                 "type": eq["type"],
-                "name": eq["name"],
+                "id": eq["id"],
             }))
     insert_rows(supabase, "org_equipment", rows, upsert=True)
 
@@ -317,9 +317,9 @@ def upsert_templates(supabase):
         rows.append(audit({
             "id": farm["template_id"],
             "org_id": ORG_ID,
-            "farm_name": farm["farm_name"],
-            "name": farm["template_name"],
-            "org_module_name": "food_safety",
+            "farm_id": farm["farm_id"],
+            "id": farm["template_name"],
+            "org_module_id": "food_safety",
             "description": (
                 f"{farm['sheet_farm']} monthly equipment calibration: thermometers (obs vs NIST), "
                 f"packing scales (498-502 g), and luminometer controls. "
@@ -336,7 +336,7 @@ def reseed_questions(supabase):
     """Returns: dict of {(template_id, question_text): question_id}"""
     print("\nClearing existing questions for these templates...")
     for farm in FARMS:
-        supabase.table("ops_template_question").delete().eq("ops_template_name", farm["template_id"]).execute()
+        supabase.table("ops_template_question").delete().eq("ops_template_id", farm["template_id"]).execute()
     print("  Cleared")
 
     rows = []
@@ -344,8 +344,8 @@ def reseed_questions(supabase):
         for order, (q_text, rtype, kw, _eq_suffix, _sheet_col, _vk) in enumerate(QUESTION_DEFS, start=1):
             rows.append(audit({
                 "org_id": ORG_ID,
-                "farm_name": farm["farm_name"],
-                "ops_template_name": farm["template_id"],
+                "farm_id": farm["farm_id"],
+                "ops_template_id": farm["template_id"],
                 "question_text": q_text,
                 "response_type": rtype,
                 "is_required": kw.get("is_required", True),
@@ -362,23 +362,23 @@ def reseed_questions(supabase):
     inserted = insert_rows(supabase, "ops_template_question", rows)
     q_map = {}
     for r in inserted:
-        q_map[(r["ops_template_name"], r["question_text"])] = r["id"]
+        q_map[(r["ops_template_id"], r["question_text"])] = r["id"]
     return q_map
 
 
 def upsert_task_template_links(supabase):
     for farm in FARMS:
         supabase.table("ops_task_template").delete().eq(
-            "ops_template_name", farm["template_id"]
-        ).eq("ops_task_name", TASK_ID).execute()
+            "ops_template_id", farm["template_id"]
+        ).eq("ops_task_id", TASK_ID).execute()
 
     rows = []
     for farm in FARMS:
         rows.append(audit({
             "org_id": ORG_ID,
-            "farm_name": farm["farm_name"],
-            "ops_task_name": TASK_ID,
-            "ops_template_name": farm["template_id"],
+            "farm_id": farm["farm_id"],
+            "ops_task_id": TASK_ID,
+            "ops_template_id": farm["template_id"],
         }))
     insert_rows(supabase, "ops_task_template", rows)
 
@@ -401,15 +401,15 @@ def clear_existing_data(supabase):
         result = (
             supabase.table("ops_template_result")
             .select("ops_task_tracker_id")
-            .eq("ops_template_name", tid)
+            .eq("ops_template_id", tid)
             .execute()
         )
         for r in result.data:
             tracker_ids_to_delete.add(r["ops_task_tracker_id"])
 
     for tid in template_ids:
-        supabase.table("ops_template_result").delete().eq("ops_template_name", tid).execute()
-        supabase.table("ops_corrective_action_taken").delete().eq("ops_template_name", tid).execute()
+        supabase.table("ops_template_result").delete().eq("ops_template_id", tid).execute()
+        supabase.table("ops_corrective_action_taken").delete().eq("ops_template_id", tid).execute()
 
     if tracker_ids_to_delete:
         # Delete in chunks of 100 since IN clauses get unwieldy
@@ -428,7 +428,7 @@ def clear_existing_data(supabase):
 
 def migrate_farm(supabase, farm, all_records, q_map, email_map, stub_cache):
     template_id = farm["template_id"]
-    farm_name = farm["farm_name"]
+    farm_id = farm["farm_id"]
     sheet_farm = farm["sheet_farm"]
 
     print(f"\n=== {template_id} ({sheet_farm}) ===")
@@ -436,7 +436,7 @@ def migrate_farm(supabase, farm, all_records, q_map, email_map, stub_cache):
     print(f"  {len(records)} sheet rows")
 
     trackers = []
-    pending = []  # (tracker_idx, q_id, equipment_name, value_kind, raw_value)
+    pending = []  # (tracker_idx, q_id, equipment_id, value_kind, raw_value)
     skipped_missing_date = 0
 
     for r in records:
@@ -454,9 +454,9 @@ def migrate_farm(supabase, farm, all_records, q_map, email_map, stub_cache):
         tracker_idx = len(trackers)
         trackers.append({
             "org_id": ORG_ID,
-            "farm_name": farm_name,
+            "farm_id": farm_id,
             "site_id": None,
-            "ops_task_name": TASK_ID,
+            "ops_task_id": TASK_ID,
             "start_time": reported,
             "stop_time": reported,
             "is_completed": True,
@@ -470,8 +470,8 @@ def migrate_farm(supabase, farm, all_records, q_map, email_map, stub_cache):
             q_id = q_map.get((template_id, q_text))
             if not q_id:
                 continue
-            equipment_name = f"{farm_name}_{eq_suffix}"
-            pending.append((tracker_idx, q_id, equipment_name, value_kind, r.get(sheet_col)))
+            equipment_id = f"{farm_id}_{eq_suffix}"
+            pending.append((tracker_idx, q_id, equipment_id, value_kind, r.get(sheet_col)))
 
     print(f"  Building {len(trackers)} trackers")
     if skipped_missing_date:
@@ -483,16 +483,16 @@ def migrate_farm(supabase, farm, all_records, q_map, email_map, stub_cache):
     inserted_trackers = insert_rows(supabase, "ops_task_tracker", trackers)
 
     result_rows = []
-    for tracker_idx, q_id, equipment_name, value_kind, raw in pending:
+    for tracker_idx, q_id, equipment_id, value_kind, raw in pending:
         tracker = inserted_trackers[tracker_idx]
         row = {
             "org_id": ORG_ID,
-            "farm_name": farm_name,
+            "farm_id": farm_id,
             "ops_task_tracker_id": tracker["id"],
-            "ops_template_name": template_id,
+            "ops_template_id": template_id,
             "ops_template_question_id": q_id,
             "site_id": None,         # equipment-scoped
-            "equipment_name": equipment_name,
+            "equipment_id": equipment_id,
             "created_by": tracker["created_by"],
             "updated_by": tracker["updated_by"],
         }

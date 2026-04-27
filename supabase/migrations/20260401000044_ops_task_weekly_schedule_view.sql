@@ -4,10 +4,10 @@ WITH schedule_base AS (
     -- Planned schedule entries only (no tracker linked).
     -- Derives the task date from start_time and the Sunday-anchored week start date.
     SELECT
-        s.hr_employee_name,
-        s.ops_task_name,
+        s.hr_employee_id,
+        s.ops_task_id,
         s.org_id,
-        s.farm_name,
+        s.farm_id,
         s.start_time                                                        AS schedule_start,
         s.stop_time                                                         AS schedule_stop,
         s.total_hours                                                       AS schedule_total_hours,
@@ -22,10 +22,10 @@ WITH schedule_base AS (
 SELECT
     sb.org_id,
     sb.week_start_date,
-    e.name                                                                  AS hr_employee_name,
-    e.hr_department_name,
-    e.hr_work_authorization_name,
-    t.name                                                                  AS task,
+    e.id                                                                    AS hr_employee_id,
+    e.hr_department_id,
+    e.hr_work_authorization_id,
+    t.id                                                                    AS task,
 
     -- Day columns — formatted as "HH:MM - HH:MM"; null when employee is not scheduled that day
     MAX(CASE WHEN sb.day_of_week = 0
@@ -95,17 +95,17 @@ SELECT
          ELSE false END                                                     AS is_over_ot_threshold
 
 FROM schedule_base sb
-JOIN hr_employee e  ON e.name = sb.hr_employee_name
-JOIN ops_task    t  ON t.name = sb.ops_task_name
+JOIN hr_employee e  ON e.id = sb.hr_employee_id
+JOIN ops_task    t  ON t.id = sb.ops_task_id
 GROUP BY
     sb.week_start_date,
     sb.org_id,
-    sb.farm_name,
-    e.name,
-    e.hr_department_name,
-    e.hr_work_authorization_name,
+    sb.farm_id,
+    e.id,
+    e.hr_department_id,
+    e.hr_work_authorization_id,
     e.overtime_threshold,
-    t.name
+    t.id
 ORDER BY
     sb.week_start_date,
-    e.name;
+    e.id;

@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS ops_training_type (
-    name        TEXT PRIMARY KEY,
+    id        TEXT PRIMARY KEY,
     org_id      TEXT        NOT NULL REFERENCES org(id),
     description TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS ops_training_type (
     updated_by  TEXT,
     is_deleted   BOOLEAN     NOT NULL DEFAULT false,
 
-    CONSTRAINT uq_ops_training_type UNIQUE (org_id, name)
+    CONSTRAINT uq_ops_training_type UNIQUE (org_id, id)
 );
 
 COMMENT ON TABLE ops_training_type IS 'Org-specific training types used to classify training sessions. Each org defines its own set of types.';

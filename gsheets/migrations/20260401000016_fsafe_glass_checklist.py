@@ -72,7 +72,7 @@ TEMPLATES = [
     {
         "id": "cuke_glass",
         "name": "Glass Inspection",
-        "farm_name": "Cuke",
+        "farm_id": "Cuke",
         "site_id": "bip_ph",
         "sheet_farm": "Cuke",
         "questions": CUKE_GLASS_QUESTIONS,
@@ -81,7 +81,7 @@ TEMPLATES = [
     {
         "id": "lettuce_glass",
         "name": "Glass Inspection",
-        "farm_name": "Lettuce",
+        "farm_id": "Lettuce",
         "site_id": "lettuce_ph",
         "sheet_farm": "Lettuce",
         "questions": LETTUCE_GLASS_QUESTIONS,
@@ -204,7 +204,7 @@ def create_stub_employee(supabase, email):
         "last_name": last,
         "company_email": email,
         "is_primary_org": True,
-        "sys_access_level_name": "Employee",
+        "sys_access_level_id": "Employee",
         "is_deleted": True,
     })
     try:
@@ -241,9 +241,9 @@ def upsert_templates(supabase):
         rows.append(audit({
             "id": t["id"],
             "org_id": ORG_ID,
-            "farm_name": t["farm_name"],
-            "name": t["name"],
-            "org_module_name": "food_safety",
+            "farm_id": t["farm_id"],
+            "id": t["name"],
+            "org_module_id": "food_safety",
             "description": t["description"],
             "display_order": next_order,
         }))
@@ -254,7 +254,7 @@ def upsert_templates(supabase):
 def reseed_questions(supabase):
     print("\nClearing existing questions for these templates...")
     for t in TEMPLATES:
-        supabase.table("ops_template_question").delete().eq("ops_template_name", t["id"]).execute()
+        supabase.table("ops_template_question").delete().eq("ops_template_id", t["id"]).execute()
     print("  Cleared")
 
     rows = []
@@ -262,8 +262,8 @@ def reseed_questions(supabase):
         for order, (q_text, rtype, kw) in enumerate(t["questions"], start=1):
             rows.append(audit({
                 "org_id": ORG_ID,
-                "farm_name": t["farm_name"],
-                "ops_template_name": t["id"],
+                "farm_id": t["farm_id"],
+                "ops_template_id": t["id"],
                 "question_text": q_text,
                 "response_type": rtype,
                 "is_required": kw.get("is_required", True),
@@ -280,23 +280,23 @@ def reseed_questions(supabase):
     inserted = insert_rows(supabase, "ops_template_question", rows)
     q_map = {}
     for r in inserted:
-        q_map[(r["ops_template_name"], r["question_text"])] = r["id"]
+        q_map[(r["ops_template_id"], r["question_text"])] = r["id"]
     return q_map
 
 
 def upsert_task_template_links(supabase):
     for t in TEMPLATES:
         supabase.table("ops_task_template").delete().eq(
-            "ops_template_name", t["id"]
-        ).eq("ops_task_name", TASK_ID).execute()
+            "ops_template_id", t["id"]
+        ).eq("ops_task_id", TASK_ID).execute()
 
     rows = []
     for t in TEMPLATES:
         rows.append(audit({
             "org_id": ORG_ID,
-            "farm_name": t["farm_name"],
-            "ops_task_name": TASK_ID,
-            "ops_template_name": t["id"],
+            "farm_id": t["farm_id"],
+            "ops_task_id": TASK_ID,
+            "ops_template_id": t["id"],
         }))
     insert_rows(supabase, "ops_task_template", rows)
 
@@ -322,7 +322,7 @@ def clear_existing_data(supabase):
         result = (
             supabase.table("ops_template_result")
             .select("ops_task_tracker_id")
-            .eq("ops_template_name", tid)
+            .eq("ops_template_id", tid)
             .execute()
         )
         for r in result.data:
@@ -330,8 +330,8 @@ def clear_existing_data(supabase):
 
     # Now delete the results + corrective actions
     for tid in template_ids:
-        supabase.table("ops_template_result").delete().eq("ops_template_name", tid).execute()
-        supabase.table("ops_corrective_action_taken").delete().eq("ops_template_name", tid).execute()
+        supabase.table("ops_template_result").delete().eq("ops_template_id", tid).execute()
+        supabase.table("ops_corrective_action_taken").delete().eq("ops_template_id", tid).execute()
 
     # Delete the previously-captured tracker IDs (now orphaned)
     if tracker_ids_to_delete:
@@ -347,7 +347,7 @@ def clear_existing_data(supabase):
 
 def migrate_template(supabase, gc, template_def, q_map, all_records, email_map, stub_cache):
     template_id = template_def["id"]
-    farm_name = template_def["farm_name"]
+    farm_id = template_def["farm_id"]
     site_id = template_def["site_id"]
     sheet_farm = template_def["sheet_farm"]
     questions = template_def["questions"]
@@ -376,9 +376,9 @@ def migrate_template(supabase, gc, template_def, q_map, all_records, email_map, 
         tracker_idx = len(trackers)
         trackers.append({
             "org_id": ORG_ID,
-            "farm_name": farm_name,
+            "farm_id": farm_id,
             "site_id": site_id,
-            "ops_task_name": TASK_ID,
+            "ops_task_id": TASK_ID,
             "start_time": reported,
             "stop_time": reported,
             "is_completed": True,
@@ -408,9 +408,9 @@ def migrate_template(supabase, gc, template_def, q_map, all_records, email_map, 
         tracker = inserted_trackers[tracker_idx]
         row = {
             "org_id": ORG_ID,
-            "farm_name": farm_name,
+            "farm_id": farm_id,
             "ops_task_tracker_id": tracker["id"],
-            "ops_template_name": template_id,
+            "ops_template_id": template_id,
             "ops_template_question_id": q_id,
             "site_id": site_id,
             "created_by": tracker["created_by"],

@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS ops_task_schedule (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                  TEXT NOT NULL REFERENCES org(id),
-    farm_name                 TEXT REFERENCES org_farm(name),
-    ops_task_name             TEXT NOT NULL REFERENCES ops_task(name),
+    farm_id                 TEXT REFERENCES org_farm(id),
+    ops_task_id             TEXT NOT NULL REFERENCES ops_task(id),
     ops_task_tracker_id     UUID REFERENCES ops_task_tracker(id),
-    hr_employee_name          TEXT NOT NULL REFERENCES hr_employee(name),
+    hr_employee_id          TEXT NOT NULL REFERENCES hr_employee(id),
     start_time              TIMESTAMPTZ NOT NULL,
     stop_time               TIMESTAMPTZ,
     -- Lunch-adjusted hours sourced from the schedule capture (sheet's daily
@@ -25,20 +25,20 @@ CREATE TABLE IF NOT EXISTS ops_task_schedule (
     is_deleted               BOOLEAN NOT NULL DEFAULT false
 );
 
-COMMENT ON TABLE ops_task_schedule IS 'Employee task assignments for both planning and execution. When ops_task_tracker_id is null, the row is a planned schedule entry. When set, it is an executed activity. ops_task_name is always set — derived from the tracker when linked, or selected by the user for planned entries.';
+COMMENT ON TABLE ops_task_schedule IS 'Employee task assignments for both planning and execution. When ops_task_tracker_id is null, the row is a planned schedule entry. When set, it is an executed activity. ops_task_id is always set — derived from the tracker when linked, or selected by the user for planned entries.';
 
-COMMENT ON COLUMN ops_task_schedule.farm_name IS 'Inherited from ops_task_tracker.farm_name when linked to a tracker; user-selected for planned entries';
-COMMENT ON COLUMN ops_task_schedule.ops_task_name IS 'Inherited from ops_task_tracker.ops_task_name when linked to a tracker; user-selected for planned entries';
+COMMENT ON COLUMN ops_task_schedule.farm_id IS 'Inherited from ops_task_tracker.farm_id when linked to a tracker; user-selected for planned entries';
+COMMENT ON COLUMN ops_task_schedule.ops_task_id IS 'Inherited from ops_task_tracker.ops_task_id when linked to a tracker; user-selected for planned entries';
 COMMENT ON COLUMN ops_task_schedule.start_time IS 'Inherited from ops_task_tracker.start_time when linked to a tracker; user-selected for planned entries';
 COMMENT ON COLUMN ops_task_schedule.stop_time IS 'Inherited from ops_task_tracker.stop_time when linked to a tracker; user-selected for planned entries';
 
 -- Executed: one employee per tracker
-CREATE UNIQUE INDEX uq_ops_task_schedule_executed ON ops_task_schedule (ops_task_tracker_id, hr_employee_name) WHERE ops_task_tracker_id IS NOT NULL;
+CREATE UNIQUE INDEX uq_ops_task_schedule_executed ON ops_task_schedule (ops_task_tracker_id, hr_employee_id) WHERE ops_task_tracker_id IS NOT NULL;
 -- Planned: one employee per task per start_time
-CREATE UNIQUE INDEX uq_ops_task_schedule_planned ON ops_task_schedule (ops_task_name, hr_employee_name, start_time) WHERE ops_task_tracker_id IS NULL;
+CREATE UNIQUE INDEX uq_ops_task_schedule_planned ON ops_task_schedule (ops_task_id, hr_employee_id, start_time) WHERE ops_task_tracker_id IS NULL;
 
-CREATE INDEX idx_ops_task_schedule_task     ON ops_task_schedule (ops_task_name);
+CREATE INDEX idx_ops_task_schedule_task     ON ops_task_schedule (ops_task_id);
 CREATE INDEX idx_ops_task_schedule_tracker  ON ops_task_schedule (ops_task_tracker_id);
-CREATE INDEX idx_ops_task_schedule_employee ON ops_task_schedule (hr_employee_name);
+CREATE INDEX idx_ops_task_schedule_employee ON ops_task_schedule (hr_employee_id);
 CREATE INDEX idx_ops_task_schedule_org_id   ON ops_task_schedule (org_id);
 

@@ -15,7 +15,7 @@ Seed batch linkage (after 2026-04-17 cuke split):
   where YY/MM come from seeding_date, GH from site_id (uppercased), and
   VARIETY from the linked invnt_item.grow_variety_id (uppercased). Trial
   vs production is NOT baked into the code — it comes from
-  grow_trial_type_name (non-null = trial). The lookup key is therefore
+  grow_trial_type_id (non-null = trial). The lookup key is therefore
   (code, is_trial) so we don't confuse a trial cycle with a production
   cycle at the same GH/month/variety.
 
@@ -49,7 +49,7 @@ variety+grade) with tare regression formulas from the legacy sheet.
 Usage:
     python migrations/20260401000026_grow_cuke_harvest.py
 
-Rerunnable: deletes all grow_harvest_weight rows for farm_name='cuke',
+Rerunnable: deletes all grow_harvest_weight rows for farm_id='cuke',
 then reinserts.
 """
 
@@ -224,7 +224,7 @@ def ensure_containers(supabase):
         rows.append(audit({
             "id": spec["id"],
             "org_id": ORG_ID,
-            "farm_name": FARM_ID,
+            "farm_id": FARM_ID,
             "name": spec["name"],
             "grow_variety_id": spec["grow_variety_id"],
             "grow_grade_id": spec["grow_grade_id"],
@@ -244,7 +244,7 @@ def ensure_containers(supabase):
 
 def derive_cycle_code(seeding_date, site_id, variety_id):
     """Legacy cycle code, derived: {YY}{MM}{GH}{VARIETY}. No P/T suffix —
-    trial/production is tracked separately via grow_trial_type_name."""
+    trial/production is tracked separately via grow_trial_type_id."""
     yy = seeding_date.year % 100
     mm = seeding_date.month
     gh = str(site_id or "").upper()
@@ -263,10 +263,10 @@ def build_batch_lookup(supabase):
               sb.id,
               sb.seeding_date,
               sb.site_id,
-              sb.grow_trial_type_name,
+              sb.grow_trial_type_id,
               i.grow_variety_id AS variety_id
             FROM grow_cuke_seed_batch sb
-            LEFT JOIN invnt_item i ON i.id = sb.invnt_item_name
+            LEFT JOIN invnt_item i ON i.id = sb.invnt_item_id
             WHERE sb.is_deleted = false
         """)
     lookup = {}
@@ -274,7 +274,7 @@ def build_batch_lookup(supabase):
         if not b["seeding_date"] or not b["variety_id"]:
             continue
         code = derive_cycle_code(b["seeding_date"], b["site_id"], b["variety_id"])
-        key = (code, bool(b["grow_trial_type_name"]))
+        key = (code, bool(b["grow_trial_type_id"]))
         lookup.setdefault(key, []).append(b["id"])
     return lookup
 
@@ -287,11 +287,11 @@ def clear_existing(supabase):
     """Delete all cuke harvest weights and containers so the migration is rerunnable."""
     print("\nClearing existing cuke harvest data...")
     supabase.table("grow_harvest_weight").delete().eq(
-        "farm_name", FARM_ID
+        "farm_id", FARM_ID
     ).execute()
     print("  Cleared grow_harvest_weight")
     supabase.table("grow_harvest_container").delete().eq(
-        "farm_name", FARM_ID
+        "farm_id", FARM_ID
     ).execute()
     print("  Cleared grow_harvest_container")
 
@@ -310,14 +310,14 @@ def ensure_grades(supabase):
         audit({
             "id": "1",
             "org_id": ORG_ID,
-            "farm_name": FARM_ID,
+            "farm_id": FARM_ID,
             "code": "1",
             "name": "On Grade",
         }),
         audit({
             "id": "2",
             "org_id": ORG_ID,
-            "farm_name": FARM_ID,
+            "farm_id": FARM_ID,
             "code": "2",
             "name": "Off Grade",
         }),
@@ -380,13 +380,13 @@ def build_harvest_row(sheet_row, batch_lookup, known_sites):
 
     return {
         "org_id": ORG_ID,
-        "farm_name": FARM_ID,
+        "farm_id": FARM_ID,
         "site_id": gh,
         "ops_task_tracker_id": None,
         "grow_cuke_seed_batch_id": batch_id,
         "grow_grade_id": grade_id,
         "harvest_date": harvest_date.isoformat(),
-        "grow_harvest_container_name": container_id,
+        "grow_harvest_container_id": container_id,
         "number_of_containers": 1,
         "weight_uom": "pound",
         "gross_weight": gross_weight,
@@ -415,7 +415,7 @@ def main():
     sites = (
         supabase.table("org_site")
         .select("id")
-        .eq("farm_name", FARM_ID)
+        .eq("farm_id", FARM_ID)
         .eq("org_site_subcategory_id", "greenhouse")
         .execute()
         .data

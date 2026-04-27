@@ -27,7 +27,7 @@ Rotation logic (forward 52-week planner):
   - For each slot, computes seeding_date = anchor_week_start +
     7 * ((slot_num - anchor_slot_num) mod 12) days, then steps forward every
     12 weeks up to a 52-week horizon
-  - Per-variety seeds/rows are derived from planting rows where scenario='planned'
+  - Per-variety seeds/rows are derived from planting rows where scenario='Planned'
 
 Usage:
     python migrations/20260418000001_rebuild_cuke_seed_batch_and_planting.py
@@ -220,7 +220,7 @@ def ensure_rotation(supabase):
         is_anchor = (slot_num == ANCHOR_SLOT_NUM)
         rows.append(audit({
             "org_id": ORG_ID,
-            "farm_name": FARM_ID,
+            "farm_id": FARM_ID,
             "slot_num": slot_num,
             "site_id": site_id,
             "is_anchor": is_anchor,
@@ -307,9 +307,9 @@ def rebuild_plantings(supabase, plant_map_records):
         if v1a and ppb1 in (4, 5):
             rows_out.append(audit({
                 "org_id": ORG_ID,
-                "farm_name": FARM_ID,
+                "farm_id": FARM_ID,
                 "org_site_cuke_gh_row_id": row_id,
-                "scenario": "current",
+                "scenario": "Current",
                 "grow_variety_id": v1a,
                 "grow_variety_id_2": v1b,
                 "plants_per_bag": ppb1,
@@ -321,9 +321,9 @@ def rebuild_plantings(supabase, plant_map_records):
         if v2a and ppb2 in (4, 5):
             rows_out.append(audit({
                 "org_id": ORG_ID,
-                "farm_name": FARM_ID,
+                "farm_id": FARM_ID,
                 "org_site_cuke_gh_row_id": row_id,
-                "scenario": "planned",
+                "scenario": "Planned",
                 "grow_variety_id": v2a,
                 "grow_variety_id_2": v2b,
                 "plants_per_bag": ppb2,
@@ -372,9 +372,9 @@ def build_historical_batches(seeding_records):
             item_id = lookup_item(name) or DEFAULT_VARIETY_ITEM[variety_id]
             rows.append({
                 "org_id":          ORG_ID,
-                "farm_name":         FARM_ID,
+                "farm_id":         FARM_ID,
                 "site_id":         site_id,
-                "invnt_item_name":   item_id,
+                "invnt_item_id":   item_id,
                 "seeding_date":    seeding_date.isoformat(),
                 "transplant_date": transplant_date.isoformat(),
                 "seeds":           seeds,
@@ -397,10 +397,10 @@ def build_historical_batches(seeding_records):
             item_id = lookup_item(t_name) or DEFAULT_VARIETY_ITEM[variety_id]
             rows.append({
                 "org_id":              ORG_ID,
-                "farm_name":             FARM_ID,
+                "farm_id":             FARM_ID,
                 "site_id":             site_id,
-                "invnt_item_name":       item_id,
-                "grow_trial_type_name":  TRIAL_TYPE_ID,
+                "invnt_item_id":       item_id,
+                "grow_trial_type_id":  TRIAL_TYPE_ID,
                 "seeding_date":        seeding_date.isoformat(),
                 "transplant_date":     transplant_date.isoformat(),
                 "seeds":               t_count,
@@ -420,8 +420,8 @@ def ensure_legacy_trial_type(supabase):
     supabase.table("grow_trial_type").upsert(audit({
         "id": TRIAL_TYPE_ID,
         "org_id": ORG_ID,
-        "farm_name": FARM_ID,
-        "name": "Legacy Trial",
+        "farm_id": FARM_ID,
+        "id": "Legacy Trial",
         "description": "Historical trial seedings migrated from grow_C_seeding sheet",
     })).execute()
 
@@ -519,9 +519,9 @@ def build_forward_batches(plant_map_records, bag_changes_records, rotation):
                         continue
                     rows_out.append({
                         "org_id":                ORG_ID,
-                        "farm_name":               FARM_ID,
+                        "farm_id":               FARM_ID,
                         "site_id":               site_id,
-                        "invnt_item_name":         DEFAULT_VARIETY_ITEM[variety_id],
+                        "invnt_item_id":         DEFAULT_VARIETY_ITEM[variety_id],
                         "seeding_date":          sd.isoformat(),
                         "transplant_date":       (sd + timedelta(days=14)).isoformat(),
                         "next_bag_change_date":  (next_bag_change(site_id, sd).isoformat()
@@ -529,7 +529,7 @@ def build_forward_batches(plant_map_records, bag_changes_records, rotation):
                         "seeds":                 vals["seeds"],
                         "rows_4_per_bag":        vals["r4"],
                         "rows_5_per_bag":        vals["r5"],
-                        "status":                "planned",
+                        "status":                "Planned",
                         "created_by":            AUDIT_USER,
                         "updated_by":            AUDIT_USER,
                     })
@@ -542,7 +542,7 @@ def rebuild_seed_batches(supabase, seeding_records, plant_map_records, bag_chang
     print("\n=== grow_cuke_seed_batch ===")
     ensure_legacy_trial_type(supabase)
 
-    supabase.table("grow_cuke_seed_batch").delete().eq("farm_name", FARM_ID).execute()
+    supabase.table("grow_cuke_seed_batch").delete().eq("farm_id", FARM_ID).execute()
     print("  Cleared existing cuke seed batches")
 
     hist = build_historical_batches(seeding_records)

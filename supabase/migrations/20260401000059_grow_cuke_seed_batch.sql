@@ -1,14 +1,14 @@
 CREATE TABLE IF NOT EXISTS grow_cuke_seed_batch (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                  TEXT NOT NULL REFERENCES org(id),
-    farm_name                 TEXT NOT NULL REFERENCES org_farm(name),
+    farm_id                 TEXT NOT NULL REFERENCES org_farm(id),
     site_id                 TEXT REFERENCES org_site_cuke_gh(id),
     -- ops_task_tracker_id and invnt_lot_id intentionally carry no FK: both
     -- parent tables are TRUNCATEd nightly and CASCADE would wipe this
     -- static/forward-planned plant-map table with no nightly re-populator.
     ops_task_tracker_id     UUID,
-    grow_trial_type_name      TEXT REFERENCES grow_trial_type(name),
-    invnt_item_name           TEXT REFERENCES invnt_item(name),
+    grow_trial_type_id      TEXT REFERENCES grow_trial_type(id),
+    invnt_item_id           TEXT REFERENCES invnt_item(id),
     invnt_lot_id            TEXT,
     seeding_date            DATE NOT NULL,
     transplant_date         DATE NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS grow_cuke_seed_batch (
     rows_4_per_bag          INTEGER NOT NULL DEFAULT 0,
     rows_5_per_bag          INTEGER NOT NULL DEFAULT 0,
     seeds                   INTEGER NOT NULL,
-    status                  TEXT NOT NULL DEFAULT 'planned' CHECK (status IN ('planned', 'seeded', 'transplanted', 'harvesting', 'harvested')),
+    status                  TEXT NOT NULL DEFAULT 'planned' CHECK (status IN ('Planned', 'Seeded', 'Transplanted', 'Harvesting', 'Harvested')),
     notes                   TEXT,
     created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by              TEXT,
@@ -28,9 +28,9 @@ CREATE TABLE IF NOT EXISTS grow_cuke_seed_batch (
 COMMENT ON TABLE grow_cuke_seed_batch IS 'Cuke seeding cycle record. One row per variety per greenhouse per seeding event. Holds historical and forward-planned cycles. Snapshot fields (rows_4_per_bag, rows_5_per_bag, seeds) are frozen at seeding time from the plant map and not recomputed.';
 
 COMMENT ON COLUMN grow_cuke_seed_batch.site_id IS 'Greenhouse being seeded; filtered to org_site where subcategory = greenhouse';
-COMMENT ON COLUMN grow_cuke_seed_batch.grow_trial_type_name IS 'Null if not a trial; set when testing a new lot, variety, or seed source';
-COMMENT ON COLUMN grow_cuke_seed_batch.invnt_item_name IS 'Specific seed cultivar used for this cycle (e.g. delta_star_minis_rz). Variety (k/j/e) is derivable via invnt_item.grow_variety_id';
-COMMENT ON COLUMN grow_cuke_seed_batch.invnt_lot_id IS 'Lot number for the cultivar. References invnt_lot filtered by invnt_item_name';
+COMMENT ON COLUMN grow_cuke_seed_batch.grow_trial_type_id IS 'Null if not a trial; set when testing a new lot, variety, or seed source';
+COMMENT ON COLUMN grow_cuke_seed_batch.invnt_item_id IS 'Specific seed cultivar used for this cycle (e.g. delta_star_minis_rz). Variety (k/j/e) is derivable via invnt_item.grow_variety_id';
+COMMENT ON COLUMN grow_cuke_seed_batch.invnt_lot_id IS 'Lot number for the cultivar. References invnt_lot filtered by invnt_item_id';
 COMMENT ON COLUMN grow_cuke_seed_batch.seeding_date IS 'Actual planting date. For future cycles this is the planned date. Dashboard derives ISO week from this';
 COMMENT ON COLUMN grow_cuke_seed_batch.transplant_date IS 'Planned or actual date transplant crew moves seedlings into the greenhouse';
 COMMENT ON COLUMN grow_cuke_seed_batch.next_bag_change_date IS 'Scheduled bag-swap date for this cycle. Null if not yet scheduled';
@@ -42,5 +42,5 @@ COMMENT ON COLUMN grow_cuke_seed_batch.status IS 'Auto-set: planned (seeding_dat
 CREATE INDEX idx_grow_cuke_seed_batch_org ON grow_cuke_seed_batch (org_id);
 CREATE INDEX idx_grow_cuke_seed_batch_site_date ON grow_cuke_seed_batch (site_id, seeding_date);
 CREATE INDEX idx_grow_cuke_seed_batch_date ON grow_cuke_seed_batch (seeding_date);
-CREATE INDEX idx_grow_cuke_seed_batch_item ON grow_cuke_seed_batch (invnt_item_name);
+CREATE INDEX idx_grow_cuke_seed_batch_item ON grow_cuke_seed_batch (invnt_item_id);
 CREATE INDEX idx_grow_cuke_seed_batch_tracker ON grow_cuke_seed_batch (ops_task_tracker_id);

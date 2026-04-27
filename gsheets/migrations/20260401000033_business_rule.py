@@ -64,9 +64,9 @@ RULES = [
     rule(
         "site_farm_scope", "business_rule", "operations",
         "Site farm scope",
-        "Sites can be org-wide (farm_name null) or farm-scoped. Child sites inherit farm_name from parent.",
+        "Sites can be org-wide (farm_id null) or farm-scoped. Child sites inherit farm_id from parent.",
         None,
-        '["org_site.farm_name", "org_site.site_id_parent"]',
+        '["org_site.farm_id", "org_site.site_id_parent"]',
         2,
     ),
     rule(
@@ -85,10 +85,10 @@ RULES = [
     rule(
         "hr_access_level_filtering", "business_rule", "human_resources",
         "Supervisory role filtering by access level",
-        "Team lead dropdown: sys_access_level_name >= team_lead. "
-        "Compensation manager dropdown: sys_access_level_name >= manager.",
+        "Team lead dropdown: sys_access_level_id >= team_lead. "
+        "Compensation manager dropdown: sys_access_level_id >= manager.",
         None,
-        '["hr_employee.team_lead_name", "hr_employee.compensation_manager_name"]',
+        '["hr_employee.team_lead_id", "hr_employee.compensation_manager_id"]',
         4,
     ),
     rule(
@@ -134,10 +134,10 @@ RULES = [
     rule(
         "invnt_po_request_types", "business_rule", "inventory",
         "PO field behavior by request type",
-        "inventory_item: invnt_item_name required, category/name/UOM/vendor auto-filled from item. "
-        "non_inventory_item: invnt_item_name hidden, user enters category/name/UOM manually.",
+        "inventory_item: invnt_item_id required, category/name/UOM/vendor auto-filled from item. "
+        "non_inventory_item: invnt_item_id hidden, user enters category/name/UOM manually.",
         None,
-        '["invnt_po.request_type", "invnt_po.invnt_item_name"]',
+        '["invnt_po.request_type", "invnt_po.invnt_item_id"]',
         9,
     ),
     rule(
@@ -175,7 +175,7 @@ RULES = [
         "Templates auto-load when task is selected",
         "All templates linked via ops_task_template load as checklists for the activity session.",
         None,
-        '["ops_task_template.ops_task_name", "ops_task_template.ops_template_name"]',
+        '["ops_task_template.ops_task_id", "ops_task_template.ops_template_id"]',
         13,
     ),
     rule(
@@ -221,7 +221,7 @@ RULES = [
     rule(
         "grow_site_scope", "business_rule", "grow",
         "Growing activities limited to greenhouse, pond, nursery sites",
-        "Site dropdown filtered by farm_name then by subcategory IN (greenhouse, pond, nursery). "
+        "Site dropdown filtered by farm_id then by subcategory IN (greenhouse, pond, nursery). "
         "Parent sites, growing_room, growing_other excluded.",
         None,
         '["grow_lettuce_seed_batch.site_id", "grow_cuke_seed_batch.site_id"]',
@@ -304,11 +304,11 @@ RULES = [
     ),
     rule(
         "pack_invnt_item_filters", "business_rule", "pack",
-        "invnt_item_name filtered by context: Packing vs Seeds",
-        "sales_product.invnt_item_name: filtered to category Packing (packaging material). "
-        "pack_dryer_result.invnt_item_name: filtered to category Seeds (seed variety being dried).",
+        "invnt_item_id filtered by context: Packing vs Seeds",
+        "sales_product.invnt_item_id: filtered to category Packing (packaging material). "
+        "pack_dryer_result.invnt_item_id: filtered to category Seeds (seed variety being dried).",
         None,
-        '["sales_product.invnt_item_name", "pack_dryer_result.invnt_item_name"]',
+        '["sales_product.invnt_item_id", "pack_dryer_result.invnt_item_id"]',
         27,
     ),
     rule(
@@ -345,9 +345,9 @@ RULES = [
     rule(
         "sales_po_farm_on_line", "business_rule", "sales",
         "Farm lives on PO line, not PO header",
-        "One PO can contain products from multiple farms. farm_name inherited from sales_product.",
+        "One PO can contain products from multiple farms. farm_id inherited from sales_product.",
         None,
-        '["sales_po_line.farm_name"]',
+        '["sales_po_line.farm_id"]',
         31,
     ),
     rule(
@@ -403,22 +403,22 @@ RULES = [
     rule(
         "sales_crm_store_customer_link", "business_rule", "sales",
         "Store links to customer but many stores can share one customer",
-        "sales_crm_store.sales_customer_name is nullable. Multiple stores can reference the same "
+        "sales_crm_store.sales_customer_id is nullable. Multiple stores can reference the same "
         "customer (e.g. all Costco locations link to the Costco customer for that island). "
         "Stores without a customer link are tracked for competitive intelligence only.",
         None,
-        '["sales_crm_store.sales_customer_name"]',
+        '["sales_crm_store.sales_customer_id"]',
         37,
     ),
     rule(
         "sales_crm_visit_result_product_exclusivity", "business_rule", "sales",
         "Visit observation: own product or competitor, never both",
         "Each sales_crm_store_visit_result row references either sales_product_id (own product) "
-        "or sales_crm_external_product_name (competitor), enforced by CHECK constraint. "
+        "or sales_crm_external_product_id (competitor), enforced by CHECK constraint. "
         "This allows comparing own vs competitor shelf presence, pricing, and stock in the same query.",
         None,
         '["sales_crm_store_visit_result.sales_product_id", '
-        '"sales_crm_store_visit_result.sales_crm_external_product_name"]',
+        '"sales_crm_store_visit_result.sales_crm_external_product_id"]',
         38,
     ),
 

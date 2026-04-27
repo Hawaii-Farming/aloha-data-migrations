@@ -205,12 +205,12 @@ def normalize_gh(raw):
 
 def ensure_trial_type(supabase):
     """Seed a single legacy_trial row in grow_trial_type so trial seeds can
-    be flagged via grow_trial_type_name. Farm-scoped to cuke."""
+    be flagged via grow_trial_type_id. Farm-scoped to cuke."""
     print("\n--- grow_trial_type ---")
     row = audit({
         "id": TRIAL_TYPE_ID,
         "org_id": ORG_ID,
-        "farm_name": FARM_ID,
+        "farm_id": FARM_ID,
         "name": "Legacy Trial",
         "description": "Generic trial type used to flag historical trial seedings migrated from the legacy grow_C_seeding sheet",
     })
@@ -227,7 +227,7 @@ def ensure_missing_items(supabase):
         rows.append(audit({
             "id": spec["id"],
             "org_id": ORG_ID,
-            "farm_name": FARM_ID,
+            "farm_id": FARM_ID,
             "invnt_category_id": "seeds",
             "name": spec["name"],
             "qb_account": "1. Growing:Seeding",
@@ -271,12 +271,12 @@ def build_item_lookup(supabase):
     items = (
         supabase.table("invnt_item")
         .select("id,name")
-        .eq("farm_name", FARM_ID)
+        .eq("farm_id", FARM_ID)
         .eq("invnt_category_id", "seeds")
         .execute()
         .data
     )
-    item_by_name_lower = {it["name"].lower(): it["id"] for it in items}
+    item_by_name_lower = {it["id"].lower(): it["id"] for it in items}
 
     def lookup(raw_name):
         if not raw_name:
@@ -356,10 +356,10 @@ def build_main_batch(sheet_row, letter, item_lookup, status, site_id, reported_b
 
     return {
         "org_id": ORG_ID,
-        "farm_name": FARM_ID,
+        "farm_id": FARM_ID,
         "site_id": site_id,
         "batch_code": f"{cycle}{letter}P",
-        "invnt_item_name": item_id,
+        "invnt_item_id": item_id,
         "seeding_uom": "bag",
         "number_of_units": number_of_units,
         "seeds_per_unit": plants_per_bag,
@@ -425,11 +425,11 @@ def build_trial_batches(sheet_row, item_lookup, status, site_id, reported_by):
         number_of_units = max(1, round(count / seeds_per_unit))
         rows.append({
             "org_id": ORG_ID,
-            "farm_name": FARM_ID,
+            "farm_id": FARM_ID,
             "site_id": site_id,
             "batch_code": code,
-            "invnt_item_name": item_id,
-            "grow_trial_type_name": TRIAL_TYPE_ID,
+            "invnt_item_id": item_id,
+            "grow_trial_type_id": TRIAL_TYPE_ID,
             "seeding_uom": "bag",
             "number_of_units": number_of_units,
             "seeds_per_unit": seeds_per_unit,
@@ -465,13 +465,13 @@ def clear_existing(supabase):
     suffixes = ["KP", "JP", "EP", "KT", "JT", "ET"]
     for s in suffixes:
         supabase.table("grow_seed_batch").delete().eq(
-            "farm_name", FARM_ID
+            "farm_id", FARM_ID
         ).like("batch_code", f"%{s}").execute()
     # Trial disambiguation suffixes ({letter}T2, {letter}T3 ...)
     for s in ["KT_", "JT_", "ET_"]:
         # PostgREST .like uses _ as a single-char wildcard, which is what we want
         supabase.table("grow_seed_batch").delete().eq(
-            "farm_name", FARM_ID
+            "farm_id", FARM_ID
         ).like("batch_code", f"%{s}").execute()
     print("  Cleared")
 
@@ -497,7 +497,7 @@ def main():
     sites = (
         supabase.table("org_site")
         .select("id")
-        .eq("farm_name", FARM_ID)
+        .eq("farm_id", FARM_ID)
         .eq("org_site_subcategory_id", "greenhouse")
         .execute()
         .data
@@ -533,7 +533,7 @@ def main():
             skipped_no_cycle += 1
             continue
 
-        status = STATUS_MAP.get(str(r.get("CycleStatus", "")).strip().lower(), "harvested")
+        status = STATUS_MAP.get(str(r.get("CycleStatus", "")).strip().lower(), "Harvested")
         reported_by_raw = str(r.get("ReportedBy", "")).strip().lower()
         reported_by = reported_by_raw if "@" in reported_by_raw else AUDIT_USER
 

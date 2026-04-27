@@ -1,9 +1,9 @@
 CREATE TABLE IF NOT EXISTS sales_po_line (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id              TEXT NOT NULL REFERENCES org(id),
-    farm_name             TEXT NOT NULL REFERENCES org_farm(name),
+    farm_id             TEXT NOT NULL REFERENCES org_farm(id),
     sales_po_id         UUID NOT NULL REFERENCES sales_po(id),
-    sales_product_id    TEXT NOT NULL REFERENCES sales_product(code),
+    sales_product_id    TEXT NOT NULL REFERENCES sales_product(id),
 
     order_quantity      NUMERIC NOT NULL,
     price_per_case NUMERIC NOT NULL,

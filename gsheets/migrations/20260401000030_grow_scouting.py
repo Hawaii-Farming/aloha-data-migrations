@@ -2,7 +2,7 @@
 Migrate Scouting Events + Observations
 ========================================
 Two sheets into three tables:
-  - grow_scouting (500 rows) -> ops_task_tracker (ops_task_name=scouting)
+  - grow_scouting (500 rows) -> ops_task_tracker (ops_task_id=scouting)
   - grow_scouting_observations (500 rows) -> grow_scout_result
     Photos from observation rows -> grow_task_photo (per tracker)
 
@@ -166,8 +166,8 @@ def resolve_user(raw: str) -> str:
 
 def ensure_pests_and_diseases(supabase):
     """Auto-create any missing pest/disease rows referenced by PEST_TYPE_MAP."""
-    existing_pests = {p["id"] for p in supabase.table("grow_pest").select("name").execute().data}
-    existing_diseases = {d["id"] for d in supabase.table("grow_disease").select("name").execute().data}
+    existing_pests = {p["id"] for p in supabase.table("grow_pest").select("id").execute().data}
+    existing_diseases = {d["id"] for d in supabase.table("grow_disease").select("id").execute().data}
 
     # Check PEST_TYPE_MAP for any missing
     pest_rows = []
@@ -179,7 +179,7 @@ def ensure_pests_and_diseases(supabase):
                 if pid == target_id:
                     pest_rows.append({
                         "id": pid,
-                        "name": pname,
+                        "id": pname,
                         "description": None,
                         "created_by": AUDIT_USER,
                         "updated_by": AUDIT_USER,
@@ -216,7 +216,7 @@ def clear_existing():
                 DELETE FROM grow_scout_result
                 WHERE ops_task_tracker_id IN (
                     SELECT id FROM ops_task_tracker
-                    WHERE ops_task_name = %s AND notes LIKE %s
+                    WHERE ops_task_id = %s AND notes LIKE %s
                 )
                 """,
                 (OPS_TASK_ID, f"%{NOTES_MARKER}%"),
@@ -228,7 +228,7 @@ def clear_existing():
                 DELETE FROM grow_task_photo
                 WHERE ops_task_tracker_id IN (
                     SELECT id FROM ops_task_tracker
-                    WHERE ops_task_name = %s AND notes LIKE %s
+                    WHERE ops_task_id = %s AND notes LIKE %s
                 )
                 """,
                 (OPS_TASK_ID, f"%{NOTES_MARKER}%"),
@@ -238,7 +238,7 @@ def clear_existing():
             cur.execute(
                 """
                 DELETE FROM ops_task_tracker
-                WHERE ops_task_name = %s AND notes LIKE %s
+                WHERE ops_task_id = %s AND notes LIKE %s
                 """,
                 (OPS_TASK_ID, f"%{NOTES_MARKER}%"),
             )
@@ -309,9 +309,9 @@ def build_trackers(scouting_records, known_sites):
         trackers_by_id[scouting_id] = {
             "id": tracker_uuid,
             "org_id": ORG_ID,
-            "farm_name": farm,
+            "farm_id": farm,
             "site_id": site_id,
-            "ops_task_name": OPS_TASK_ID,
+            "ops_task_id": OPS_TASK_ID,
             "start_time": start_dt.isoformat(),
             "stop_time": start_dt.isoformat(),
             "is_completed": True,
@@ -388,12 +388,12 @@ def build_results_and_photos(observation_records, trackers_by_id, existing_pest_
 
         result = {
             "org_id": ORG_ID,
-            "farm_name": tracker["farm_name"],
+            "farm_id": tracker["farm_id"],
             "ops_task_tracker_id": tracker["id"],
             "site_id": None,  # row-level sites not modeled; greenhouse on tracker
             "observation_type": kind,
-            "grow_pest_name": target_id if kind == "pest" else None,
-            "grow_disease_name": target_id if kind == "disease" else None,
+            "grow_pest_id": target_id if kind == "pest" else None,
+            "grow_disease_id": target_id if kind == "disease" else None,
             # disease_infection_stage not in source data; leave NULL (allowed)
             "disease_infection_stage": None,
             "severity_level": severity,
@@ -413,7 +413,7 @@ def build_results_and_photos(observation_records, trackers_by_id, existing_pest_
             url = url.replace("grow_scouting_observations_Images/", "images/grow_task/scouting/")
             photos.append({
                 "org_id": ORG_ID,
-                "farm_name": tracker["farm_name"],
+                "farm_id": tracker["farm_id"],
                 "ops_task_tracker_id": tracker["id"],
                 "photo_url": url,
                 "caption": caption_base,
@@ -440,17 +440,17 @@ def main():
     ensure_pests_and_diseases(supabase)
 
     # Load known sites for cuke/lettuce
-    sites = paginate_select(supabase, "org_site", "id,farm_name,org_site_subcategory_id")
+    sites = paginate_select(supabase, "org_site", "id,farm_id,org_site_subcategory_id")
     known_sites = {
         s["id"] for s in sites
-        if s.get("farm_name") in ("cuke", "lettuce")
+        if s.get("farm_id") in ("cuke", "lettuce")
         and s.get("org_site_subcategory_id") in ("greenhouse", "pond", None)
     }
     print(f"\n  Known cuke/lettuce sites: {len(known_sites)}")
 
     # Load pest/disease IDs for validation
-    existing_pest_ids = {p["id"] for p in supabase.table("grow_pest").select("name").execute().data}
-    existing_disease_ids = {d["id"] for d in supabase.table("grow_disease").select("name").execute().data}
+    existing_pest_ids = {p["id"] for p in supabase.table("grow_pest").select("id").execute().data}
+    existing_disease_ids = {d["id"] for d in supabase.table("grow_disease").select("id").execute().data}
 
     wb = gc.open_by_key(GROW_SHEET_ID)
     print("\nReading grow_scouting...")

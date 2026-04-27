@@ -138,12 +138,12 @@ def migrate_lab_tests(supabase, gc):
             continue
         is_positive = str(r.get("PositiveResult", "")).strip().upper() == "TRUE"
         if is_positive:
-            row = {"org_id": ORG_ID, "test_name": proper_case(name),
-                   "result_type": "enum", "enum_options": ["Positive", "Negative"],
+            row = {"org_id": ORG_ID, "id": proper_case(name),
+                   "result_type": "Enum", "enum_options": ["Positive", "Negative"],
                    "enum_pass_options": ["Negative"]}
         else:
-            row = {"org_id": ORG_ID, "test_name": proper_case(name),
-                   "result_type": "numeric", "minimum_value": safe_numeric(r.get("MinResult")),
+            row = {"org_id": ORG_ID, "id": proper_case(name),
+                   "result_type": "Numeric", "minimum_value": safe_numeric(r.get("MinResult")),
                    "maximum_value": safe_numeric(r.get("MaxResult"))}
         rows.append(audit(row))
 
@@ -151,7 +151,7 @@ def migrate_lab_tests(supabase, gc):
 
     supabase.table("fsafe_lab_test").upsert(audit({
         "org_id": ORG_ID,
-        "test_name": "Listeria Monocytogenes", "result_type": "enum",
+        "id": "Listeria Monocytogenes", "result_type": "Enum",
         "enum_options": ["Positive", "Negative"], "enum_pass_options": ["Negative"],
     })).execute()
     print("  Upserted Listeria Monocytogenes lab test")
@@ -171,14 +171,14 @@ def migrate_fsafe_sites(supabase, gc):
         farm = str(r.get("Farm", "")).strip().lower()
         building = str(r.get("Building", "")).strip().lower()
         zone = ZONE_MAP.get(str(r.get("Zone", "")).strip().lower())
-        farm_name = {"cuke": "Cuke", "lettuce": "Lettuce"}.get(farm)
+        farm_id = {"cuke": "Cuke", "lettuce": "Lettuce"}.get(farm)
         parent_id = BUILDING_SITE_MAP.get((farm, building))
         site_id = to_id(f"{farm}_{building}_{site_name}")
         if site_id in seen:
             continue
         seen.add(site_id)
         display_name = f"{building.upper()} - {site_name}"
-        rows.append(audit({"id": site_id, "org_id": ORG_ID, "farm_name": farm_name,
+        rows.append(audit({"id": site_id, "org_id": ORG_ID, "farm_id": farm_id,
                            "name": display_name, "org_site_category_id": "food_safety",
                            "site_id_parent": parent_id, "zone": zone}))
 
@@ -198,14 +198,14 @@ def migrate_pest_stations(supabase, gc):
         station = str(r.get("Station", "")).strip()
         if not farm or not site_name or not station:
             continue
-        farm_name = {"cuke": "Cuke", "lettuce": "Lettuce"}.get(farm)
+        farm_id = {"cuke": "Cuke", "lettuce": "Lettuce"}.get(farm)
         parent_id = PEST_SITE_MAP.get((farm, site_name))
         display_name = f"{site_name.upper()} - Trap {station}"
         site_id = to_id(f"{farm}_{site_name}_trap_{station}")
         if site_id in seen:
             continue
         seen.add(site_id)
-        rows.append(audit({"id": site_id, "org_id": ORG_ID, "farm_name": farm_name,
+        rows.append(audit({"id": site_id, "org_id": ORG_ID, "farm_id": farm_id,
                            "name": display_name, "org_site_category_id": "pest_trap",
                            "site_id_parent": parent_id}))
 
@@ -230,9 +230,9 @@ def ensure_foreign_material_template(supabase):
 
     supabase.table("ops_template").upsert(audit({
         "org_id": ORG_ID,
-        "farm_name": None,
-        "name": FM_TEMPLATE_NAME,
-        "org_module_name": "Food Safety",
+        "farm_id": None,
+        "id": FM_TEMPLATE_NAME,
+        "org_module_id": "Food Safety",
         "description": "Recorded when a foreign material event occurs during packing or food safety inspection",
         "display_order": 100,
     })).execute()
@@ -243,7 +243,7 @@ def ensure_foreign_material_template(supabase):
     existing_results = (
         supabase.table("ops_template_result")
         .select("id,ops_task_tracker_id")
-        .eq("ops_template_name", FM_TEMPLATE_NAME)
+        .eq("ops_template_id", FM_TEMPLATE_NAME)
         .execute()
         .data
     )
@@ -256,19 +256,19 @@ def ensure_foreign_material_template(supabase):
             ).execute()
         # Then the results
         supabase.table("ops_template_result").delete().eq(
-            "ops_template_name", FM_TEMPLATE_NAME
+            "ops_template_id", FM_TEMPLATE_NAME
         ).execute()
         print(f"  Cleared {len(result_ids)} existing foreign_material_event results + photos")
 
     supabase.table("ops_template_question").delete().eq(
-        "ops_template_name", FM_TEMPLATE_NAME
+        "ops_template_id", FM_TEMPLATE_NAME
     ).execute()
     inserted_q = supabase.table("ops_template_question").insert(audit({
         "org_id": ORG_ID,
-        "farm_name": None,
-        "ops_template_name": FM_TEMPLATE_NAME,
+        "farm_id": None,
+        "ops_template_id": FM_TEMPLATE_NAME,
         "question_text": "Type of foreign material",
-        "response_type": "enum",
+        "response_type": "Enum",
         "is_required": True,
         "enum_options": FM_ENUM_OPTIONS,
         "enum_pass_options": [],
@@ -278,15 +278,15 @@ def ensure_foreign_material_template(supabase):
     })).execute()
     print(f"  Inserted foreign_material_event enum question")
 
-    # Idempotent task->template link (org-scoped, no farm_name)
+    # Idempotent task->template link (org-scoped, no farm_id)
     supabase.table("ops_task_template").delete().eq(
-        "ops_template_name", FM_TEMPLATE_NAME
-    ).eq("ops_task_name", TASK_NAME).execute()
+        "ops_template_id", FM_TEMPLATE_NAME
+    ).eq("ops_task_id", TASK_NAME).execute()
     supabase.table("ops_task_template").insert(audit({
         "org_id": ORG_ID,
-        "farm_name": None,
-        "ops_task_name": TASK_NAME,
-        "ops_template_name": FM_TEMPLATE_NAME,
+        "farm_id": None,
+        "ops_task_id": TASK_NAME,
+        "ops_template_id": FM_TEMPLATE_NAME,
     })).execute()
     print(f"  Linked template to {TASK_NAME}")
 
@@ -308,7 +308,7 @@ def migrate_corrective_action_choices(supabase, gc):
             continue
         seen.add(choice_id)
         rows.append(audit({"org_id": ORG_ID,
-                           "name": proper_case(short_name), "description": description}))
+                           "id": proper_case(short_name), "description": description}))
 
     insert_rows(supabase, "ops_corrective_action_choice", rows)
 
@@ -322,10 +322,9 @@ def main():
     print("=" * 60)
 
     print("\nClearing food safety lookup data...")
-    PK_COL = {"ops_corrective_action_choice": "name", "fsafe_lab_test": "test_name"}
     for t in ["ops_corrective_action_choice", "fsafe_lab_test"]:
         try:
-            supabase.table(t).delete().neq(PK_COL[t], "__none__").execute()
+            supabase.table(t).delete().neq("id", "__none__").execute()
             print(f"  Cleared {t}")
         except Exception as e:
             # Tables may have FK references from existing results; in that case

@@ -141,11 +141,11 @@ def get_sheets():
 def seed_access_levels(supabase):
     """Seed the 5 access levels."""
     rows = [
-        audit({"name": "Employee",  "level": 1, "display_order": 1}),
-        audit({"name": "Team Lead", "level": 2, "display_order": 2}),
-        audit({"name": "Manager",   "level": 3, "display_order": 3}),
-        audit({"name": "Admin",     "level": 4, "display_order": 4}),
-        audit({"name": "Owner",     "level": 5, "display_order": 5}),
+        audit({"id": "Employee",  "level": 1, "display_order": 1}),
+        audit({"id": "Team Lead", "level": 2, "display_order": 2}),
+        audit({"id": "Manager",   "level": 3, "display_order": 3}),
+        audit({"id": "Admin",     "level": 4, "display_order": 4}),
+        audit({"id": "Owner",     "level": 5, "display_order": 5}),
     ]
     insert_rows(supabase, "sys_access_level", rows)
 
@@ -153,14 +153,14 @@ def seed_access_levels(supabase):
 def seed_modules(supabase):
     """Seed the application modules."""
     rows = [
-        audit({"name": "Operations",      "display_order": 1}),
-        audit({"name": "Grow",            "display_order": 2}),
-        audit({"name": "Pack",            "display_order": 3}),
-        audit({"name": "Food Safety",     "display_order": 4}),
-        audit({"name": "Maintenance",     "display_order": 5}),
-        audit({"name": "Inventory",       "display_order": 6}),
-        audit({"name": "Sales",           "display_order": 7}),
-        audit({"name": "Human Resources", "display_order": 8}),
+        audit({"id": "Operations",      "display_order": 1}),
+        audit({"id": "Grow",            "display_order": 2}),
+        audit({"id": "Pack",            "display_order": 3}),
+        audit({"id": "Food Safety",     "display_order": 4}),
+        audit({"id": "Maintenance",     "display_order": 5}),
+        audit({"id": "Inventory",       "display_order": 6}),
+        audit({"id": "Sales",           "display_order": 7}),
+        audit({"id": "Human Resources", "display_order": 8}),
     ]
     insert_rows(supabase, "sys_module", rows)
 
@@ -208,12 +208,12 @@ def seed_sub_modules(supabase, gc):
         if not sub_name or not main_name:
             continue
 
-        sys_module_name = module_map.get(main_name.lower())
-        if not sys_module_name:
+        sys_module_id = module_map.get(main_name.lower())
+        if not sys_module_id:
             print(f"  SKIP: Unknown module '{main_name}' for sub '{sub_name}'")
             continue
 
-        sys_access_level_name = level_map.get(level, "Employee")
+        sys_access_level_id = level_map.get(level, "Employee")
 
         # Deduplicate by display name (the PK)
         if sub_name in seen:
@@ -221,9 +221,9 @@ def seed_sub_modules(supabase, gc):
         seen.add(sub_name)
 
         rows.append(audit({
-            "sys_module_name": sys_module_name,
-            "name": sub_name,
-            "sys_access_level_name": sys_access_level_name,
+            "sys_module_id": sys_module_id,
+            "id": sub_name,
+            "sys_access_level_id": sys_access_level_id,
             "display_order": len(rows) + 1,
         }))
 
@@ -234,62 +234,62 @@ def migrate_uom(supabase):
     """Migrate sys_uom from legacy Google Sheet + additional schema-required UOMs."""
     rows = [
         # From legacy Google Sheet (global_measurement_unit)
-        {"code": "clip",         "name": "clip",         "category": "packaging"},
-        {"code": "bag",          "name": "bag",          "category": "packaging"},
-        {"code": "box",          "name": "box",          "category": "packaging"},
-        {"code": "blade",        "name": "blade",        "category": "equipment"},
-        {"code": "bottle",       "name": "bottle",       "category": "packaging"},
-        {"code": "count",        "name": "count",        "category": "quantity"},
-        {"code": "dozen",        "name": "dozen",        "category": "quantity"},
-        {"code": "drum",         "name": "drum",         "category": "packaging"},
-        {"code": "gallon",       "name": "gallon",       "category": "volume"},
-        {"code": "board",        "name": "board",        "category": "growing"},
-        {"code": "impression",   "name": "impression",   "category": "packaging"},
-        {"code": "pallet",       "name": "pallet",       "category": "shipping"},
-        {"code": "meter",        "name": "meter",        "category": "length"},
-        {"code": "label",        "name": "label",        "category": "packaging"},
-        {"code": "seed",         "name": "seed",         "category": "growing"},
-        {"code": "pack",         "name": "pack",         "category": "packaging"},
-        {"code": "tray",         "name": "tray",         "category": "packaging"},
-        {"code": "unit",         "name": "unit",         "category": "quantity"},
-        {"code": "roll",         "name": "roll",         "category": "packaging"},
-        {"code": "lid",          "name": "lid",          "category": "packaging"},
-        {"code": "pound",        "name": "lb",           "category": "weight"},
-        {"code": "quart",        "name": "quart",        "category": "volume"},
-        {"code": "ounce",        "name": "oz",           "category": "weight"},
-        {"code": "gram",         "name": "g",            "category": "weight"},
-        {"code": "kit",          "name": "kit",          "category": "quantity"},
-        {"code": "feet",         "name": "ft",           "category": "length"},
-        {"code": "fluid_ounce",  "name": "fl oz",        "category": "volume"},
-        {"code": "milliliter",   "name": "mL",           "category": "volume"},
-        {"code": "reactions",    "name": "reactions",     "category": "lab"},
-        {"code": "cubes",       "name": "cubes",         "category": "quantity"},
+        {"id": "clip",         "name": "clip",         "category": "packaging"},
+        {"id": "bag",          "name": "bag",          "category": "packaging"},
+        {"id": "box",          "name": "box",          "category": "packaging"},
+        {"id": "blade",        "name": "blade",        "category": "equipment"},
+        {"id": "bottle",       "name": "bottle",       "category": "packaging"},
+        {"id": "count",        "name": "count",        "category": "quantity"},
+        {"id": "dozen",        "name": "dozen",        "category": "quantity"},
+        {"id": "drum",         "name": "drum",         "category": "packaging"},
+        {"id": "gallon",       "name": "gallon",       "category": "volume"},
+        {"id": "board",        "name": "board",        "category": "growing"},
+        {"id": "impression",   "name": "impression",   "category": "packaging"},
+        {"id": "pallet",       "name": "pallet",       "category": "shipping"},
+        {"id": "meter",        "name": "meter",        "category": "length"},
+        {"id": "label",        "name": "label",        "category": "packaging"},
+        {"id": "seed",         "name": "seed",         "category": "growing"},
+        {"id": "pack",         "name": "pack",         "category": "packaging"},
+        {"id": "tray",         "name": "tray",         "category": "packaging"},
+        {"id": "unit",         "name": "unit",         "category": "quantity"},
+        {"id": "roll",         "name": "roll",         "category": "packaging"},
+        {"id": "lid",          "name": "lid",          "category": "packaging"},
+        {"id": "pound",        "name": "lb",           "category": "weight"},
+        {"id": "quart",        "name": "quart",        "category": "volume"},
+        {"id": "ounce",        "name": "oz",           "category": "weight"},
+        {"id": "gram",         "name": "g",            "category": "weight"},
+        {"id": "kit",          "name": "kit",          "category": "quantity"},
+        {"id": "feet",         "name": "ft",           "category": "length"},
+        {"id": "fluid_ounce",  "name": "fl oz",        "category": "volume"},
+        {"id": "milliliter",   "name": "mL",           "category": "volume"},
+        {"id": "reactions",    "name": "reactions",     "category": "lab"},
+        {"id": "cubes",       "name": "cubes",         "category": "quantity"},
 
         # Additional UOMs required by the new schema
-        {"code": "kilogram",     "name": "kg",           "category": "weight"},
-        {"code": "liter",        "name": "L",            "category": "volume"},
-        {"code": "case",         "name": "case",         "category": "packaging"},
-        {"code": "flat",         "name": "flat",         "category": "growing"},
-        {"code": "tote",         "name": "tote",         "category": "packaging"},
-        {"code": "basket",       "name": "basket",       "category": "packaging"},
-        {"code": "clam",         "name": "clam",         "category": "packaging"},
-        {"code": "sleeve",       "name": "sleeve",       "category": "packaging"},
-        {"code": "bunch",        "name": "bunch",        "category": "quantity"},
-        {"code": "head",         "name": "head",         "category": "quantity"},
-        {"code": "piece",        "name": "piece",        "category": "quantity"},
-        {"code": "acre",         "name": "acre",         "category": "area"},
-        {"code": "inch",         "name": "in",           "category": "length"},
-        {"code": "centimeter",   "name": "cm",           "category": "length"},
-        {"code": "celsius",      "name": "C",            "category": "temperature"},
-        {"code": "fahrenheit",   "name": "F",            "category": "temperature"},
-        {"code": "ppm",          "name": "ppm",          "category": "concentration"},
-        {"code": "ph",           "name": "pH",           "category": "concentration"},
-        {"code": "percent",      "name": "%",            "category": "ratio"},
-        {"code": "rlu",          "name": "RLU",          "category": "lab"},
-        {"code": "each",         "name": "each",          "category": "quantity"},
-        {"code": "hour",         "name": "hr",           "category": "time"},
-        {"code": "day",          "name": "day",          "category": "time"},
-        {"code": "millisiemens", "name": "mS/cm",        "category": "conductivity"},
+        {"id": "kilogram",     "name": "kg",           "category": "weight"},
+        {"id": "liter",        "name": "L",            "category": "volume"},
+        {"id": "case",         "name": "case",         "category": "packaging"},
+        {"id": "flat",         "name": "flat",         "category": "growing"},
+        {"id": "tote",         "name": "tote",         "category": "packaging"},
+        {"id": "basket",       "name": "basket",       "category": "packaging"},
+        {"id": "clam",         "name": "clam",         "category": "packaging"},
+        {"id": "sleeve",       "name": "sleeve",       "category": "packaging"},
+        {"id": "bunch",        "name": "bunch",        "category": "quantity"},
+        {"id": "head",         "name": "head",         "category": "quantity"},
+        {"id": "piece",        "name": "piece",        "category": "quantity"},
+        {"id": "acre",         "name": "acre",         "category": "area"},
+        {"id": "inch",         "name": "in",           "category": "length"},
+        {"id": "centimeter",   "name": "cm",           "category": "length"},
+        {"id": "celsius",      "name": "C",            "category": "temperature"},
+        {"id": "fahrenheit",   "name": "F",            "category": "temperature"},
+        {"id": "ppm",          "name": "ppm",          "category": "concentration"},
+        {"id": "ph",           "name": "pH",           "category": "concentration"},
+        {"id": "percent",      "name": "%",            "category": "ratio"},
+        {"id": "rlu",          "name": "RLU",          "category": "lab"},
+        {"id": "each",         "name": "each",          "category": "quantity"},
+        {"id": "hour",         "name": "hr",           "category": "time"},
+        {"id": "day",          "name": "day",          "category": "time"},
+        {"id": "millisiemens", "name": "mS/cm",        "category": "conductivity"},
     ]
 
     for row in rows:
@@ -315,10 +315,10 @@ def main():
 
     # Clear sys tables in reverse FK order so they can be re-seeded below.
     print("Clearing sys tables...")
-    supabase.table("sys_sub_module").delete().neq("name", "___never___").execute()
-    supabase.table("sys_module").delete().neq("name", "___never___").execute()
-    supabase.table("sys_access_level").delete().neq("name", "___never___").execute()
-    supabase.table("sys_uom").delete().neq("code", "___never___").execute()
+    supabase.table("sys_sub_module").delete().neq("id", "___never___").execute()
+    supabase.table("sys_module").delete().neq("id", "___never___").execute()
+    supabase.table("sys_access_level").delete().neq("id", "___never___").execute()
+    supabase.table("sys_uom").delete().neq("id", "___never___").execute()
     print("  All cleared")
 
     migrate_uom(supabase)

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pack_productivity_hour (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                  TEXT NOT NULL REFERENCES org(id),
-    farm_name                 TEXT NOT NULL REFERENCES org_farm(name),
+    farm_id                 TEXT NOT NULL REFERENCES org_farm(id),
     ops_task_tracker_id     UUID NOT NULL REFERENCES ops_task_tracker(id),
     pack_end_hour               TIMESTAMPTZ NOT NULL,
 

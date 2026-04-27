@@ -13,7 +13,7 @@ Architecture:
   we can't directly look up "which tracker came from LogID=abc123". Instead
   we re-read each source log tab and rebuild an in-memory map of
   Entry ID -> tracker_id (or fsafe_result_id, fsafe_pest_result_id) by
-  matching on (start_time, created_by, farm_name) — the same fields the
+  matching on (start_time, created_by, farm_id) — the same fields the
   earlier migrations used as natural keys.
 
   For checklist corrective actions: ops_template_result_id is left null
@@ -53,20 +53,20 @@ from gsheets.migrations._config import (
 
 FSAFE_SHEET_ID = SHEET_IDS["fsafe"]
 
-# Map sheet 'Log' values -> source tab + (template_id|None) + farm_name
+# Map sheet 'Log' values -> source tab + (template_id|None) + farm_id
 # Templates exist for the ops checklists; EMP/Pest results don't have one.
 LOG_SOURCES = {
-    "Cuke GH Pre Ops":     {"tab": "fsafe_log_C_gh_pre",  "template_id": "cuke_gh_pre_ops",     "farm_name": "Cuke",    "kind": "tracker"},
-    "Cuke GH Post Ops":    {"tab": "fsafe_log_C_gh_post", "template_id": "cuke_gh_post_ops",    "farm_name": "Cuke",    "kind": "tracker"},
-    "Cuke PH Pre Ops":     {"tab": "fsafe_log_C_ph_pre",  "template_id": "cuke_ph_pre_ops",     "farm_name": "Cuke",    "kind": "tracker"},
-    "Cuke PH Post Ops":    {"tab": "fsafe_log_C_ph_post", "template_id": "cuke_ph_post_ops",    "farm_name": "Cuke",    "kind": "tracker"},
-    "Lettuce GH Pre Ops":  {"tab": "fsafe_log_L_gh_pre",  "template_id": "lettuce_gh_pre_ops",  "farm_name": "Lettuce", "kind": "tracker"},
-    "Lettuce GH Post Ops": {"tab": "fsafe_log_L_gh_post", "template_id": "lettuce_gh_post_ops", "farm_name": "Lettuce", "kind": "tracker"},
-    "Lettuce PH Pre Ops":  {"tab": "fsafe_log_L_ph_pre",  "template_id": "lettuce_ph_pre_ops",  "farm_name": "Lettuce", "kind": "tracker"},
-    "Lettuce PH Post Ops": {"tab": "fsafe_log_L_ph_post", "template_id": "lettuce_ph_post_ops", "farm_name": "Lettuce", "kind": "tracker"},
-    "Lettuce Calibration": {"tab": "fsafe_log_calibration","template_id": "lettuce_calibration", "farm_name": "Lettuce", "kind": "tracker"},
-    "EMP Results":         {"tab": "fsafe_log_emp",        "template_id": None,                  "farm_name": None,      "kind": "fsafe_result"},
-    "Pest Activity Log":   {"tab": "fsafe_log_pest",       "template_id": None,                  "farm_name": None,      "kind": "fsafe_pest_result"},
+    "Cuke GH Pre Ops":     {"tab": "fsafe_log_C_gh_pre",  "template_id": "cuke_gh_pre_ops",     "farm_id": "Cuke",    "kind": "tracker"},
+    "Cuke GH Post Ops":    {"tab": "fsafe_log_C_gh_post", "template_id": "cuke_gh_post_ops",    "farm_id": "Cuke",    "kind": "tracker"},
+    "Cuke PH Pre Ops":     {"tab": "fsafe_log_C_ph_pre",  "template_id": "cuke_ph_pre_ops",     "farm_id": "Cuke",    "kind": "tracker"},
+    "Cuke PH Post Ops":    {"tab": "fsafe_log_C_ph_post", "template_id": "cuke_ph_post_ops",    "farm_id": "Cuke",    "kind": "tracker"},
+    "Lettuce GH Pre Ops":  {"tab": "fsafe_log_L_gh_pre",  "template_id": "lettuce_gh_pre_ops",  "farm_id": "Lettuce", "kind": "tracker"},
+    "Lettuce GH Post Ops": {"tab": "fsafe_log_L_gh_post", "template_id": "lettuce_gh_post_ops", "farm_id": "Lettuce", "kind": "tracker"},
+    "Lettuce PH Pre Ops":  {"tab": "fsafe_log_L_ph_pre",  "template_id": "lettuce_ph_pre_ops",  "farm_id": "Lettuce", "kind": "tracker"},
+    "Lettuce PH Post Ops": {"tab": "fsafe_log_L_ph_post", "template_id": "lettuce_ph_post_ops", "farm_id": "Lettuce", "kind": "tracker"},
+    "Lettuce Calibration": {"tab": "fsafe_log_calibration","template_id": "lettuce_calibration", "farm_id": "Lettuce", "kind": "tracker"},
+    "EMP Results":         {"tab": "fsafe_log_emp",        "template_id": None,                  "farm_id": None,      "kind": "fsafe_result"},
+    "Pest Activity Log":   {"tab": "fsafe_log_pest",       "template_id": None,                  "farm_id": None,      "kind": "fsafe_pest_result"},
 }
 
 
@@ -182,7 +182,7 @@ def normalize_iso(s):
 
 
 def load_employee_email_map(supabase):
-    result = supabase.table("hr_employee").select("name, company_email").execute()
+    result = supabase.table("hr_employee").select("id, company_email").execute()
     return {
         (r["company_email"] or "").lower(): r["id"]
         for r in result.data
@@ -211,7 +211,7 @@ def fetch_all(supabase, table, columns, filters=None):
     return rows
 
 
-def build_lookup_for_template(supabase, gc, template_id, source_tab, farm_name):
+def build_lookup_for_template(supabase, gc, template_id, source_tab, farm_id):
     """Returns dict: legacy Entry ID -> ops_task_tracker.id (first match)."""
     # Pull all trackers for this template via the results that point at it.
     # We need (tracker_id, start_time, created_by). Trackers don't have
@@ -220,7 +220,7 @@ def build_lookup_for_template(supabase, gc, template_id, source_tab, farm_name):
     result_rows = fetch_all(
         supabase, "ops_template_result",
         "ops_task_tracker_id",
-        filters={"ops_template_name": template_id},
+        filters={"ops_template_id": template_id},
     )
     tracker_ids = sorted({r["ops_task_tracker_id"] for r in result_rows})
     if not tracker_ids:
@@ -279,7 +279,7 @@ def build_lookup_emp(supabase, gc):
     print(f"    Loading EMP fsafe_result rows...")
     fr_rows = fetch_all(
         supabase, "fsafe_result",
-        "id,sampled_at,site_id,fsafe_lab_test_name",
+        "id,sampled_at,site_id,fsafe_lab_test_id",
     )
     # Filter to actual EMP results: not test_hold, not water (water has zone),
     # not ATP. Easiest filter: exclude atp_rlu test, exclude rows with fsafe_test_hold_id.
@@ -346,7 +346,7 @@ def build_lookup_pest(supabase, gc):
     pest_trackers = fetch_all(
         supabase, "ops_task_tracker",
         "id,start_time,created_by",
-        filters={"ops_task_name": "Pest Trap Inspection"},
+        filters={"ops_task_id": "Pest Trap Inspection"},
     )
     tracker_index = {}
     for tr in pest_trackers:
@@ -428,7 +428,7 @@ def migrate(supabase, gc, email_map):
         if src["kind"] == "tracker":
             print(f"  Building tracker lookup for {log_val!r}...")
             tracker_lookups[log_val] = build_lookup_for_template(
-                supabase, gc, src["template_id"], src["tab"], src["farm_name"]
+                supabase, gc, src["template_id"], src["tab"], src["farm_id"]
             )
         elif src["kind"] == "fsafe_result" and emp_lookup is None:
             print(f"  Building EMP fsafe_result lookup...")
@@ -473,8 +473,8 @@ def migrate(supabase, gc, email_map):
             notes_combined = (notes_combined + " | " if notes_combined else "") + other_text
 
         # Resolve link target by kind
-        farm_name = src["farm_name"]
-        ops_template_name = src["template_id"]
+        farm_id = src["farm_id"]
+        ops_template_id = src["template_id"]
         ops_template_result_id = None
         fsafe_result_id = None
         fsafe_pest_result_id = None
@@ -491,24 +491,24 @@ def migrate(supabase, gc, email_map):
             if not fsafe_result_id:
                 skipped_no_match += 1
                 continue
-            # EMP corrective action — derive farm_name from the resolved fsafe_result row.
+            # EMP corrective action — derive farm_id from the resolved fsafe_result row.
             # We didn't capture farm in the lookup; pull it on-demand.
-            r2 = supabase.table("fsafe_result").select("farm_name").eq("id", fsafe_result_id).execute()
+            r2 = supabase.table("fsafe_result").select("farm_id").eq("id", fsafe_result_id).execute()
             if r2.data:
-                farm_name = r2.data[0].get("farm_name")
+                farm_id = r2.data[0].get("farm_id")
         elif src["kind"] == "fsafe_pest_result":
             fsafe_pest_result_id = (pest_lookup or {}).get(log_id)
             if not fsafe_pest_result_id:
                 skipped_no_match += 1
                 continue
-            r2 = supabase.table("fsafe_pest_result").select("farm_name").eq("id", fsafe_pest_result_id).execute()
+            r2 = supabase.table("fsafe_pest_result").select("farm_id").eq("id", fsafe_pest_result_id).execute()
             if r2.data:
-                farm_name = r2.data[0].get("farm_name")
+                farm_id = r2.data[0].get("farm_id")
 
         rows.append({
             "org_id": ORG_ID,
-            "farm_name": farm_name,
-            "ops_template_name": ops_template_name,
+            "farm_id": farm_id,
+            "ops_template_id": ops_template_id,
             "ops_template_result_id": ops_template_result_id,
             "fsafe_result_id": fsafe_result_id,
             "fsafe_pest_result_id": fsafe_pest_result_id,

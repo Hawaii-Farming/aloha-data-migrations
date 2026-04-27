@@ -1,13 +1,13 @@
 CREATE TABLE IF NOT EXISTS fsafe_lab_test (
-    test_name       TEXT PRIMARY KEY,
+    id       TEXT PRIMARY KEY,
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_name         TEXT REFERENCES org_farm(name),
+    farm_id         TEXT REFERENCES org_farm(id),
 
     test_methods    JSONB NOT NULL DEFAULT '[]',
     test_description TEXT,
 
     -- Result configuration
-    result_type     TEXT NOT NULL CHECK (result_type IN ('enum', 'numeric')),
+    result_type     TEXT NOT NULL CHECK (result_type IN ('Enum', 'Numeric')),
     enum_options         JSONB,
     enum_pass_options    JSONB,
     minimum_value NUMERIC,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS fsafe_lab_test (
     updated_by      TEXT,
     is_deleted       BOOLEAN NOT NULL DEFAULT false,
 
-    CONSTRAINT uq_fsafe_lab_test UNIQUE (org_id, test_name)
+    CONSTRAINT uq_fsafe_lab_test UNIQUE (org_id, id)
 );
 
 COMMENT ON TABLE fsafe_lab_test IS 'Catalog of EMP test definitions and their result configuration. Defines how results are evaluated and how many retests or vector tests are required on a fail.';

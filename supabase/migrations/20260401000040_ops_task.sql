@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS ops_task (
-    name       TEXT PRIMARY KEY,
+    id       TEXT PRIMARY KEY,
     org_id      TEXT NOT NULL REFERENCES org(id),
-    farm_name     TEXT REFERENCES org_farm(name),
+    farm_id     TEXT REFERENCES org_farm(id),
     description TEXT,
     qb_account  TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS ops_task (
     updated_by  TEXT,
     is_deleted   BOOLEAN NOT NULL DEFAULT false,
 
-    CONSTRAINT uq_ops_task_name UNIQUE (org_id, name)
+    CONSTRAINT uq_ops_task_name UNIQUE (org_id, id)
 );
 
 COMMENT ON TABLE ops_task IS 'Flat task catalog for labor tracking. Tasks can be org-wide or scoped to a specific farm.';

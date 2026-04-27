@@ -169,13 +169,13 @@ def ensure_missing_employees(supabase, data, emp_by_pid, emp_by_name):
 
         emp_id = to_id(name)
         rows.append(audit({
-            "name": emp_id,
+            "id": emp_id,
             "org_id": ORG_ID,
             "first_name": first,
             "last_name": last,
             "is_primary_org": True,
-            "sys_access_level_name": "Employee",
-            "hr_department_name": info["department"],
+            "sys_access_level_id": "Employee",
+            "hr_department_id": info["department"],
             "payroll_id": info["payroll_id"],
             "wc": info["wc"],
             "payroll_processor": info["source"],
@@ -214,8 +214,8 @@ def migrate_payroll(supabase, gc):
 
     # Build employee lookups
     emps = supabase.table("hr_employee").select(
-        "name, first_name, last_name, payroll_id, hr_department_name, "
-        "hr_work_authorization_name, wc, pay_structure, overtime_threshold"
+        "id, first_name, last_name, payroll_id, hr_department_id, "
+        "hr_work_authorization_id, wc, pay_structure, overtime_threshold"
     ).execute()
 
     emp_by_pid = {}
@@ -232,8 +232,8 @@ def migrate_payroll(supabase, gc):
 
     # Refresh lookups after auto-create
     emps = supabase.table("hr_employee").select(
-        "name, first_name, last_name, payroll_id, hr_department_name, "
-        "hr_work_authorization_name, wc, pay_structure, overtime_threshold"
+        "id, first_name, last_name, payroll_id, hr_department_id, "
+        "hr_work_authorization_id, wc, pay_structure, overtime_threshold"
     ).execute()
     emp_by_pid = {}
     emp_by_name = {}
@@ -245,8 +245,8 @@ def migrate_payroll(supabase, gc):
 
     # Work authorization lookup — hr_work_authorization has no 'name' column;
     # its id IS the display value (e.g. "H2A", "1099", "FUERTE"), so match on id.
-    wa_result = supabase.table("hr_work_authorization").select("name").execute()
-    wa_by_name = {w["name"].lower(): w["name"] for w in wa_result.data}
+    wa_result = supabase.table("hr_work_authorization").select("id").execute()
+    wa_by_name = {w["id"].lower(): w["id"] for w in wa_result.data}
 
     rows = []
     skipped_adjustment = 0
@@ -280,12 +280,12 @@ def migrate_payroll(supabase, gc):
                 last = proper_case(parts[0]) if parts else proper_case(name)
                 first = proper_case(" ".join(parts[1:])) if len(parts) >= 2 else "Unknown"
                 stub = {
-                    "name": new_id,
+                    "id": new_id,
                     "org_id": ORG_ID,
                     "first_name": first,
                     "last_name": last,
                     "is_primary_org": True,
-                    "sys_access_level_name": "Employee",
+                    "sys_access_level_id": "Employee",
                     "payroll_id": eid or new_id,
                     "is_deleted": True,
                     "created_by": AUDIT_USER,
@@ -335,14 +335,14 @@ def migrate_payroll(supabase, gc):
 
         # Snapshot fields from employee record
         dept = str(r.get("department", "")).strip().lower()
-        dept_id = DEPT_MAP.get(dept) or emp.get("hr_department_name")
+        dept_id = DEPT_MAP.get(dept) or emp.get("hr_department_id")
 
         status = str(r.get("status", "")).strip()
-        wa_id = wa_by_name.get(status.lower()) or emp.get("hr_work_authorization_name")
+        wa_id = wa_by_name.get(status.lower()) or emp.get("hr_work_authorization_id")
 
         wc = str(r.get("workers_compensation_code", "")).strip() or emp.get("wc")
         pay_structure = str(r.get("pay_structure", "")).strip().lower() or emp.get("pay_structure")
-        if pay_structure and pay_structure not in ("hourly", "salary"):
+        if pay_structure and pay_structure not in ("Hourly", "Salary"):
             pay_structure = emp.get("pay_structure")
 
         source = str(r.get("source", "")).strip() or "HRB"
@@ -351,8 +351,8 @@ def migrate_payroll(supabase, gc):
 
         row = {
             "org_id": ORG_ID,
-            "hr_employee_name": emp["name"],
-            "payroll_id": eid or emp.get("payroll_id") or emp["name"],
+            "hr_employee_id": emp["id"],
+            "payroll_id": eid or emp.get("payroll_id") or emp["id"],
             "pay_period_start": pay_period_start,
             "pay_period_end": pay_period_end,
             "check_date": check_date,
@@ -360,8 +360,8 @@ def migrate_payroll(supabase, gc):
             "payroll_processor": source,
             "is_standard": str(r.get("is_standard", "")).strip().lower() == "true",
             "employee_name": proper_case(name),
-            "hr_department_name": dept_id,
-            "hr_work_authorization_name": wa_id,
+            "hr_department_id": dept_id,
+            "hr_work_authorization_id": wa_id,
             "wc": wc if wc else None,
             "pay_structure": pay_structure,
             "hourly_rate": hourly_rate,

@@ -110,7 +110,7 @@ def migrate_sales_fob(supabase, gc):
         rows.append(audit({
             "id": to_id(name),
             "org_id": ORG_ID,
-            "name": proper_case(name),
+            "id": proper_case(name),
         }))
 
     insert_rows(supabase, "sales_fob", rows)
@@ -138,15 +138,15 @@ def migrate_sales_customer(supabase, gc):
         audit({
             "id": to_id(g),
             "org_id": ORG_ID,
-            "name": proper_case(g),
+            "id": proper_case(g),
         })
         for g in groups
     ]
     insert_rows(supabase, "sales_customer_group", group_rows)
 
     # --- Build FOB lookup ---
-    fob_result = supabase.table("sales_fob").select("id, name").eq("org_id", ORG_ID).execute()
-    fob_by_name = {f["name"].lower(): f["id"] for f in fob_result.data}
+    fob_result = supabase.table("sales_fob").select("id").eq("org_id", ORG_ID).execute()
+    fob_by_name = {f["id"].lower(): f["id"] for f in fob_result.data}
 
     # --- Insert customers ---
     customer_rows = []
@@ -189,10 +189,10 @@ def migrate_sales_customer(supabase, gc):
         customer_rows.append(audit({
             "id": cust_id,
             "org_id": ORG_ID,
-            "sales_customer_group_name": group_id,
-            "sales_fob_name": fob_id,
+            "sales_customer_group_id": group_id,
+            "sales_fob_id": fob_id,
             "qb_account": qb_account,
-            "name": proper_case(name),
+            "id": proper_case(name),
             "email": email,
             "cc_emails": cc_emails,
         }))
@@ -221,7 +221,7 @@ def migrate_sales_container_type(supabase, gc):
         rows.append(audit({
             "id": to_id(name),
             "org_id": ORG_ID,
-            "name": proper_case(name),
+            "id": proper_case(name),
             "maximum_spaces": spaces,
         }))
 
@@ -236,9 +236,9 @@ def migrate_sales_product_price(supabase, gc):
     """Migrate sales_product_prices tab → sales_product_price.
 
     SpecialPricing resolution:
-      - "Default" → sales_customer_group_name = null, sales_customer_name = null
-      - Check sales_customer_group first → sales_customer_group_name
-      - Fall back to sales_customer → sales_customer_name
+      - "Default" → sales_customer_group_id = null, sales_customer_id = null
+      - Check sales_customer_group first → sales_customer_group_id
+      - Fall back to sales_customer → sales_customer_id
     """
     wb = gc.open_by_key(SALES_SHEET_ID)
     data = wb.worksheet("sales_product_prices").get_all_records()
@@ -246,14 +246,14 @@ def migrate_sales_product_price(supabase, gc):
     print(f"\nProcessing {len(data)} product price rows...")
 
     # Build lookups
-    fob_result = supabase.table("sales_fob").select("id, name").eq("org_id", ORG_ID).execute()
-    fob_by_name = {f["name"].lower(): f["id"] for f in fob_result.data}
+    fob_result = supabase.table("sales_fob").select("id").eq("org_id", ORG_ID).execute()
+    fob_by_name = {f["id"].lower(): f["id"] for f in fob_result.data}
 
-    group_result = supabase.table("sales_customer_group").select("id, name").eq("org_id", ORG_ID).execute()
-    group_by_name = {g["name"].lower(): g["id"] for g in group_result.data}
+    group_result = supabase.table("sales_customer_group").select("id").eq("org_id", ORG_ID).execute()
+    group_by_name = {g["id"].lower(): g["id"] for g in group_result.data}
 
-    cust_result = supabase.table("sales_customer").select("id, name").eq("org_id", ORG_ID).execute()
-    cust_by_name = {c["name"].lower(): c["id"] for c in cust_result.data}
+    cust_result = supabase.table("sales_customer").select("id").eq("org_id", ORG_ID).execute()
+    cust_by_name = {c["id"].lower(): c["id"] for c in cust_result.data}
 
     rows = []
     skipped = 0
@@ -268,8 +268,8 @@ def migrate_sales_product_price(supabase, gc):
             skipped += 1
             continue
 
-        farm_name = str(r.get("Farm", "")).strip()
-        farm_name = to_id(farm_name)
+        farm_id = str(r.get("Farm", "")).strip()
+        farm_id = to_id(farm_id)
         sales_product_id = product_code
 
         # FOB
@@ -295,16 +295,16 @@ def migrate_sales_product_price(supabase, gc):
 
         row = {
             "org_id": ORG_ID,
-            "farm_name": farm_name,
+            "farm_id": farm_id,
             "sales_product_id": sales_product_id,
-            "sales_fob_name": fob_id,
+            "sales_fob_id": fob_id,
             "price_per_case": price,
             "effective_from": "2024-01-01",
         }
         if group_id:
-            row["sales_customer_group_name"] = group_id
+            row["sales_customer_group_id"] = group_id
         if cust_id:
-            row["sales_customer_name"] = cust_id
+            row["sales_customer_id"] = cust_id
 
         rows.append(audit(row))
 
@@ -331,7 +331,7 @@ def main():
     supabase.table("sales_customer").delete().neq("id", "__none__").execute()
     supabase.table("sales_customer_group").delete().neq("id", "__none__").execute()
     supabase.table("sales_fob").delete().neq("id", "__none__").execute()
-    supabase.table("sales_container_type").delete().neq("name", "__none__").execute()
+    supabase.table("sales_container_type").delete().neq("id", "__none__").execute()
     print("  Cleared")
 
     # Step 1: FOB lookup

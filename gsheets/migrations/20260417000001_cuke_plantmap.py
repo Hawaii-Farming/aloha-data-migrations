@@ -236,9 +236,9 @@ def seed_org_site_cuke_gh(supabase):
         rows.append(audit({
             "id":                site_id,
             "org_id":            ORG_ID,
-            "farm_name":           FARM_ID,
+            "farm_id":           FARM_ID,
             "farm_section":      farm_section,
-            "rows_orientation":  "vertical" if vert else "horizontal",
+            "rows_orientation":  "Vertical" if vert else "Horizontal",
             "sidewalk_position": sidewalk,
             "blocks_vertical":   blocks_vertical,
             "layout_grid_row":   layout_row,
@@ -298,7 +298,7 @@ def seed_org_site_cuke_gh_row(supabase, records):
         # the physical row — this table is pure identity (site_id, row_number).
         rows.append(audit({
             "org_id":            ORG_ID,
-            "farm_name":           FARM_ID,
+            "farm_id":           FARM_ID,
             "site_id":           site_id,
             "row_number":           row_number,
         }))
@@ -356,11 +356,11 @@ def seed_org_site_cuke_gh_block(supabase, records, inserted_rows):
 
         ascending_diffs = sum(1 for a, b in zip(row_numbers, row_numbers[1:]) if b > a)
         descending_diffs = sum(1 for a, b in zip(row_numbers, row_numbers[1:]) if b < a)
-        direction = "forward" if ascending_diffs >= descending_diffs else "reverse"
+        direction = "Forward" if ascending_diffs >= descending_diffs else "Reverse"
 
         rows.append(audit({
             "org_id":        ORG_ID,
-            "farm_name":       FARM_ID,
+            "farm_id":       FARM_ID,
             "site_id":       site_id,
             "block_number":     block_nums_per_site[site_id][block_label],
             "name":          block_label,
@@ -434,9 +434,9 @@ def seed_grow_cuke_gh_row_planting(supabase, records):
         if v1_primary and ppb1 in (4, 5):
             rows.append(audit({
                 "org_id":             ORG_ID,
-                "farm_name":            FARM_ID,
+                "farm_id":            FARM_ID,
                 "org_site_cuke_gh_row_id": row_id,
-                "scenario":           "current",
+                "scenario":           "Current",
                 "grow_variety_id":    v1_primary,
                 "grow_variety_id_2":  v1_secondary,
                 "plants_per_bag":     ppb1,
@@ -449,9 +449,9 @@ def seed_grow_cuke_gh_row_planting(supabase, records):
         if v2_primary and ppb2 in (4, 5):
             rows.append(audit({
                 "org_id":             ORG_ID,
-                "farm_name":            FARM_ID,
+                "farm_id":            FARM_ID,
                 "org_site_cuke_gh_row_id": row_id,
-                "scenario":           "planned",
+                "scenario":           "Planned",
                 "grow_variety_id":    v2_primary,
                 "grow_variety_id_2":  v2_secondary,
                 "plants_per_bag":     ppb2,
@@ -473,17 +473,17 @@ def migrate_cuke_seed_batches(supabase):
     preserving UUIDs so the FK splits in 007/008 can match.
 
     Mapping (grow_lettuce_seed_batch -> grow_cuke_seed_batch):
-      id, org_id, site_id, ops_task_tracker_id, grow_trial_type_name,
-      invnt_item_name, invnt_lot_id, seeding_date, transplant_date,
+      id, org_id, site_id, ops_task_tracker_id, grow_trial_type_id,
+      invnt_item_id, invnt_lot_id, seeding_date, transplant_date,
       status, notes, created_at/by, updated_at/by, is_deleted -> copied verbatim
-      farm_name                 -> forced to 'cuke' (guard)
+      farm_id                 -> forced to 'cuke' (guard)
       seeds                   -> number_of_units * seeds_per_unit
       rows_4_per_bag          -> -1 (historical sentinel)
       rows_5_per_bag          -> -1 (historical sentinel)
       next_bag_change_date    -> null
       batch_code              -> dropped (not kept in the new table)
-      grow_cycle_pattern_name   -> dropped (always null for cuke)
-      grow_lettuce_seed_mix_name -> dropped (cuke never uses seed mixes)
+      grow_cycle_pattern_id   -> dropped (always null for cuke)
+      grow_lettuce_seed_mix_id -> dropped (cuke never uses seed mixes)
       seeding_uom             -> dropped (always 'bag' for cuke)
       number_of_units         -> dropped (rolled into seeds)
       seeds_per_unit          -> dropped (rolled into seeds)
@@ -495,13 +495,13 @@ def migrate_cuke_seed_batches(supabase):
         src_rows = pg_select_all(
             conn,
             """
-            SELECT id, org_id, site_id, ops_task_tracker_id, grow_trial_type_name,
-                   invnt_item_name, invnt_lot_id, seeding_date, transplant_date,
+            SELECT id, org_id, site_id, ops_task_tracker_id, grow_trial_type_id,
+                   invnt_item_id, invnt_lot_id, seeding_date, transplant_date,
                    COALESCE(number_of_units, 0) * COALESCE(seeds_per_unit, 0) AS seeds,
                    status, notes,
                    created_at, created_by, updated_at, updated_by, is_deleted
             FROM grow_lettuce_seed_batch
-            WHERE farm_name = 'cuke' AND is_deleted = false
+            WHERE farm_id = 'cuke' AND is_deleted = false
             """,
         )
 
@@ -512,11 +512,11 @@ def migrate_cuke_seed_batches(supabase):
         dest_rows.append({
             "id":                   r["id"],
             "org_id":               r["org_id"],
-            "farm_name":              FARM_ID,
+            "farm_id":              FARM_ID,
             "site_id":              r["site_id"],
             "ops_task_tracker_id":  r["ops_task_tracker_id"],
-            "grow_trial_type_name":   r["grow_trial_type_name"],
-            "invnt_item_name":        r["invnt_item_name"],
+            "grow_trial_type_id":   r["grow_trial_type_id"],
+            "invnt_item_id":        r["invnt_item_id"],
             "invnt_lot_id":         r["invnt_lot_id"],
             "seeding_date":         r["seeding_date"],
             "transplant_date":      r["transplant_date"],

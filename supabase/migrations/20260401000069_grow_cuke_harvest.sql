@@ -34,10 +34,10 @@ SELECT
     b.seeding_date,
     (h.harvest_date - b.seeding_date) AS days_since_seed,
     h.org_id,
-    h.farm_name
+    h.farm_id
 FROM grow_harvest_weight h
 LEFT JOIN grow_cuke_seed_batch b ON b.id = h.grow_cuke_seed_batch_id
-LEFT JOIN invnt_item i ON i.name = b.invnt_item_name
-WHERE h.farm_name = 'cuke' AND h.is_deleted = false;
+LEFT JOIN invnt_item i ON i.id = b.invnt_item_id
+WHERE h.farm_id = 'Cuke' AND h.is_deleted = false;
 
 COMMENT ON VIEW grow_cuke_harvest IS 'Cuke harvest weigh-ins with display-friendly greenhouse names (GH1/Kona/HK/etc.), variety letter (K/J/E), and days_since_seed (harvest_date - seeding_date) for dashboards.';

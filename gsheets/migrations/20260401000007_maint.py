@@ -302,7 +302,7 @@ def migrate_maint_sites(supabase):
     # =====================================================================
     # EQUIPMENT MAP — these go into org_equipment, not org_site
     # =====================================================================
-    # Format: "Legacy SiteName" → (equipment_name, type, farm_name)
+    # Format: "Legacy SiteName" → (equipment_id, type, farm_id)
     #   type: vehicle, tool, machine, ppe, bag_pack_sprayer, fogger, tank
     # =====================================================================
 
@@ -376,39 +376,39 @@ def migrate_maint_sites(supabase):
     # Sites that need parent site and/or farm overrides
     SITE_OVERRIDES = {
         # -- BIP children (farm=cuke, parent=bip) --
-        "fert_bip":                     {"site_id_parent": "bip", "farm_name": "Cuke"},
-        "bip_ph":                       {"site_id_parent": "bip", "farm_name": "Cuke"},
+        "fert_bip":                     {"site_id_parent": "bip", "farm_id": "Cuke"},
+        "bip_ph":                       {"site_id_parent": "bip", "farm_id": "Cuke"},
 
         # -- BIP PH children (farm=cuke, parent=bip_ph) --
-        "bip_breakroom":                {"site_id_parent": "bip_ph", "farm_name": "Cuke"},
-        "bip_office":                   {"site_id_parent": "bip_ph", "farm_name": "Cuke"},
-        "bip_cold_storage_1":           {"site_id_parent": "bip_ph", "farm_name": "Cuke"},
-        "bip_cold_storage_2":           {"site_id_parent": "bip_ph", "farm_name": "Cuke"},
+        "bip_breakroom":                {"site_id_parent": "bip_ph", "farm_id": "Cuke"},
+        "bip_office":                   {"site_id_parent": "bip_ph", "farm_id": "Cuke"},
+        "bip_cold_storage_1":           {"site_id_parent": "bip_ph", "farm_id": "Cuke"},
+        "bip_cold_storage_2":           {"site_id_parent": "bip_ph", "farm_id": "Cuke"},
 
         # -- JTL children (farm=cuke, parent=jtl) --
-        "fert_jtl":                     {"site_id_parent": "jtl", "farm_name": "Cuke"},
-        "gh_01_storage":                {"site_id_parent": "jtl", "farm_name": "Cuke"},
-        "watanabe_break_room":          {"site_id_parent": "jtl", "farm_name": "Cuke"},
-        "shop":                         {"site_id_parent": "jtl", "farm_name": "Cuke"},
-        "boneyard_container_racks":     {"site_id_parent": "jtl", "farm_name": "Cuke"},
-        "boneyard_containers":          {"site_id_parent": "jtl", "farm_name": "Cuke"},
-        "boneyard_parts_containers":    {"site_id_parent": "jtl", "farm_name": "Cuke"},
+        "fert_jtl":                     {"site_id_parent": "jtl", "farm_id": "Cuke"},
+        "gh_01_storage":                {"site_id_parent": "jtl", "farm_id": "Cuke"},
+        "watanabe_break_room":          {"site_id_parent": "jtl", "farm_id": "Cuke"},
+        "shop":                         {"site_id_parent": "jtl", "farm_id": "Cuke"},
+        "boneyard_container_racks":     {"site_id_parent": "jtl", "farm_id": "Cuke"},
+        "boneyard_containers":          {"site_id_parent": "jtl", "farm_id": "Cuke"},
+        "boneyard_parts_containers":    {"site_id_parent": "jtl", "farm_id": "Cuke"},
 
         # -- GH children (farm=lettuce, parent=gh) --
-        "lettuce_fert_station":         {"site_id_parent": "gh", "farm_name": "Lettuce"},
-        "lettuce_germination_room":     {"site_id_parent": "gh", "farm_name": "Lettuce"},
-        "lettuce_ph":                   {"site_id_parent": "gh", "farm_name": "Lettuce"},
+        "lettuce_fert_station":         {"site_id_parent": "gh", "farm_id": "Lettuce"},
+        "lettuce_germination_room":     {"site_id_parent": "gh", "farm_id": "Lettuce"},
+        "lettuce_ph":                   {"site_id_parent": "gh", "farm_id": "Lettuce"},
 
         # -- Lettuce PH children (farm=lettuce, parent=lettuce_ph) --
-        "lettuce_packing_room":         {"site_id_parent": "lettuce_ph", "farm_name": "Lettuce"},
-        "lettuce_ph_cold_storage":      {"site_id_parent": "lettuce_ph", "farm_name": "Lettuce"},
-        "lettuce_ph_utility_closet":    {"site_id_parent": "lettuce_ph", "farm_name": "Lettuce"},
-        "lettuce_breezeway":            {"site_id_parent": "lettuce_ph", "farm_name": "Lettuce"},
-        "lettuce_dry_side_storage":     {"site_id_parent": "lettuce_ph", "farm_name": "Lettuce"},
-        "lettuce_cold_storage":         {"site_id_parent": "lettuce_ph", "farm_name": "Lettuce"},
-        "emergency_40_reefer_container": {"site_id_parent": "lettuce_ph", "farm_name": "Lettuce"},
-        "new_40_reefer_container":      {"site_id_parent": "lettuce_ph", "farm_name": "Lettuce"},
-        "new_40ft_container":           {"site_id_parent": "lettuce_ph", "farm_name": "Lettuce"},
+        "lettuce_packing_room":         {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
+        "lettuce_ph_cold_storage":      {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
+        "lettuce_ph_utility_closet":    {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
+        "lettuce_breezeway":            {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
+        "lettuce_dry_side_storage":     {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
+        "lettuce_cold_storage":         {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
+        "emergency_40_reefer_container": {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
+        "new_40_reefer_container":      {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
+        "new_40ft_container":           {"site_id_parent": "lettuce_ph", "farm_id": "Lettuce"},
 
         # -- Housing children (parent=their house, no farm) --
         "duplex_downstairs_bathroom_1": {"site_id_parent": "duplex"},
@@ -505,12 +505,12 @@ def migrate_maint_sites(supabase):
         insert_rows(supabase, "org_site", child_rows)
 
     # Create org_equipment records
-    existing_equip = supabase.table("org_equipment").select("name").execute()
-    existing_equip_names = {e["name"] for e in existing_equip.data}
+    existing_equip = supabase.table("org_equipment").select("id").execute()
+    existing_equip_names = {e["id"] for e in existing_equip.data}
 
     equip_rows = []
     seen_equip = set()
-    for equip_name, (_legacy_id, equip_type, farm_name) in EQUIPMENT_MAP.items():
+    for equip_name, (_legacy_id, equip_type, farm_id) in EQUIPMENT_MAP.items():
         # Use the map key verbatim as the PK (preserves "Lettuce GH Fans" as-is
         # instead of letting proper_case turn it into "Lettuce Gh Fans").
         if equip_name in existing_equip_names or equip_name in seen_equip:
@@ -518,9 +518,9 @@ def migrate_maint_sites(supabase):
         seen_equip.add(equip_name)
         equip_rows.append({
             "org_id": ORG_ID,
-            "farm_name": farm_name,
+            "farm_id": farm_id,
             "type": equip_type,
-            "name": equip_name,
+            "id": equip_name,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
         })
@@ -537,22 +537,22 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
     records = ws.get_all_records()
 
     # Build employee email -> id lookup
-    emp_result = supabase.table("hr_employee").select("name, company_email").execute()
+    emp_result = supabase.table("hr_employee").select("id, company_email").execute()
     email_to_emp = {}
     for e in emp_result.data:
         if e.get("company_email"):
-            email_to_emp[e["company_email"].lower()] = e["name"]
+            email_to_emp[e["company_email"].lower()] = e["id"]
     FALLBACK_EMP = email_to_emp.get("data@hawaiifarming.com")
 
-    # Build site -> farm_name and equipment -> farm_name lookups
+    # Build site -> farm_id and equipment -> farm_id lookups
     site_farm = {}
-    for s in supabase.table("org_site").select("id, farm_name").execute().data:
-        if s.get("farm_name"):
-            site_farm[s["id"]] = s["farm_name"]
+    for s in supabase.table("org_site").select("id, farm_id").execute().data:
+        if s.get("farm_id"):
+            site_farm[s["id"]] = s["farm_id"]
     equip_farm = {}
-    for eq in supabase.table("org_equipment").select("name, farm_name").execute().data:
-        if eq.get("farm_name"):
-            equip_farm[eq["name"]] = eq["farm_name"]
+    for eq in supabase.table("org_equipment").select("id, farm_id").execute().data:
+        if eq.get("farm_id"):
+            equip_farm[eq["id"]] = eq["farm_id"]
 
     # Build site lookup from SITE_MAP: legacy name → org_site_id
     site_by_name = {}
@@ -565,10 +565,10 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
         equip_by_name[legacy_name.lower()] = legacy_name
 
     # Build item name -> id lookup
-    item_result = supabase.table("invnt_item").select("name, burn_uom").execute()
+    item_result = supabase.table("invnt_item").select("id, burn_uom").execute()
     item_by_name = {}
     for it in item_result.data:
-        item_by_name[it["name"].lower()] = it
+        item_by_name[it["id"].lower()] = it
 
     # Fixer mapping: first name in concatenated list
     FIXER_MAP = {
@@ -619,12 +619,12 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
 
         # Site or Equipment — check equipment first, then site
         site_name = str(r.get("SiteName", "")).strip()
-        equipment_name = equip_by_name.get(site_name.lower())
-        site_id = None if equipment_name else (site_by_name.get(site_name.lower()) or site_by_name.get(to_id(site_name)))
+        equipment_id = equip_by_name.get(site_name.lower())
+        site_id = None if equipment_id else (site_by_name.get(site_name.lower()) or site_by_name.get(to_id(site_name)))
 
         # Status
         raw_status = str(r.get("Status", "")).strip().lower()
-        status = STATUS_MAP.get(raw_status, "new")
+        status = STATUS_MAP.get(raw_status, "New")
 
         # Recurring
         raw_recurring = str(r.get("Recurring", "")).strip().lower()
@@ -638,7 +638,7 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
 
         # Fixer
         fixer_raw = str(r.get("Fixer", "")).strip()
-        fixer_name = resolve_fixer(fixer_raw)
+        fixer_id = resolve_fixer(fixer_raw)
 
         # Fixer comments
         fixer_desc = str(r.get("FixerComments", "")).strip() or None
@@ -647,28 +647,28 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
         req_email = str(r.get("RequestedBy", "")).strip().lower()
         requested_by = email_to_emp.get(req_email) or FALLBACK_EMP
 
-        # Derive farm_name from site or equipment
-        farm_name = None
+        # Derive farm_id from site or equipment
+        farm_id = None
         if site_id:
-            farm_name = site_farm.get(site_id)
-        if not farm_name and equipment_name:
-            farm_name = equip_farm.get(equipment_name)
+            farm_id = site_farm.get(site_id)
+        if not farm_id and equipment_id:
+            farm_id = equip_farm.get(equipment_id)
 
         # Skip rows where neither site nor equipment is set (XOR constraint)
-        if not site_id and not equipment_name:
+        if not site_id and not equipment_id:
             continue
 
         req = {
             "org_id": ORG_ID,
-            "farm_name": farm_name,
+            "farm_id": farm_id,
             "site_id": site_id,
-            "equipment_name": equipment_name,
+            "equipment_id": equipment_id,
             "status": status,
             "request_description": description or None,
             "recurring_frequency": recurring,
             "due_date": due_date,
             "completed_at": completed_at,
-            "fixer_name": fixer_name,
+            "fixer_id": fixer_id,
             "fixer_description": fixer_desc,
             "requested_at": requested_at,
             "requested_by": requested_by,
@@ -689,7 +689,7 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
                 qty = safe_numeric(r.get("QuantityUsed", ""))
                 invnt_item_rows.append((req_index, {
                     "org_id": ORG_ID,
-                    "invnt_item_name": item["name"],
+                    "invnt_item_id": item["id"],
                     "uom": item.get("burn_uom"),
                     "quantity_used": qty if qty else None,
                     "created_by": req_email or AUDIT_USER,
@@ -704,7 +704,7 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
                 url = url.replace("images/maint/", "images/maint_request/")
                 photo_rows.append((req_index, {
                     "org_id": ORG_ID,
-                    "photo_type": "before",
+                    "photo_type": "Before",
                     "photo_url": url,
                     "created_by": req_email or AUDIT_USER,
                     "updated_by": req_email or AUDIT_USER,
@@ -718,7 +718,7 @@ def migrate_maint_request(supabase, client, site_map, equipment_map):
                 url = url.replace("images/maint/", "images/maint_request/")
                 photo_rows.append((req_index, {
                     "org_id": ORG_ID,
-                    "photo_type": "after",
+                    "photo_type": "After",
                     "photo_url": url,
                     "created_by": req_email or AUDIT_USER,
                     "updated_by": req_email or AUDIT_USER,
@@ -764,11 +764,11 @@ def migrate_house_inspections(supabase, client):
     records = ws.get_all_records()
 
     # Build employee email -> id lookup
-    emp_result = supabase.table("hr_employee").select("name, company_email").execute()
+    emp_result = supabase.table("hr_employee").select("id, company_email").execute()
     email_to_emp = {}
     for e in emp_result.data:
         if e.get("company_email"):
-            email_to_emp[e["company_email"].lower()] = e["name"]
+            email_to_emp[e["company_email"].lower()] = e["id"]
     FALLBACK_EMP = email_to_emp.get("data@hawaiifarming.com")
 
     # Build site lookup: "house|room" -> org_site_id
@@ -797,7 +797,7 @@ def migrate_house_inspections(supabase, client):
     # --- Define templates per room type ---
     TEMPLATES = {
         "exterior": {
-            "name": "House Inspection - Exterior",
+            "id": "House Inspection - Exterior",
             "questions": [
                 ("General cleanliness", "numeric", 1, 5),
                 ("Roof intact with no missing shingles, leaks or loose flashing", "boolean", None, None),
@@ -808,7 +808,7 @@ def migrate_house_inspections(supabase, client):
             ],
         },
         "bedroom": {
-            "name": "House Inspection - Bedroom",
+            "id": "House Inspection - Bedroom",
             "questions": [
                 ("General cleanliness", "numeric", 1, 5),
                 ("Doors are secure and locks functional", "boolean", None, None),
@@ -822,7 +822,7 @@ def migrate_house_inspections(supabase, client):
             ],
         },
         "bathroom": {
-            "name": "House Inspection - Bathroom",
+            "id": "House Inspection - Bathroom",
             "questions": [
                 ("General cleanliness", "numeric", 1, 5),
                 ("Doors are secure and locks functional", "boolean", None, None),
@@ -836,7 +836,7 @@ def migrate_house_inspections(supabase, client):
             ],
         },
         "kitchen": {
-            "name": "House Inspection - Kitchen",
+            "id": "House Inspection - Kitchen",
             "questions": [
                 ("General cleanliness", "numeric", 1, 5),
                 ("Doors are secure and locks functional", "boolean", None, None),
@@ -852,7 +852,7 @@ def migrate_house_inspections(supabase, client):
             ],
         },
         "living_room": {
-            "name": "House Inspection - Living Room",
+            "id": "House Inspection - Living Room",
             "questions": [
                 ("General cleanliness", "numeric", 1, 5),
                 ("Doors are secure and locks functional", "boolean", None, None),
@@ -866,7 +866,7 @@ def migrate_house_inspections(supabase, client):
             ],
         },
         "garage": {
-            "name": "House Inspection - Garage",
+            "id": "House Inspection - Garage",
             "questions": [
                 ("General cleanliness", "numeric", 1, 5),
                 ("Driveway and walkways clear with no cracks or tripping hazards", "boolean", None, None),
@@ -904,7 +904,7 @@ def migrate_house_inspections(supabase, client):
     task_name = "House Inspection"
     supabase.table("ops_task").upsert({
         "org_id": ORG_ID,
-        "name": task_name,
+        "id": task_name,
         "description": "Periodic inspection of housing units and rooms",
         "created_by": AUDIT_USER,
         "updated_by": AUDIT_USER,
@@ -915,14 +915,14 @@ def migrate_house_inspections(supabase, client):
     # 2. Create ops_template + ops_template_question for each room type
     template_questions = {}  # room_type -> {question_text: question_id}
     for room_type, tmpl in TEMPLATES.items():
-        org_module_result = supabase.table("org_module").select("name").eq("sys_module_name", "Maintenance").execute()
-        org_module_name = org_module_result.data[0]["name"] if org_module_result.data else None
+        org_module_result = supabase.table("org_module").select("id").eq("sys_module_id", "Maintenance").execute()
+        org_module_id = org_module_result.data[0]["id"] if org_module_result.data else None
 
-        tmpl_name = tmpl["name"]
+        tmpl_name = tmpl["id"]
         supabase.table("ops_template").insert({
             "org_id": ORG_ID,
-            "name": tmpl_name,
-            "org_module_name": org_module_name,
+            "id": tmpl_name,
+            "org_module_id": org_module_id,
             "display_order": list(TEMPLATES.keys()).index(room_type) + 1,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
@@ -931,8 +931,8 @@ def migrate_house_inspections(supabase, client):
         # Link task to template
         supabase.table("ops_task_template").insert({
             "org_id": ORG_ID,
-            "ops_task_name": task_name,
-            "ops_template_name": tmpl_name,
+            "ops_task_id": task_name,
+            "ops_template_id": tmpl_name,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
         }).execute()
@@ -942,7 +942,7 @@ def migrate_house_inspections(supabase, client):
         for i, (q_text, resp_type, min_val, max_val) in enumerate(tmpl["questions"]):
             q_row = {
                 "org_id": ORG_ID,
-                "ops_template_name": tmpl_name,
+                "ops_template_id": tmpl_name,
                 "question_text": q_text,
                 "response_type": resp_type,
                 "is_required": True,
@@ -1011,12 +1011,12 @@ def migrate_house_inspections(supabase, client):
         inspector_id = email_to_emp.get(inspector_email) or FALLBACK_EMP
 
         # Resolve the display-name PK for this room's template
-        tmpl_name = TEMPLATES[room_type]["name"]
+        tmpl_name = TEMPLATES[room_type]["id"]
 
         tracker = {
             "org_id": ORG_ID,
             "site_id": site_id,
-            "ops_task_name": task_name,
+            "ops_task_id": task_name,
             "start_time": inspection_date,
             "stop_time": inspection_date,
             "is_completed": True,
@@ -1038,7 +1038,7 @@ def migrate_house_inspections(supabase, client):
 
             result_row = {
                 "org_id": ORG_ID,
-                "ops_template_name": tmpl_name,
+                "ops_template_id": tmpl_name,
                 "ops_template_question_id": q_id,
                 "created_by": inspector_email or AUDIT_USER,
                 "updated_by": inspector_email or AUDIT_USER,
@@ -1097,7 +1097,7 @@ def main():
             pass
     # Clear equipment created by this script
     try:
-        supabase.table("org_equipment").delete().neq("name", "___never___").execute()
+        supabase.table("org_equipment").delete().neq("id", "___never___").execute()
     except Exception:
         pass
     print("  All cleared")

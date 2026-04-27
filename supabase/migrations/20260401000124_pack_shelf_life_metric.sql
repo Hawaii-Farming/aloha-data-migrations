@@ -1,11 +1,11 @@
 CREATE TABLE IF NOT EXISTS pack_shelf_life_metric (
-    name       TEXT PRIMARY KEY,
+    id       TEXT PRIMARY KEY,
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_name         TEXT REFERENCES org_farm(name),
+    farm_id         TEXT REFERENCES org_farm(id),
     description     TEXT,
 
     -- Response configuration
-    response_type   TEXT NOT NULL CHECK (response_type IN ('boolean', 'numeric', 'enum')),
+    response_type   TEXT NOT NULL CHECK (response_type IN ('Boolean', 'Numeric', 'Enum')),
     enum_options    JSONB,
 
     -- Fail criteria (triggers trial termination when matched)
@@ -28,9 +28,9 @@ COMMENT ON TABLE pack_shelf_life_metric IS 'Defines what gets checked during a s
 
 CREATE INDEX idx_pack_shelf_life_metric_org_id ON pack_shelf_life_metric (org_id);
 
--- Partial unique indexes handle NULL farm_name correctly
-CREATE UNIQUE INDEX uq_pack_shelf_life_metric_org_level  ON pack_shelf_life_metric (org_id, name) WHERE farm_name IS NULL;
-CREATE UNIQUE INDEX uq_pack_shelf_life_metric_farm_level ON pack_shelf_life_metric (org_id, farm_name, name) WHERE farm_name IS NOT NULL;
+-- Partial unique indexes handle NULL farm_id correctly
+CREATE UNIQUE INDEX uq_pack_shelf_life_metric_org_level  ON pack_shelf_life_metric (org_id, id) WHERE farm_id IS NULL;
+CREATE UNIQUE INDEX uq_pack_shelf_life_metric_farm_level ON pack_shelf_life_metric (org_id, farm_id, id) WHERE farm_id IS NOT NULL;
 
 COMMENT ON COLUMN pack_shelf_life_metric.response_type IS 'boolean, numeric, enum';
 COMMENT ON COLUMN pack_shelf_life_metric.enum_options IS 'JSON array of allowed observation values when response_type is enum (e.g. ["Green", "Yellow", "Brown"])';

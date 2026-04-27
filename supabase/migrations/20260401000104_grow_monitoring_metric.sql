@@ -1,14 +1,14 @@
 CREATE TABLE IF NOT EXISTS grow_monitoring_metric (
     id              TEXT PRIMARY KEY,
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_name         TEXT NOT NULL REFERENCES org_farm(name),
+    farm_id         TEXT NOT NULL REFERENCES org_farm(id),
     site_category   TEXT NOT NULL,
     name            TEXT NOT NULL,
     description     TEXT,
 
     -- Response configuration
-    response_type       TEXT NOT NULL DEFAULT 'numeric' CHECK (response_type IN ('boolean', 'numeric', 'enum')),
-    reading_uom         TEXT REFERENCES sys_uom(code),
+    response_type       TEXT NOT NULL DEFAULT 'numeric' CHECK (response_type IN ('Boolean', 'Numeric', 'Enum')),
+    reading_uom         TEXT REFERENCES sys_uom(id),
     minimum_value       NUMERIC,
     maximum_value       NUMERIC,
     enum_options        JSONB,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS grow_monitoring_metric (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by      TEXT,
     is_deleted      BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT uq_grow_monitoring_metric UNIQUE (org_id, farm_name, site_category, name)
+    CONSTRAINT uq_grow_monitoring_metric UNIQUE (org_id, farm_id, site_category, name)
 );
 
 COMMENT ON TABLE grow_monitoring_metric IS 'Defines what to measure per farm and site category. Direct points are entered manually; calculated points are derived from other points using a formula.';
@@ -47,4 +47,4 @@ COMMENT ON COLUMN grow_monitoring_metric.input_point_ids IS 'JSON array of grow_
 COMMENT ON COLUMN grow_monitoring_metric.is_required IS 'When true, an out-of-range reading triggers corrective action creation; when false, the metric is informational only';
 COMMENT ON COLUMN grow_monitoring_metric.corrective_actions IS 'JSON array of corrective action options shown when reading is out of range; selected value stored in grow_monitoring_result.corrective_action';
 
-CREATE INDEX idx_grow_monitoring_metric_farm ON grow_monitoring_metric (org_id, farm_name, site_category);
+CREATE INDEX idx_grow_monitoring_metric_farm ON grow_monitoring_metric (org_id, farm_id, site_category);

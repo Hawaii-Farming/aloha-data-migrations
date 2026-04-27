@@ -1,15 +1,15 @@
 CREATE TABLE IF NOT EXISTS org_farm (
-    name       TEXT PRIMARY KEY,
+    id       TEXT PRIMARY KEY,
     org_id           TEXT NOT NULL REFERENCES org(id),
-    weighing_uom  TEXT REFERENCES sys_uom(code),
-    growing_uom   TEXT REFERENCES sys_uom(code),
-    volume_uom    TEXT REFERENCES sys_uom(code),
+    weighing_uom  TEXT REFERENCES sys_uom(id),
+    growing_uom   TEXT REFERENCES sys_uom(id),
+    volume_uom    TEXT REFERENCES sys_uom(id),
     created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by       TEXT,
     updated_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by       TEXT,
     is_deleted        BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT uq_org_farm UNIQUE (org_id, name)
+    CONSTRAINT uq_org_farm UNIQUE (org_id, id)
 );
 
 COMMENT ON TABLE org_farm IS 'Represents a crop or product line within an organization (e.g. Cuke Farm, Lettuce Farm). Each farm has its own sites, varieties, grades, and products. Farm-level defaults reference units of measure for weighing and growing operations.';
@@ -22,8 +22,8 @@ COMMENT ON COLUMN org_farm.volume_uom IS 'Default volume unit for this farm; pre
 -- data (grow_trial_type.legacy_trial) don't hit an FK violation. The
 -- Python migration 002_org.py upserts the same rows with full UOM
 -- defaults on the next nightly.
-INSERT INTO public.org_farm (org_id, name)
+INSERT INTO public.org_farm (org_id, id)
 VALUES
   ('hawaii_farming', 'Cuke'),
   ('hawaii_farming', 'Lettuce')
-ON CONFLICT (name) DO NOTHING;
+ON CONFLICT (id) DO NOTHING;

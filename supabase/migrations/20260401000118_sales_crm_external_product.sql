@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS sales_crm_external_product (
-    name       TEXT PRIMARY KEY,
+    id       TEXT PRIMARY KEY,
     org_id          TEXT NOT NULL REFERENCES org(id),
     display_order   INTEGER NOT NULL DEFAULT 0,
     is_active       BOOLEAN NOT NULL DEFAULT true,
@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS sales_crm_external_product (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by      TEXT,
     is_deleted      BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT uq_sales_crm_external_product UNIQUE (org_id, name)
+    CONSTRAINT uq_sales_crm_external_product UNIQUE (org_id, id)
 );
 
 COMMENT ON TABLE sales_crm_external_product IS 'Competitor products observed during store visits. Simple name-based lookup (e.g. Nalo 14oz, Mainland 16oz, Sensei 4oz).';
