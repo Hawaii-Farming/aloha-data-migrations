@@ -12,9 +12,9 @@ on:
         default: 'default'
         type: choice
         options:
-          - default     # _run_nightly.py default set (007-033)
-          - all         # all migrations 001-033
-          - grow_only   # grow-related only (024-032)
+          - default     # _run_nightly.py default set (003-035)
+          - all         # all migrations 001-035
+          - grow_only   # grow-related only (024-033)
           - only        # run exactly the scripts in `only_list` input
       only_list:
         description: 'Comma-sep migration numbers when mode=only (e.g. "005" or "003,004,005")'
@@ -79,7 +79,7 @@ jobs:
 
       - name: Run migrations (grow only)
         if: ${{ inputs.mode == 'grow_only' }}
-        run: python gsheets/migrations/_run_nightly.py --only 025,026,027,028,029,030,031,032
+        run: python gsheets/migrations/_run_nightly.py --only 024,025,026,027,028,029,030,031,032,033
 
       - name: Run migrations (custom only list)
         if: ${{ inputs.mode == 'only' && inputs.only_list != '' }}
