@@ -80,6 +80,10 @@ SHEET_IDS = {
     "ops_training": os.environ.get(
         "SHEET_OPS_TRAINING", "1MbHJoJmq0w8hWz8rl9VXezmK-63MFmuK19lz3pu0dfc"
     ),
+    # External-lab chemistry results (lettuce ponds + water source)
+    "chemistry": os.environ.get(
+        "SHEET_CHEMISTRY", "1XwavjRPi3xMJClslOjuC_4ONrbdl8l_qw0_JallE2c0"
+    ),
 }
 
 

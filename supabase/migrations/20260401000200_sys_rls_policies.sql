@@ -1243,6 +1243,18 @@ CREATE POLICY "fin_expense_read" ON public.fin_expense
 GRANT SELECT ON public.fin_expense TO authenticated;
 
 -- ============================================================
+-- grow_chemistry_result
+-- ============================================================
+
+ALTER TABLE public.grow_chemistry_result ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "grow_chemistry_result_read" ON public.grow_chemistry_result
+  FOR SELECT TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT SELECT ON public.grow_chemistry_result TO authenticated;
+
+-- ============================================================
 -- Views
 -- ============================================================
 -- Views don't carry their own RLS policies. Each view is created with
