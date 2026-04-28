@@ -231,14 +231,14 @@ def migrate_hr_employee(supabase, records, app_users):
         level = app_user.get("Level", 1)
         access_level = level_map.get(level, "Employee")
 
-        # Gender
-        gender = str(r.get("Gender", "")).strip().lower()
+        # Gender (CHECK: 'Male', 'Female')
+        gender = proper_case(r.get("Gender", "")) or None
         if gender not in ("Male", "Female"):
             gender = None
 
-        # Pay structure
-        pay = str(r.get("PayStructure", "")).strip().lower()
-        if pay not in ("hourly", "salary"):
+        # Pay structure (CHECK: 'Hourly', 'Salary')
+        pay = proper_case(r.get("PayStructure", "")) or None
+        if pay not in ("Hourly", "Salary"):
             pay = None
 
         # Housing — sheet value is the org_site_housing.id verbatim
@@ -372,12 +372,12 @@ def migrate_hr_time_off_request(supabase, gc, emp_records):
         if email:
             email_to_id[email] = to_id(full)
 
-    # Status mapping
+    # Status mapping (CHECK: 'Pending', 'Approved', 'Denied')
     status_map = {
-        "approved": "approved",
-        "denied": "denied",
-        "not approved": "denied",
-        "pending": "pending",
+        "approved": "Approved",
+        "denied": "Denied",
+        "not approved": "Denied",
+        "pending": "Pending",
     }
 
     rows = []
@@ -479,7 +479,7 @@ def migrate_hr_travel_request(supabase, gc, emp_records):
         reviewed_by = email_to_id.get(updated_email)
 
         status = str(r.get("request_status", "")).strip().lower()
-        status_map = {"requested": "pending", "ordered": "approved"}
+        status_map = {"requested": "Pending", "ordered": "Approved"}
         mapped_status = status_map.get(status, "Pending")
 
         row = {

@@ -194,18 +194,19 @@ def parse_int(val, default=None):
 # ---------------------------------------------------------------------------
 
 def clear_existing(supabase):
-    """Remove rows from the four new layout tables so the script is rerunnable.
+    """Remove rows from layout tables so the script is rerunnable.
 
-    grow_cuke_seed_batch is handled by the upsert path in Step 7 — not cleared
-    here because 007/008 SQL migrations may have already moved FKs onto those
-    rows, and deleting would fail the inbound constraints.
+    org_site_cuke_gh is NOT cleared — it is upserted in place (Step 1) because
+    grow_cuke_seed_batch.site_id and grow_cuke_rotation.site_id keep inbound
+    FK references to its TEXT ids ('01'..'08', 'hk', 'wa', 'ko', 'hi'). Those
+    ids are stable, so an upsert refreshes the row content without breaking
+    FKs. grow_cuke_seed_batch itself is handled by the upsert path in Step 5.
     """
     print("\nClearing layout tables for rerun...")
     for table in (
         "grow_cuke_gh_row_planting",
         "org_site_cuke_gh_block",
         "org_site_cuke_gh_row",
-        "org_site_cuke_gh",
     ):
         supabase.table(table).delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
         print(f"  Cleared {table}")
@@ -246,7 +247,7 @@ def seed_org_site_cuke_gh(supabase):
             "layout_stack_pos":  layout_stack_pos,
         }))
 
-    return insert_rows(supabase, "org_site_cuke_gh", rows)
+    return insert_rows(supabase, "org_site_cuke_gh", rows, upsert=True)
 
 
 # ---------------------------------------------------------------------------

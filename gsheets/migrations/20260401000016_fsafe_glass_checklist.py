@@ -414,9 +414,9 @@ def migrate_template(supabase, gc, template_def, q_map, all_records, email_map, 
             "created_by": tracker["created_by"],
             "updated_by": tracker["updated_by"],
         }
-        if rtype == "boolean":
+        if rtype == "Boolean":
             row["response_boolean"] = parse_bool_cell(raw)
-        elif rtype == "numeric":
+        elif rtype == "Numeric":
             try:
                 v = str(raw).strip()
                 row["response_numeric"] = float(v) if v else None

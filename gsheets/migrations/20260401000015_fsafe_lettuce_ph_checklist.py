@@ -646,11 +646,11 @@ def migrate_template(supabase, gc, template_def, q_map, email_map, stub_cache):
             "created_by": tracker["created_by"],
             "updated_by": tracker["updated_by"],
         }
-        if rtype == "boolean":
+        if rtype == "Boolean":
             row["response_boolean"] = parse_bool_cell(raw)
-        elif rtype == "numeric":
+        elif rtype == "Numeric":
             row["response_numeric"] = parse_numeric_cell(raw)
-        elif rtype == "enum":
+        elif rtype == "Enum":
             v = str(raw).strip() if raw is not None else None
             row["response_enum"] = v or None
         result_rows.append(row)

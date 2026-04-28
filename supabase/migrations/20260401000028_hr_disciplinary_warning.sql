@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS hr_disciplinary_warning (
     acknowledged_at                 TIMESTAMPTZ,
     employee_signature_url          TEXT,
 
-    status                          TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('Pending', 'Reviewed')),
+    status                          TEXT NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Reviewed')),
 
     reported_at                     TIMESTAMPTZ NOT NULL DEFAULT now(),
     reported_by                     TEXT,

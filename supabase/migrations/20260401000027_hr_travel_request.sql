@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS hr_travel_request (
 
     denial_reason       TEXT,
     notes               TEXT,
-    status              TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('Pending', 'Approved', 'Denied')),
+    status              TEXT NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Approved', 'Denied')),
 
     requested_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
     requested_by        TEXT NOT NULL,

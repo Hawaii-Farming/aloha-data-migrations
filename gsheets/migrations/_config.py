@@ -267,13 +267,31 @@ def _install_postgrest_retry():
             code = None
         return code in _TRANSIENT_HTTP_CODES
 
+    # Build a fake empty postgrest response so retry-after-write can return
+    # cleanly when the server committed the original request but the client
+    # got a network error mid-flight.
+    class _FakeResponse:
+        def __init__(self):
+            self.data = []
+            self.count = None
+
     def _wrap_execute(original):
         @functools.wraps(original)
         def retry_execute(self, *args, **kwargs):
+            had_network_retry = False
             for attempt in range(_MAX_ATTEMPTS):
                 try:
                     return original(self, *args, **kwargs)
                 except APIError as e:
+                    # 23505 = duplicate_key. If we just retried after a
+                    # transient network error, the original request likely
+                    # committed server-side — treat the dupe as success.
+                    if had_network_retry and getattr(e, "code", None) == "23505":
+                        print(
+                            f"  [retry] swallowed duplicate_key after network "
+                            f"retry — original write succeeded server-side"
+                        )
+                        return _FakeResponse()
                     if _transient_api_error(e) and attempt < _MAX_ATTEMPTS - 1:
                         wait = 2 ** attempt
                         print(
@@ -290,6 +308,7 @@ def _install_postgrest_retry():
                             f"  [retry] {type(e).__name__}; "
                             f"retrying in {wait}s (attempt {attempt + 1}/{_MAX_ATTEMPTS - 1})"
                         )
+                        had_network_retry = True
                         time.sleep(wait)
                         continue
                     raise

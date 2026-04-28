@@ -582,10 +582,10 @@ ENUM_NORMALIZE = {
     "acceptable": "Acceptable",
 }
 
-# Photo type mapping
+# Photo side mapping (CHECK: 'Bottom', 'Side', 'Top')
 PHOTO_SIDE_MAP = {
-    "TopPhoto": "top",
-    "BottomPhoto": "bottom",
+    "TopPhoto": "Top",
+    "BottomPhoto": "Bottom",
     "SidePhoto": "Side",
 }
 
@@ -819,7 +819,7 @@ def migrate_shelf_life(supabase, gc):
             "pack_shelf_life_id": shelf_life_id,
             "observation_date": obs_date,
             "shelf_life_day": shelf_life_day,
-            "Side": side,
+            "side": side,
             "photo_url": photo_url,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
