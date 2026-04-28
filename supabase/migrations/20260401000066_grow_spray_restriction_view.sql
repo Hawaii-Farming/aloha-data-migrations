@@ -1,4 +1,5 @@
-CREATE OR REPLACE VIEW grow_spray_restriction AS
+CREATE OR REPLACE VIEW grow_spray_restriction
+WITH (security_invoker = true) AS
 WITH spray_events AS (
     -- Get each spray event with its max REI and PHI from compliance records
     SELECT

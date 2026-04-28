@@ -26,7 +26,8 @@
 -- see one row per (org, module, sub_module) across all orgs they belong to.
 -- Do not remove the auth.uid() filter — it is the entire access control.
 
-CREATE OR REPLACE VIEW public.hr_rba_navigation AS
+CREATE OR REPLACE VIEW public.hr_rba_navigation
+WITH (security_invoker = true) AS
 SELECT
     om.org_id,
     -- The Proper Case PK IS the display name AND the URL segment AND the

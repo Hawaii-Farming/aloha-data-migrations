@@ -4,7 +4,8 @@
 -- re-joining seed batch + invnt_item on every query.
 
 DROP VIEW IF EXISTS grow_cuke_harvest;
-CREATE VIEW grow_cuke_harvest AS
+CREATE VIEW grow_cuke_harvest
+WITH (security_invoker = true) AS
 SELECT
     h.id,
     h.harvest_date,

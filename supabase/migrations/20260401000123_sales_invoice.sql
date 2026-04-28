@@ -41,7 +41,8 @@ CREATE INDEX idx_sales_invoice_number ON sales_invoice (invoice_number);
 CREATE INDEX idx_sales_invoice_customer ON sales_invoice (customer_name);
 
 -- View exposes derived date parts + applies soft-delete filter. Dashboards query this.
-CREATE OR REPLACE VIEW sales_invoice_v AS
+CREATE OR REPLACE VIEW sales_invoice_v
+WITH (security_invoker = true) AS
 SELECT
     i.*,
     EXTRACT(YEAR    FROM i.invoice_date)::INT AS year,

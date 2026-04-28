@@ -1,4 +1,5 @@
-CREATE OR REPLACE VIEW invnt_item_summary AS
+CREATE OR REPLACE VIEW invnt_item_summary
+WITH (security_invoker = true) AS
 WITH latest_onhand AS (
     SELECT DISTINCT ON (invnt_item_id)
         invnt_item_id,

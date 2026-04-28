@@ -3,7 +3,8 @@
 -- re-joining grow_harvest_weight to grow_lettuce_seed_batch + invnt_item
 -- on every query. One row per harvest weigh-in.
 
-CREATE OR REPLACE VIEW grow_lettuce_harvest AS
+CREATE OR REPLACE VIEW grow_lettuce_harvest
+WITH (security_invoker = true) AS
 SELECT
     h.id,
     h.harvest_date,

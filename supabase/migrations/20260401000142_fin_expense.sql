@@ -39,7 +39,8 @@ CREATE INDEX idx_fin_expense_farm ON fin_expense (farm_id);
 CREATE INDEX idx_fin_expense_txn_date ON fin_expense (txn_date);
 
 -- View exposes derived date parts + applies soft-delete filter. Dashboards query this.
-CREATE OR REPLACE VIEW fin_expense_v AS
+CREATE OR REPLACE VIEW fin_expense_v
+WITH (security_invoker = true) AS
 SELECT
     e.*,
     EXTRACT(YEAR  FROM e.txn_date)::INT AS year,
