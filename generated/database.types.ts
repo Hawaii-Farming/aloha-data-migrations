@@ -70,7 +70,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           effective_amount: number | null
-          farm_name: string | null
+          farm_id: string | null
           id: string
           is_credit: boolean
           is_deleted: boolean
@@ -91,7 +91,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           effective_amount?: number | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           is_credit?: boolean
           is_deleted?: boolean
@@ -112,7 +112,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           effective_amount?: number | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           is_credit?: boolean
           is_deleted?: boolean
@@ -126,11 +126,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fin_expense_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "fin_expense_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fin_expense_org_id_fkey"
@@ -146,8 +146,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          id: string
           is_deleted: boolean
-          name: string
           org_id: string
           updated_at: string
           updated_by: string | null
@@ -156,8 +156,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          id: string
           is_deleted?: boolean
-          name: string
           org_id: string
           updated_at?: string
           updated_by?: string | null
@@ -166,8 +166,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          id?: string
           is_deleted?: boolean
-          name?: string
           org_id?: string
           updated_at?: string
           updated_by?: string | null
@@ -189,7 +189,8 @@ export type Database = {
           created_by: string | null
           enum_options: Json | null
           enum_pass_options: Json | null
-          farm_name: string | null
+          farm_id: string | null
+          id: string
           is_deleted: boolean
           maximum_value: number | null
           minimum_value: number | null
@@ -199,7 +200,6 @@ export type Database = {
           result_type: string
           test_description: string | null
           test_methods: Json
-          test_name: string
           updated_at: string
           updated_by: string | null
         }
@@ -209,7 +209,8 @@ export type Database = {
           created_by?: string | null
           enum_options?: Json | null
           enum_pass_options?: Json | null
-          farm_name?: string | null
+          farm_id?: string | null
+          id: string
           is_deleted?: boolean
           maximum_value?: number | null
           minimum_value?: number | null
@@ -219,7 +220,6 @@ export type Database = {
           result_type: string
           test_description?: string | null
           test_methods?: Json
-          test_name: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -229,7 +229,8 @@ export type Database = {
           created_by?: string | null
           enum_options?: Json | null
           enum_pass_options?: Json | null
-          farm_name?: string | null
+          farm_id?: string | null
+          id?: string
           is_deleted?: boolean
           maximum_value?: number | null
           minimum_value?: number | null
@@ -239,17 +240,16 @@ export type Database = {
           result_type?: string
           test_description?: string | null
           test_methods?: Json
-          test_name?: string
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "fsafe_lab_test_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "fsafe_lab_test_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fsafe_lab_test_org_id_fkey"
@@ -264,7 +264,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           id: string
           is_deleted: boolean
           notes: string | null
@@ -279,7 +279,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           id?: string
           is_deleted?: boolean
           notes?: string | null
@@ -294,7 +294,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           id?: string
           is_deleted?: boolean
           notes?: string | null
@@ -308,11 +308,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fsafe_pest_result_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "fsafe_pest_result_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fsafe_pest_result_ops_task_tracker_id_fkey"
@@ -343,9 +343,9 @@ export type Database = {
           created_at: string
           created_by: string | null
           fail_code: string | null
-          farm_name: string
-          fsafe_lab_name: string | null
-          fsafe_lab_test_name: string
+          farm_id: string
+          fsafe_lab_id: string | null
+          fsafe_lab_test_id: string
           fsafe_result_id_original: string | null
           fsafe_test_hold_id: string | null
           id: string
@@ -372,9 +372,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           fail_code?: string | null
-          farm_name: string
-          fsafe_lab_name?: string | null
-          fsafe_lab_test_name: string
+          farm_id: string
+          fsafe_lab_id?: string | null
+          fsafe_lab_test_id: string
           fsafe_result_id_original?: string | null
           fsafe_test_hold_id?: string | null
           id?: string
@@ -401,9 +401,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           fail_code?: string | null
-          farm_name?: string
-          fsafe_lab_name?: string | null
-          fsafe_lab_test_name?: string
+          farm_id?: string
+          fsafe_lab_id?: string | null
+          fsafe_lab_test_id?: string
           fsafe_result_id_original?: string | null
           fsafe_test_hold_id?: string | null
           id?: string
@@ -431,49 +431,49 @@ export type Database = {
             columns: ["sampled_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_fsafe_result_sampled_by"
             columns: ["sampled_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "fk_fsafe_result_verified_by"
             columns: ["verified_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_fsafe_result_verified_by"
             columns: ["verified_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
-            foreignKeyName: "fsafe_result_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "fsafe_result_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fsafe_result_fsafe_lab_name_fkey"
-            columns: ["fsafe_lab_name"]
+            foreignKeyName: "fsafe_result_fsafe_lab_id_fkey"
+            columns: ["fsafe_lab_id"]
             isOneToOne: false
             referencedRelation: "fsafe_lab"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fsafe_result_fsafe_lab_test_name_fkey"
-            columns: ["fsafe_lab_test_name"]
+            foreignKeyName: "fsafe_result_fsafe_lab_test_id_fkey"
+            columns: ["fsafe_lab_test_id"]
             isOneToOne: false
             referencedRelation: "fsafe_lab_test"
-            referencedColumns: ["test_name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fsafe_result_fsafe_result_id_original_fkey"
@@ -510,16 +510,16 @@ export type Database = {
           created_at: string
           created_by: string | null
           delivered_to_lab_on: string | null
-          farm_name: string
-          fsafe_lab_name: string | null
+          farm_id: string
+          fsafe_lab_id: string | null
           id: string
           is_deleted: boolean
           lab_test_id: string | null
           notes: string | null
           org_id: string
           pack_lot_id: string
-          sales_customer_group_name: string | null
-          sales_customer_name: string | null
+          sales_customer_group_id: string | null
+          sales_customer_id: string | null
           updated_at: string
           updated_by: string | null
         }
@@ -527,16 +527,16 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           delivered_to_lab_on?: string | null
-          farm_name: string
-          fsafe_lab_name?: string | null
+          farm_id: string
+          fsafe_lab_id?: string | null
           id?: string
           is_deleted?: boolean
           lab_test_id?: string | null
           notes?: string | null
           org_id: string
           pack_lot_id: string
-          sales_customer_group_name?: string | null
-          sales_customer_name?: string | null
+          sales_customer_group_id?: string | null
+          sales_customer_id?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -544,33 +544,33 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           delivered_to_lab_on?: string | null
-          farm_name?: string
-          fsafe_lab_name?: string | null
+          farm_id?: string
+          fsafe_lab_id?: string | null
           id?: string
           is_deleted?: boolean
           lab_test_id?: string | null
           notes?: string | null
           org_id?: string
           pack_lot_id?: string
-          sales_customer_group_name?: string | null
-          sales_customer_name?: string | null
+          sales_customer_group_id?: string | null
+          sales_customer_id?: string | null
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "fsafe_test_hold_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "fsafe_test_hold_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fsafe_test_hold_fsafe_lab_name_fkey"
-            columns: ["fsafe_lab_name"]
+            foreignKeyName: "fsafe_test_hold_fsafe_lab_id_fkey"
+            columns: ["fsafe_lab_id"]
             isOneToOne: false
             referencedRelation: "fsafe_lab"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fsafe_test_hold_org_id_fkey"
@@ -587,18 +587,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fsafe_test_hold_sales_customer_group_name_fkey"
-            columns: ["sales_customer_group_name"]
+            foreignKeyName: "fsafe_test_hold_sales_customer_group_id_fkey"
+            columns: ["sales_customer_group_id"]
             isOneToOne: false
             referencedRelation: "sales_customer_group"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fsafe_test_hold_sales_customer_name_fkey"
-            columns: ["sales_customer_name"]
+            foreignKeyName: "fsafe_test_hold_sales_customer_id_fkey"
+            columns: ["sales_customer_id"]
             isOneToOne: false
             referencedRelation: "sales_customer"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -606,7 +606,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           fsafe_test_hold_id: string
           id: string
           is_deleted: boolean
@@ -618,7 +618,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           fsafe_test_hold_id: string
           id?: string
           is_deleted?: boolean
@@ -630,7 +630,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           fsafe_test_hold_id?: string
           id?: string
           is_deleted?: boolean
@@ -641,11 +641,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fsafe_test_hold_po_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "fsafe_test_hold_po_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fsafe_test_hold_po_fsafe_test_hold_id_fkey"
@@ -674,7 +674,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           grow_variety_id: string
           grow_variety_id_2: string | null
           id: string
@@ -691,7 +691,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           grow_variety_id: string
           grow_variety_id_2?: string | null
           id?: string
@@ -708,7 +708,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           grow_variety_id?: string
           grow_variety_id_2?: string | null
           id?: string
@@ -735,21 +735,21 @@ export type Database = {
             columns: ["grow_variety_id"]
             isOneToOne: false
             referencedRelation: "grow_variety"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_grow_cuke_gh_row_planting_variety_secondary"
             columns: ["grow_variety_id_2"]
             isOneToOne: false
             referencedRelation: "grow_variety"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_cuke_gh_row_planting_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_cuke_gh_row_planting_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_cuke_gh_row_planting_org_id_fkey"
@@ -765,7 +765,7 @@ export type Database = {
           anchor_week_start: string | null
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           id: string
           is_anchor: boolean
           is_deleted: boolean
@@ -780,7 +780,7 @@ export type Database = {
           anchor_week_start?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           id?: string
           is_anchor?: boolean
           is_deleted?: boolean
@@ -795,7 +795,7 @@ export type Database = {
           anchor_week_start?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           id?: string
           is_anchor?: boolean
           is_deleted?: boolean
@@ -820,10 +820,10 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string
-          grow_trial_type_name: string | null
+          farm_id: string
+          grow_trial_type_id: string | null
           id: string
-          invnt_item_name: string | null
+          invnt_item_id: string | null
           invnt_lot_id: string | null
           is_deleted: boolean
           next_bag_change_date: string | null
@@ -843,10 +843,10 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name: string
-          grow_trial_type_name?: string | null
+          farm_id: string
+          grow_trial_type_id?: string | null
           id?: string
-          invnt_item_name?: string | null
+          invnt_item_id?: string | null
           invnt_lot_id?: string | null
           is_deleted?: boolean
           next_bag_change_date?: string | null
@@ -866,10 +866,10 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string
-          grow_trial_type_name?: string | null
+          farm_id?: string
+          grow_trial_type_id?: string | null
           id?: string
-          invnt_item_name?: string | null
+          invnt_item_id?: string | null
           invnt_lot_id?: string | null
           is_deleted?: boolean
           next_bag_change_date?: string | null
@@ -888,32 +888,32 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "grow_cuke_seed_batch_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_cuke_seed_batch_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_cuke_seed_batch_grow_trial_type_name_fkey"
-            columns: ["grow_trial_type_name"]
+            foreignKeyName: "grow_cuke_seed_batch_grow_trial_type_id_fkey"
+            columns: ["grow_trial_type_id"]
             isOneToOne: false
             referencedRelation: "grow_trial_type"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_cuke_seed_batch_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "grow_cuke_seed_batch_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_cuke_seed_batch_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "grow_cuke_seed_batch_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item_summary"
-            referencedColumns: ["invnt_item_name"]
+            referencedColumns: ["invnt_item_id"]
           },
           {
             foreignKeyName: "grow_cuke_seed_batch_org_id_fkey"
@@ -936,9 +936,9 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
-          farm_name: string
+          farm_id: string
+          id: string
           is_deleted: boolean
-          name: string
           org_id: string
           updated_at: string
           updated_by: string | null
@@ -947,9 +947,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          farm_name: string
+          farm_id: string
+          id: string
           is_deleted?: boolean
-          name: string
           org_id: string
           updated_at?: string
           updated_by?: string | null
@@ -958,20 +958,20 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          farm_name?: string
+          farm_id?: string
+          id?: string
           is_deleted?: boolean
-          name?: string
           org_id?: string
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "grow_cycle_pattern_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_cycle_pattern_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_cycle_pattern_org_id_fkey"
@@ -987,8 +987,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          id: string
           is_deleted: boolean
-          name: string
           updated_at: string
           updated_by: string | null
         }
@@ -996,8 +996,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          id: string
           is_deleted?: boolean
-          name: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -1005,8 +1005,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          id?: string
           is_deleted?: boolean
-          name?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -1016,9 +1016,9 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          equipment_name: string
-          farm_name: string
-          grow_fertigation_recipe_name: string
+          equipment_id: string | null
+          farm_id: string
+          grow_fertigation_recipe_id: string
           id: string
           is_deleted: boolean
           ops_task_tracker_id: string
@@ -1031,9 +1031,9 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          equipment_name: string
-          farm_name: string
-          grow_fertigation_recipe_name: string
+          equipment_id?: string | null
+          farm_id: string
+          grow_fertigation_recipe_id: string
           id?: string
           is_deleted?: boolean
           ops_task_tracker_id: string
@@ -1046,9 +1046,9 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          equipment_name?: string
-          farm_name?: string
-          grow_fertigation_recipe_name?: string
+          equipment_id?: string | null
+          farm_id?: string
+          grow_fertigation_recipe_id?: string
           id?: string
           is_deleted?: boolean
           ops_task_tracker_id?: string
@@ -1060,25 +1060,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "grow_fertigation_equipment_name_fkey"
-            columns: ["equipment_name"]
+            foreignKeyName: "grow_fertigation_equipment_id_fkey"
+            columns: ["equipment_id"]
             isOneToOne: false
             referencedRelation: "org_equipment"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_fertigation_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_fertigation_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_fertigation_grow_fertigation_recipe_name_fkey"
-            columns: ["grow_fertigation_recipe_name"]
+            foreignKeyName: "grow_fertigation_grow_fertigation_recipe_id_fkey"
+            columns: ["grow_fertigation_recipe_id"]
             isOneToOne: false
             referencedRelation: "grow_fertigation_recipe"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_fertigation_ops_task_tracker_id_fkey"
@@ -1099,7 +1099,7 @@ export type Database = {
             columns: ["volume_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1108,9 +1108,9 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
-          farm_name: string
+          farm_id: string
+          id: string
           is_deleted: boolean
-          name: string
           org_id: string
           updated_at: string
           updated_by: string | null
@@ -1119,9 +1119,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          farm_name: string
+          farm_id: string
+          id: string
           is_deleted?: boolean
-          name: string
           org_id: string
           updated_at?: string
           updated_by?: string | null
@@ -1130,20 +1130,20 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          farm_name?: string
+          farm_id?: string
+          id?: string
           is_deleted?: boolean
-          name?: string
           org_id?: string
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "grow_fertigation_recipe_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_fertigation_recipe_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_fertigation_recipe_org_id_fkey"
@@ -1162,11 +1162,11 @@ export type Database = {
           burn_uom: string | null
           created_at: string
           created_by: string | null
-          equipment_name: string | null
-          farm_name: string
-          grow_fertigation_recipe_name: string
+          equipment_id: string | null
+          farm_id: string
+          grow_fertigation_recipe_id: string
           id: string
-          invnt_item_name: string | null
+          invnt_item_id: string | null
           is_deleted: boolean
           item_name: string
           notes: string | null
@@ -1181,11 +1181,11 @@ export type Database = {
           burn_uom?: string | null
           created_at?: string
           created_by?: string | null
-          equipment_name?: string | null
-          farm_name: string
-          grow_fertigation_recipe_name: string
+          equipment_id?: string | null
+          farm_id: string
+          grow_fertigation_recipe_id: string
           id?: string
-          invnt_item_name?: string | null
+          invnt_item_id?: string | null
           is_deleted?: boolean
           item_name: string
           notes?: string | null
@@ -1200,11 +1200,11 @@ export type Database = {
           burn_uom?: string | null
           created_at?: string
           created_by?: string | null
-          equipment_name?: string | null
-          farm_name?: string
-          grow_fertigation_recipe_name?: string
+          equipment_id?: string | null
+          farm_id?: string
+          grow_fertigation_recipe_id?: string
           id?: string
-          invnt_item_name?: string | null
+          invnt_item_id?: string | null
           is_deleted?: boolean
           item_name?: string
           notes?: string | null
@@ -1218,49 +1218,49 @@ export type Database = {
             columns: ["application_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_fertigation_recipe_item_burn_uom_fkey"
             columns: ["burn_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_fertigation_recipe_item_equipment_name_fkey"
-            columns: ["equipment_name"]
+            foreignKeyName: "grow_fertigation_recipe_item_equipment_id_fkey"
+            columns: ["equipment_id"]
             isOneToOne: false
             referencedRelation: "org_equipment"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_fertigation_recipe_item_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_fertigation_recipe_item_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_fertigation_recipe_item_grow_fertigation_recipe_name_fkey"
-            columns: ["grow_fertigation_recipe_name"]
+            foreignKeyName: "grow_fertigation_recipe_item_grow_fertigation_recipe_id_fkey"
+            columns: ["grow_fertigation_recipe_id"]
             isOneToOne: false
             referencedRelation: "grow_fertigation_recipe"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_fertigation_recipe_item_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "grow_fertigation_recipe_item_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_fertigation_recipe_item_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "grow_fertigation_recipe_item_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item_summary"
-            referencedColumns: ["invnt_item_name"]
+            referencedColumns: ["invnt_item_id"]
           },
           {
             foreignKeyName: "grow_fertigation_recipe_item_org_id_fkey"
@@ -1275,8 +1275,8 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string
-          grow_fertigation_recipe_name: string
+          farm_id: string
+          grow_fertigation_recipe_id: string
           id: string
           is_deleted: boolean
           org_id: string
@@ -1287,8 +1287,8 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name: string
-          grow_fertigation_recipe_name: string
+          farm_id: string
+          grow_fertigation_recipe_id: string
           id?: string
           is_deleted?: boolean
           org_id: string
@@ -1299,8 +1299,8 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string
-          grow_fertigation_recipe_name?: string
+          farm_id?: string
+          grow_fertigation_recipe_id?: string
           id?: string
           is_deleted?: boolean
           org_id?: string
@@ -1310,18 +1310,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "grow_fertigation_recipe_site_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_fertigation_recipe_site_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_fertigation_recipe_site_grow_fertigation_recipe_name_fkey"
-            columns: ["grow_fertigation_recipe_name"]
+            foreignKeyName: "grow_fertigation_recipe_site_grow_fertigation_recipe_id_fkey"
+            columns: ["grow_fertigation_recipe_id"]
             isOneToOne: false
             referencedRelation: "grow_fertigation_recipe"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_fertigation_recipe_site_org_id_fkey"
@@ -1341,10 +1341,10 @@ export type Database = {
       }
       grow_grade: {
         Row: {
-          code: string
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
+          id: string
           is_deleted: boolean
           name: string
           org_id: string
@@ -1352,10 +1352,10 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
-          code: string
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
+          id: string
           is_deleted?: boolean
           name: string
           org_id: string
@@ -1363,10 +1363,10 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
-          code?: string
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
+          id?: string
           is_deleted?: boolean
           name?: string
           org_id?: string
@@ -1375,11 +1375,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "grow_grade_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_grade_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_grade_org_id_fkey"
@@ -1394,12 +1394,12 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           grow_grade_id: string | null
           grow_variety_id: string | null
+          id: string
           is_deleted: boolean
           is_tare_calculated: boolean
-          name: string
           org_id: string
           tare_formula: string | null
           tare_formula_inputs: Json | null
@@ -1411,12 +1411,12 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           grow_grade_id?: string | null
           grow_variety_id?: string | null
+          id: string
           is_deleted?: boolean
           is_tare_calculated?: boolean
-          name: string
           org_id: string
           tare_formula?: string | null
           tare_formula_inputs?: Json | null
@@ -1428,12 +1428,12 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           grow_grade_id?: string | null
           grow_variety_id?: string | null
+          id?: string
           is_deleted?: boolean
           is_tare_calculated?: boolean
-          name?: string
           org_id?: string
           tare_formula?: string | null
           tare_formula_inputs?: Json | null
@@ -1444,25 +1444,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "grow_harvest_container_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_harvest_container_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_harvest_container_grow_grade_id_fkey"
             columns: ["grow_grade_id"]
             isOneToOne: false
             referencedRelation: "grow_grade"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_harvest_container_grow_variety_id_fkey"
             columns: ["grow_variety_id"]
             isOneToOne: false
             referencedRelation: "grow_variety"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_harvest_container_org_id_fkey"
@@ -1476,7 +1476,7 @@ export type Database = {
             columns: ["weight_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1484,11 +1484,11 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           gross_weight: number
           grow_cuke_seed_batch_id: string | null
           grow_grade_id: string | null
-          grow_harvest_container_name: string
+          grow_harvest_container_id: string
           grow_lettuce_seed_batch_id: string | null
           harvest_date: string
           id: string
@@ -1505,11 +1505,11 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           gross_weight: number
           grow_cuke_seed_batch_id?: string | null
           grow_grade_id?: string | null
-          grow_harvest_container_name: string
+          grow_harvest_container_id: string
           grow_lettuce_seed_batch_id?: string | null
           harvest_date: string
           id?: string
@@ -1526,11 +1526,11 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           gross_weight?: number
           grow_cuke_seed_batch_id?: string | null
           grow_grade_id?: string | null
-          grow_harvest_container_name?: string
+          grow_harvest_container_id?: string
           grow_lettuce_seed_batch_id?: string | null
           harvest_date?: string
           id?: string
@@ -1546,11 +1546,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "grow_harvest_weight_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_harvest_weight_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_harvest_weight_grow_cuke_seed_batch_id_fkey"
@@ -1564,14 +1564,14 @@ export type Database = {
             columns: ["grow_grade_id"]
             isOneToOne: false
             referencedRelation: "grow_grade"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_harvest_weight_grow_harvest_container_name_fkey"
-            columns: ["grow_harvest_container_name"]
+            foreignKeyName: "grow_harvest_weight_grow_harvest_container_id_fkey"
+            columns: ["grow_harvest_container_id"]
             isOneToOne: false
             referencedRelation: "grow_harvest_container"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_harvest_weight_grow_lettuce_seed_batch_id_fkey"
@@ -1606,7 +1606,7 @@ export type Database = {
             columns: ["weight_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1616,12 +1616,12 @@ export type Database = {
           created_at: string
           created_by: string | null
           estimated_harvest_date: string
-          farm_name: string
-          grow_cycle_pattern_name: string | null
-          grow_lettuce_seed_mix_name: string | null
-          grow_trial_type_name: string | null
+          farm_id: string
+          grow_cycle_pattern_id: string | null
+          grow_lettuce_seed_mix_id: string | null
+          grow_trial_type_id: string | null
           id: string
-          invnt_item_name: string | null
+          invnt_item_id: string | null
           invnt_lot_id: string | null
           is_deleted: boolean
           notes: string | null
@@ -1643,12 +1643,12 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           estimated_harvest_date: string
-          farm_name: string
-          grow_cycle_pattern_name?: string | null
-          grow_lettuce_seed_mix_name?: string | null
-          grow_trial_type_name?: string | null
+          farm_id: string
+          grow_cycle_pattern_id?: string | null
+          grow_lettuce_seed_mix_id?: string | null
+          grow_trial_type_id?: string | null
           id?: string
-          invnt_item_name?: string | null
+          invnt_item_id?: string | null
           invnt_lot_id?: string | null
           is_deleted?: boolean
           notes?: string | null
@@ -1670,12 +1670,12 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           estimated_harvest_date?: string
-          farm_name?: string
-          grow_cycle_pattern_name?: string | null
-          grow_lettuce_seed_mix_name?: string | null
-          grow_trial_type_name?: string | null
+          farm_id?: string
+          grow_cycle_pattern_id?: string | null
+          grow_lettuce_seed_mix_id?: string | null
+          grow_trial_type_id?: string | null
           id?: string
-          invnt_item_name?: string | null
+          invnt_item_id?: string | null
           invnt_lot_id?: string | null
           is_deleted?: boolean
           notes?: string | null
@@ -1694,46 +1694,46 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "grow_lettuce_seed_batch_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_lettuce_seed_batch_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_lettuce_seed_batch_grow_cycle_pattern_name_fkey"
-            columns: ["grow_cycle_pattern_name"]
+            foreignKeyName: "grow_lettuce_seed_batch_grow_cycle_pattern_id_fkey"
+            columns: ["grow_cycle_pattern_id"]
             isOneToOne: false
             referencedRelation: "grow_cycle_pattern"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_lettuce_seed_batch_grow_lettuce_seed_mix_name_fkey"
-            columns: ["grow_lettuce_seed_mix_name"]
+            foreignKeyName: "grow_lettuce_seed_batch_grow_lettuce_seed_mix_id_fkey"
+            columns: ["grow_lettuce_seed_mix_id"]
             isOneToOne: false
             referencedRelation: "grow_lettuce_seed_mix"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_lettuce_seed_batch_grow_trial_type_name_fkey"
-            columns: ["grow_trial_type_name"]
+            foreignKeyName: "grow_lettuce_seed_batch_grow_trial_type_id_fkey"
+            columns: ["grow_trial_type_id"]
             isOneToOne: false
             referencedRelation: "grow_trial_type"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_lettuce_seed_batch_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "grow_lettuce_seed_batch_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_lettuce_seed_batch_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "grow_lettuce_seed_batch_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item_summary"
-            referencedColumns: ["invnt_item_name"]
+            referencedColumns: ["invnt_item_id"]
           },
           {
             foreignKeyName: "grow_lettuce_seed_batch_invnt_lot_id_fkey"
@@ -1761,7 +1761,7 @@ export type Database = {
             columns: ["seeding_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_lettuce_seed_batch_site_id_fkey"
@@ -1777,9 +1777,9 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
-          farm_name: string
+          farm_id: string
+          id: string
           is_deleted: boolean
-          name: string
           org_id: string
           updated_at: string
           updated_by: string | null
@@ -1788,9 +1788,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          farm_name: string
+          farm_id: string
+          id: string
           is_deleted?: boolean
-          name: string
           org_id: string
           updated_at?: string
           updated_by?: string | null
@@ -1799,20 +1799,20 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          farm_name?: string
+          farm_id?: string
+          id?: string
           is_deleted?: boolean
-          name?: string
           org_id?: string
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "grow_lettuce_seed_mix_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_lettuce_seed_mix_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_lettuce_seed_mix_org_id_fkey"
@@ -1827,10 +1827,10 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string
-          grow_lettuce_seed_mix_name: string
+          farm_id: string
+          grow_lettuce_seed_mix_id: string
           id: string
-          invnt_item_name: string
+          invnt_item_id: string
           invnt_lot_id: string | null
           is_deleted: boolean
           org_id: string
@@ -1841,10 +1841,10 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name: string
-          grow_lettuce_seed_mix_name: string
+          farm_id: string
+          grow_lettuce_seed_mix_id: string
           id?: string
-          invnt_item_name: string
+          invnt_item_id: string
           invnt_lot_id?: string | null
           is_deleted?: boolean
           org_id: string
@@ -1855,10 +1855,10 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string
-          grow_lettuce_seed_mix_name?: string
+          farm_id?: string
+          grow_lettuce_seed_mix_id?: string
           id?: string
-          invnt_item_name?: string
+          invnt_item_id?: string
           invnt_lot_id?: string | null
           is_deleted?: boolean
           org_id?: string
@@ -1868,32 +1868,32 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "grow_lettuce_seed_mix_item_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_lettuce_seed_mix_item_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_lettuce_seed_mix_item_grow_lettuce_seed_mix_name_fkey"
-            columns: ["grow_lettuce_seed_mix_name"]
+            foreignKeyName: "grow_lettuce_seed_mix_item_grow_lettuce_seed_mix_id_fkey"
+            columns: ["grow_lettuce_seed_mix_id"]
             isOneToOne: false
             referencedRelation: "grow_lettuce_seed_mix"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_lettuce_seed_mix_item_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "grow_lettuce_seed_mix_item_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_lettuce_seed_mix_item_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "grow_lettuce_seed_mix_item_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item_summary"
-            referencedColumns: ["invnt_item_name"]
+            referencedColumns: ["invnt_item_id"]
           },
           {
             foreignKeyName: "grow_lettuce_seed_mix_item_invnt_lot_id_fkey"
@@ -1920,7 +1920,7 @@ export type Database = {
           display_order: number
           enum_options: Json | null
           enum_pass_options: Json | null
-          farm_name: string
+          farm_id: string
           formula: string | null
           id: string
           input_point_ids: Json | null
@@ -1945,7 +1945,7 @@ export type Database = {
           display_order?: number
           enum_options?: Json | null
           enum_pass_options?: Json | null
-          farm_name: string
+          farm_id: string
           formula?: string | null
           id: string
           input_point_ids?: Json | null
@@ -1970,7 +1970,7 @@ export type Database = {
           display_order?: number
           enum_options?: Json | null
           enum_pass_options?: Json | null
-          farm_name?: string
+          farm_id?: string
           formula?: string | null
           id?: string
           input_point_ids?: Json | null
@@ -1989,11 +1989,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "grow_monitoring_metric_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_monitoring_metric_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_monitoring_metric_org_id_fkey"
@@ -2007,7 +2007,7 @@ export type Database = {
             columns: ["reading_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2016,7 +2016,7 @@ export type Database = {
           corrective_action: string | null
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           grow_monitoring_metric_id: string
           id: string
           is_deleted: boolean
@@ -2036,7 +2036,7 @@ export type Database = {
           corrective_action?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           grow_monitoring_metric_id: string
           id?: string
           is_deleted?: boolean
@@ -2056,7 +2056,7 @@ export type Database = {
           corrective_action?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           grow_monitoring_metric_id?: string
           id?: string
           is_deleted?: boolean
@@ -2074,11 +2074,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "grow_monitoring_result_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_monitoring_result_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_monitoring_result_grow_monitoring_metric_id_fkey"
@@ -2115,8 +2115,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          id: string
           is_deleted: boolean
-          name: string
           updated_at: string
           updated_by: string | null
         }
@@ -2124,8 +2124,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          id: string
           is_deleted?: boolean
-          name: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -2133,8 +2133,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          id?: string
           is_deleted?: boolean
-          name?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -2145,9 +2145,9 @@ export type Database = {
           created_at: string
           created_by: string | null
           disease_infection_stage: string | null
-          farm_name: string
-          grow_disease_name: string | null
-          grow_pest_name: string | null
+          farm_id: string
+          grow_disease_id: string | null
+          grow_pest_id: string | null
           id: string
           is_deleted: boolean
           notes: string | null
@@ -2163,9 +2163,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           disease_infection_stage?: string | null
-          farm_name: string
-          grow_disease_name?: string | null
-          grow_pest_name?: string | null
+          farm_id: string
+          grow_disease_id?: string | null
+          grow_pest_id?: string | null
           id?: string
           is_deleted?: boolean
           notes?: string | null
@@ -2181,9 +2181,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           disease_infection_stage?: string | null
-          farm_name?: string
-          grow_disease_name?: string | null
-          grow_pest_name?: string | null
+          farm_id?: string
+          grow_disease_id?: string | null
+          grow_pest_id?: string | null
           id?: string
           is_deleted?: boolean
           notes?: string | null
@@ -2197,25 +2197,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "grow_scout_result_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_scout_result_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_scout_result_grow_disease_name_fkey"
-            columns: ["grow_disease_name"]
+            foreignKeyName: "grow_scout_result_grow_disease_id_fkey"
+            columns: ["grow_disease_id"]
             isOneToOne: false
             referencedRelation: "grow_disease"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_scout_result_grow_pest_name_fkey"
-            columns: ["grow_pest_name"]
+            foreignKeyName: "grow_scout_result_grow_pest_id_fkey"
+            columns: ["grow_pest_id"]
             isOneToOne: false
             referencedRelation: "grow_pest"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_scout_result_ops_task_tracker_id_fkey"
@@ -2252,9 +2252,9 @@ export type Database = {
           epa_registration: string | null
           expiration_date: string | null
           external_label_url: string
-          farm_name: string | null
+          farm_id: string | null
           id: string
-          invnt_item_name: string | null
+          invnt_item_id: string | null
           is_deleted: boolean
           label_date: string | null
           maximum_quantity_per_acre: number | null
@@ -2276,9 +2276,9 @@ export type Database = {
           epa_registration?: string | null
           expiration_date?: string | null
           external_label_url: string
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
-          invnt_item_name?: string | null
+          invnt_item_id?: string | null
           is_deleted?: boolean
           label_date?: string | null
           maximum_quantity_per_acre?: number | null
@@ -2300,9 +2300,9 @@ export type Database = {
           epa_registration?: string | null
           expiration_date?: string | null
           external_label_url?: string
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
-          invnt_item_name?: string | null
+          invnt_item_id?: string | null
           is_deleted?: boolean
           label_date?: string | null
           maximum_quantity_per_acre?: number | null
@@ -2319,35 +2319,35 @@ export type Database = {
             columns: ["application_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_spray_compliance_burn_uom_fkey"
             columns: ["burn_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_spray_compliance_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_spray_compliance_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_spray_compliance_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "grow_spray_compliance_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_spray_compliance_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "grow_spray_compliance_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item_summary"
-            referencedColumns: ["invnt_item_name"]
+            referencedColumns: ["invnt_item_id"]
           },
           {
             foreignKeyName: "grow_spray_compliance_org_id_fkey"
@@ -2362,8 +2362,8 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          equipment_name: string
-          farm_name: string
+          equipment_id: string | null
+          farm_id: string
           id: string
           is_deleted: boolean
           ops_task_tracker_id: string
@@ -2376,8 +2376,8 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          equipment_name: string
-          farm_name: string
+          equipment_id?: string | null
+          farm_id: string
           id?: string
           is_deleted?: boolean
           ops_task_tracker_id: string
@@ -2390,8 +2390,8 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          equipment_name?: string
-          farm_name?: string
+          equipment_id?: string | null
+          farm_id?: string
           id?: string
           is_deleted?: boolean
           ops_task_tracker_id?: string
@@ -2403,18 +2403,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "grow_spray_equipment_equipment_name_fkey"
-            columns: ["equipment_name"]
+            foreignKeyName: "grow_spray_equipment_equipment_id_fkey"
+            columns: ["equipment_id"]
             isOneToOne: false
             referencedRelation: "org_equipment"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_spray_equipment_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_spray_equipment_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_spray_equipment_ops_task_tracker_id_fkey"
@@ -2435,7 +2435,7 @@ export type Database = {
             columns: ["water_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2445,10 +2445,10 @@ export type Database = {
           application_uom: string
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           grow_spray_compliance_id: string
           id: string
-          invnt_item_name: string
+          invnt_item_id: string
           invnt_lot_id: string | null
           is_deleted: boolean
           ops_task_tracker_id: string
@@ -2462,10 +2462,10 @@ export type Database = {
           application_uom: string
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           grow_spray_compliance_id: string
           id?: string
-          invnt_item_name: string
+          invnt_item_id: string
           invnt_lot_id?: string | null
           is_deleted?: boolean
           ops_task_tracker_id: string
@@ -2479,10 +2479,10 @@ export type Database = {
           application_uom?: string
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           grow_spray_compliance_id?: string
           id?: string
-          invnt_item_name?: string
+          invnt_item_id?: string
           invnt_lot_id?: string | null
           is_deleted?: boolean
           ops_task_tracker_id?: string
@@ -2497,14 +2497,14 @@ export type Database = {
             columns: ["application_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_spray_input_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_spray_input_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_spray_input_grow_spray_compliance_id_fkey"
@@ -2514,18 +2514,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_spray_input_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "grow_spray_input_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "grow_spray_input_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "grow_spray_input_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item_summary"
-            referencedColumns: ["invnt_item_name"]
+            referencedColumns: ["invnt_item_id"]
           },
           {
             foreignKeyName: "grow_spray_input_invnt_lot_id_fkey"
@@ -2555,7 +2555,7 @@ export type Database = {
           caption: string | null
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           id: string
           is_deleted: boolean
           ops_task_tracker_id: string
@@ -2568,7 +2568,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           id?: string
           is_deleted?: boolean
           ops_task_tracker_id: string
@@ -2581,7 +2581,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           id?: string
           is_deleted?: boolean
           ops_task_tracker_id?: string
@@ -2592,11 +2592,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "grow_task_photo_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_task_photo_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_task_photo_ops_task_tracker_id_fkey"
@@ -2618,7 +2618,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           grow_cuke_seed_batch_id: string | null
           grow_lettuce_seed_batch_id: string | null
           id: string
@@ -2631,7 +2631,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           grow_cuke_seed_batch_id?: string | null
           grow_lettuce_seed_batch_id?: string | null
           id?: string
@@ -2644,7 +2644,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           grow_cuke_seed_batch_id?: string | null
           grow_lettuce_seed_batch_id?: string | null
           id?: string
@@ -2656,11 +2656,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "grow_task_seed_batch_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_task_seed_batch_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_task_seed_batch_grow_cuke_seed_batch_id_fkey"
@@ -2697,9 +2697,9 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
-          farm_name: string
+          farm_id: string
+          id: string
           is_deleted: boolean
-          name: string
           org_id: string
           updated_at: string
           updated_by: string | null
@@ -2708,9 +2708,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          farm_name: string
+          farm_id: string
+          id: string
           is_deleted?: boolean
-          name: string
           org_id: string
           updated_at?: string
           updated_by?: string | null
@@ -2719,20 +2719,20 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          farm_name?: string
+          farm_id?: string
+          id?: string
           is_deleted?: boolean
-          name?: string
           org_id?: string
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "grow_trial_type_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_trial_type_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_trial_type_org_id_fkey"
@@ -2745,11 +2745,11 @@ export type Database = {
       }
       grow_variety: {
         Row: {
-          code: string
           created_at: string
           created_by: string | null
           description: string | null
-          farm_name: string
+          farm_id: string
+          id: string
           is_deleted: boolean
           name: string
           org_id: string
@@ -2757,11 +2757,11 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
-          code: string
           created_at?: string
           created_by?: string | null
           description?: string | null
-          farm_name: string
+          farm_id: string
+          id: string
           is_deleted?: boolean
           name: string
           org_id: string
@@ -2769,11 +2769,11 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
-          code?: string
           created_at?: string
           created_by?: string | null
           description?: string | null
-          farm_name?: string
+          farm_id?: string
+          id?: string
           is_deleted?: boolean
           name?: string
           org_id?: string
@@ -2782,11 +2782,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "grow_variety_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_variety_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_variety_org_id_fkey"
@@ -2802,8 +2802,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          id: string
           is_deleted: boolean
-          name: string
           org_id: string
           updated_at: string
           updated_by: string | null
@@ -2812,8 +2812,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          id: string
           is_deleted?: boolean
-          name: string
           org_id: string
           updated_at?: string
           updated_by?: string | null
@@ -2822,8 +2822,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          id?: string
           is_deleted?: boolean
-          name?: string
           org_id?: string
           updated_at?: string
           updated_by?: string | null
@@ -2845,7 +2845,7 @@ export type Database = {
           created_by: string | null
           employee_signature_url: string | null
           further_infraction_consequences: string | null
-          hr_employee_name: string
+          hr_employee_id: string
           id: string
           is_acknowledged: boolean
           is_deleted: boolean
@@ -2870,7 +2870,7 @@ export type Database = {
           created_by?: string | null
           employee_signature_url?: string | null
           further_infraction_consequences?: string | null
-          hr_employee_name: string
+          hr_employee_id: string
           id?: string
           is_acknowledged?: boolean
           is_deleted?: boolean
@@ -2895,7 +2895,7 @@ export type Database = {
           created_by?: string | null
           employee_signature_url?: string | null
           further_infraction_consequences?: string | null
-          hr_employee_name?: string
+          hr_employee_id?: string
           id?: string
           is_acknowledged?: boolean
           is_deleted?: boolean
@@ -2917,45 +2917,45 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fk_hr_disciplinary_warning_employee"
-            columns: ["hr_employee_name"]
+            columns: ["hr_employee_id"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_hr_disciplinary_warning_employee"
-            columns: ["hr_employee_name"]
+            columns: ["hr_employee_id"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "fk_hr_disciplinary_warning_reported_by"
             columns: ["reported_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_hr_disciplinary_warning_reported_by"
             columns: ["reported_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "fk_hr_disciplinary_warning_reviewed_by"
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_hr_disciplinary_warning_reviewed_by"
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "hr_disciplinary_warning_org_id_fkey"
@@ -2969,7 +2969,7 @@ export type Database = {
       hr_employee: {
         Row: {
           company_email: string | null
-          compensation_manager_name: string | null
+          compensation_manager_id: string | null
           created_at: string
           created_by: string | null
           date_of_birth: string | null
@@ -2978,14 +2978,14 @@ export type Database = {
           ethnicity: string | null
           first_name: string
           gender: string | null
-          housing_name: string | null
-          hr_department_name: string | null
-          hr_work_authorization_name: string | null
+          housing_id: string | null
+          hr_department_id: string | null
+          hr_work_authorization_id: string | null
+          id: string
           is_deleted: boolean
           is_manager: boolean
           is_primary_org: boolean
           last_name: string
-          name: string
           org_id: string
           overtime_threshold: number | null
           pay_delivery_method: string | null
@@ -2996,8 +2996,8 @@ export type Database = {
           preferred_name: string | null
           profile_photo_url: string | null
           start_date: string | null
-          sys_access_level_name: string
-          team_lead_name: string | null
+          sys_access_level_id: string
+          team_lead_id: string | null
           updated_at: string
           updated_by: string | null
           user_id: string | null
@@ -3005,7 +3005,7 @@ export type Database = {
         }
         Insert: {
           company_email?: string | null
-          compensation_manager_name?: string | null
+          compensation_manager_id?: string | null
           created_at?: string
           created_by?: string | null
           date_of_birth?: string | null
@@ -3014,14 +3014,14 @@ export type Database = {
           ethnicity?: string | null
           first_name: string
           gender?: string | null
-          housing_name?: string | null
-          hr_department_name?: string | null
-          hr_work_authorization_name?: string | null
+          housing_id?: string | null
+          hr_department_id?: string | null
+          hr_work_authorization_id?: string | null
+          id: string
           is_deleted?: boolean
           is_manager?: boolean
           is_primary_org?: boolean
           last_name: string
-          name: string
           org_id: string
           overtime_threshold?: number | null
           pay_delivery_method?: string | null
@@ -3032,8 +3032,8 @@ export type Database = {
           preferred_name?: string | null
           profile_photo_url?: string | null
           start_date?: string | null
-          sys_access_level_name: string
-          team_lead_name?: string | null
+          sys_access_level_id: string
+          team_lead_id?: string | null
           updated_at?: string
           updated_by?: string | null
           user_id?: string | null
@@ -3041,7 +3041,7 @@ export type Database = {
         }
         Update: {
           company_email?: string | null
-          compensation_manager_name?: string | null
+          compensation_manager_id?: string | null
           created_at?: string
           created_by?: string | null
           date_of_birth?: string | null
@@ -3050,14 +3050,14 @@ export type Database = {
           ethnicity?: string | null
           first_name?: string
           gender?: string | null
-          housing_name?: string | null
-          hr_department_name?: string | null
-          hr_work_authorization_name?: string | null
+          housing_id?: string | null
+          hr_department_id?: string | null
+          hr_work_authorization_id?: string | null
+          id?: string
           is_deleted?: boolean
           is_manager?: boolean
           is_primary_org?: boolean
           last_name?: string
-          name?: string
           org_id?: string
           overtime_threshold?: number | null
           pay_delivery_method?: string | null
@@ -3068,8 +3068,8 @@ export type Database = {
           preferred_name?: string | null
           profile_photo_url?: string | null
           start_date?: string | null
-          sys_access_level_name?: string
-          team_lead_name?: string | null
+          sys_access_level_id?: string
+          team_lead_id?: string | null
           updated_at?: string
           updated_by?: string | null
           user_id?: string | null
@@ -3078,52 +3078,52 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fk_hr_employee_compensation_manager"
-            columns: ["compensation_manager_name"]
+            columns: ["compensation_manager_id"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_hr_employee_compensation_manager"
-            columns: ["compensation_manager_name"]
+            columns: ["compensation_manager_id"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "fk_hr_employee_team_lead"
-            columns: ["team_lead_name"]
+            columns: ["team_lead_id"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_hr_employee_team_lead"
-            columns: ["team_lead_name"]
+            columns: ["team_lead_id"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
-            foreignKeyName: "hr_employee_housing_name_fkey"
-            columns: ["housing_name"]
+            foreignKeyName: "hr_employee_housing_id_fkey"
+            columns: ["housing_id"]
             isOneToOne: false
             referencedRelation: "org_site_housing"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "hr_employee_hr_department_name_fkey"
-            columns: ["hr_department_name"]
+            foreignKeyName: "hr_employee_hr_department_id_fkey"
+            columns: ["hr_department_id"]
             isOneToOne: false
             referencedRelation: "hr_department"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "hr_employee_hr_work_authorization_name_fkey"
-            columns: ["hr_work_authorization_name"]
+            foreignKeyName: "hr_employee_hr_work_authorization_id_fkey"
+            columns: ["hr_work_authorization_id"]
             isOneToOne: false
             referencedRelation: "hr_work_authorization"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "hr_employee_org_id_fkey"
@@ -3133,11 +3133,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "hr_employee_sys_access_level_name_fkey"
-            columns: ["sys_access_level_name"]
+            foreignKeyName: "hr_employee_sys_access_level_id_fkey"
+            columns: ["sys_access_level_id"]
             isOneToOne: false
             referencedRelation: "sys_access_level"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3148,11 +3148,11 @@ export type Database = {
           created_at: string
           created_by: string | null
           engagement: number
-          hr_employee_name: string
+          hr_employee_id: string
           id: string
           is_deleted: boolean
           is_locked: boolean
-          lead_name: string | null
+          lead_id: string | null
           notes: string | null
           org_id: string
           productivity: number
@@ -3168,11 +3168,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           engagement: number
-          hr_employee_name: string
+          hr_employee_id: string
           id?: string
           is_deleted?: boolean
           is_locked?: boolean
-          lead_name?: string | null
+          lead_id?: string | null
           notes?: string | null
           org_id: string
           productivity: number
@@ -3188,11 +3188,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           engagement?: number
-          hr_employee_name?: string
+          hr_employee_id?: string
           id?: string
           is_deleted?: boolean
           is_locked?: boolean
-          lead_name?: string | null
+          lead_id?: string | null
           notes?: string | null
           org_id?: string
           productivity?: number
@@ -3205,45 +3205,45 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fk_hr_employee_review_employee"
-            columns: ["hr_employee_name"]
+            columns: ["hr_employee_id"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_hr_employee_review_employee"
-            columns: ["hr_employee_name"]
+            columns: ["hr_employee_id"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "fk_hr_employee_review_lead"
-            columns: ["lead_name"]
+            columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_hr_employee_review_lead"
-            columns: ["lead_name"]
+            columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "hr_employee_review_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "hr_employee_review_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "hr_employee_review_org_id_fkey"
@@ -3257,14 +3257,14 @@ export type Database = {
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "hr_employee_review_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
         ]
       }
@@ -3275,12 +3275,12 @@ export type Database = {
           can_verify: boolean
           created_at: string
           created_by: string | null
-          hr_employee_name: string
+          hr_employee_id: string
           id: string
           is_deleted: boolean
           is_enabled: boolean
           org_id: string
-          org_module_name: string
+          org_module_id: string
           updated_at: string
           updated_by: string | null
         }
@@ -3290,12 +3290,12 @@ export type Database = {
           can_verify?: boolean
           created_at?: string
           created_by?: string | null
-          hr_employee_name: string
+          hr_employee_id: string
           id?: string
           is_deleted?: boolean
           is_enabled?: boolean
           org_id: string
-          org_module_name: string
+          org_module_id: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -3305,29 +3305,29 @@ export type Database = {
           can_verify?: boolean
           created_at?: string
           created_by?: string | null
-          hr_employee_name?: string
+          hr_employee_id?: string
           id?: string
           is_deleted?: boolean
           is_enabled?: boolean
           org_id?: string
-          org_module_name?: string
+          org_module_id?: string
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "hr_module_access_hr_employee_name_fkey"
-            columns: ["hr_employee_name"]
+            foreignKeyName: "hr_module_access_hr_employee_id_fkey"
+            columns: ["hr_employee_id"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "hr_module_access_hr_employee_name_fkey"
-            columns: ["hr_employee_name"]
+            foreignKeyName: "hr_module_access_hr_employee_id_fkey"
+            columns: ["hr_employee_id"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "hr_module_access_org_id_fkey"
@@ -3337,25 +3337,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "hr_module_access_org_module_name_fkey"
-            columns: ["org_module_name"]
+            foreignKeyName: "hr_module_access_org_module_id_fkey"
+            columns: ["org_module_id"]
             isOneToOne: false
             referencedRelation: "hr_rba_navigation"
             referencedColumns: ["module_display_name"]
           },
           {
-            foreignKeyName: "hr_module_access_org_module_name_fkey"
-            columns: ["org_module_name"]
+            foreignKeyName: "hr_module_access_org_module_id_fkey"
+            columns: ["org_module_id"]
             isOneToOne: false
             referencedRelation: "hr_rba_navigation"
             referencedColumns: ["module_id"]
           },
           {
-            foreignKeyName: "hr_module_access_org_module_name_fkey"
-            columns: ["org_module_name"]
+            foreignKeyName: "hr_module_access_org_module_id_fkey"
+            columns: ["org_module_id"]
             isOneToOne: false
             referencedRelation: "org_module"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3383,9 +3383,9 @@ export type Database = {
           holiday_hours: number
           holiday_pay: number
           hourly_rate: number | null
-          hr_department_name: string | null
-          hr_employee_name: string
-          hr_work_authorization_name: string | null
+          hr_department_id: string | null
+          hr_employee_id: string
+          hr_work_authorization_id: string | null
           id: string
           invoice_number: string | null
           is_deleted: boolean
@@ -3450,9 +3450,9 @@ export type Database = {
           holiday_hours?: number
           holiday_pay?: number
           hourly_rate?: number | null
-          hr_department_name?: string | null
-          hr_employee_name: string
-          hr_work_authorization_name?: string | null
+          hr_department_id?: string | null
+          hr_employee_id: string
+          hr_work_authorization_id?: string | null
           id?: string
           invoice_number?: string | null
           is_deleted?: boolean
@@ -3517,9 +3517,9 @@ export type Database = {
           holiday_hours?: number
           holiday_pay?: number
           hourly_rate?: number | null
-          hr_department_name?: string | null
-          hr_employee_name?: string
-          hr_work_authorization_name?: string | null
+          hr_department_id?: string | null
+          hr_employee_id?: string
+          hr_work_authorization_id?: string | null
           id?: string
           invoice_number?: string | null
           is_deleted?: boolean
@@ -3563,32 +3563,32 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "hr_payroll_hr_department_name_fkey"
-            columns: ["hr_department_name"]
+            foreignKeyName: "hr_payroll_hr_department_id_fkey"
+            columns: ["hr_department_id"]
             isOneToOne: false
             referencedRelation: "hr_department"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "hr_payroll_hr_employee_name_fkey"
-            columns: ["hr_employee_name"]
+            foreignKeyName: "hr_payroll_hr_employee_id_fkey"
+            columns: ["hr_employee_id"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "hr_payroll_hr_employee_name_fkey"
-            columns: ["hr_employee_name"]
+            foreignKeyName: "hr_payroll_hr_employee_id_fkey"
+            columns: ["hr_employee_id"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
-            foreignKeyName: "hr_payroll_hr_work_authorization_name_fkey"
-            columns: ["hr_work_authorization_name"]
+            foreignKeyName: "hr_payroll_hr_work_authorization_id_fkey"
+            columns: ["hr_work_authorization_id"]
             isOneToOne: false
             referencedRelation: "hr_work_authorization"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "hr_payroll_org_id_fkey"
@@ -3604,7 +3604,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           denial_reason: string | null
-          hr_employee_name: string
+          hr_employee_id: string
           id: string
           is_deleted: boolean
           non_pto_days: number | null
@@ -3627,7 +3627,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           denial_reason?: string | null
-          hr_employee_name: string
+          hr_employee_id: string
           id?: string
           is_deleted?: boolean
           non_pto_days?: number | null
@@ -3650,7 +3650,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           denial_reason?: string | null
-          hr_employee_name?: string
+          hr_employee_id?: string
           id?: string
           is_deleted?: boolean
           non_pto_days?: number | null
@@ -3672,45 +3672,45 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fk_hr_time_off_request_employee"
-            columns: ["hr_employee_name"]
+            columns: ["hr_employee_id"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_hr_time_off_request_employee"
-            columns: ["hr_employee_name"]
+            columns: ["hr_employee_id"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "fk_hr_time_off_request_requested_by"
             columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_hr_time_off_request_requested_by"
             columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "fk_hr_time_off_request_reviewed_by"
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_hr_time_off_request_reviewed_by"
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "hr_time_off_request_org_id_fkey"
@@ -3726,7 +3726,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           denial_reason: string | null
-          hr_employee_name: string
+          hr_employee_id: string
           id: string
           is_deleted: boolean
           notes: string | null
@@ -3749,7 +3749,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           denial_reason?: string | null
-          hr_employee_name: string
+          hr_employee_id: string
           id?: string
           is_deleted?: boolean
           notes?: string | null
@@ -3772,7 +3772,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           denial_reason?: string | null
-          hr_employee_name?: string
+          hr_employee_id?: string
           id?: string
           is_deleted?: boolean
           notes?: string | null
@@ -3794,45 +3794,45 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fk_hr_travel_request_employee"
-            columns: ["hr_employee_name"]
+            columns: ["hr_employee_id"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_hr_travel_request_employee"
-            columns: ["hr_employee_name"]
+            columns: ["hr_employee_id"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "fk_hr_travel_request_requested_by"
             columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_hr_travel_request_requested_by"
             columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "fk_hr_travel_request_reviewed_by"
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_hr_travel_request_reviewed_by"
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "hr_travel_request_org_id_fkey"
@@ -3848,8 +3848,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          id: string
           is_deleted: boolean
-          name: string
           org_id: string
           updated_at: string
           updated_by: string | null
@@ -3858,8 +3858,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          id: string
           is_deleted?: boolean
-          name: string
           org_id: string
           updated_at?: string
           updated_by?: string | null
@@ -3868,8 +3868,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          id?: string
           is_deleted?: boolean
-          name?: string
           org_id?: string
           updated_at?: string
           updated_by?: string | null
@@ -3938,12 +3938,13 @@ export type Database = {
           created_by: string | null
           cushion_weeks: number
           description: string | null
-          equipment_name: string | null
-          farm_name: string | null
+          equipment_id: string | null
+          farm_id: string | null
           grow_variety_id: string | null
+          id: string
           invnt_category_id: string | null
           invnt_subcategory_id: string | null
-          invnt_vendor_name: string | null
+          invnt_vendor_id: string | null
           is_active: boolean
           is_auto_reorder: boolean
           is_deleted: boolean
@@ -3952,7 +3953,6 @@ export type Database = {
           maint_part_number: string | null
           maint_part_type: string | null
           manufacturer: string | null
-          name: string
           onhand_uom: string | null
           order_per_pallet: number
           order_uom: string | null
@@ -3978,12 +3978,13 @@ export type Database = {
           created_by?: string | null
           cushion_weeks?: number
           description?: string | null
-          equipment_name?: string | null
-          farm_name?: string | null
+          equipment_id?: string | null
+          farm_id?: string | null
           grow_variety_id?: string | null
+          id: string
           invnt_category_id?: string | null
           invnt_subcategory_id?: string | null
-          invnt_vendor_name?: string | null
+          invnt_vendor_id?: string | null
           is_active?: boolean
           is_auto_reorder?: boolean
           is_deleted?: boolean
@@ -3992,7 +3993,6 @@ export type Database = {
           maint_part_number?: string | null
           maint_part_type?: string | null
           manufacturer?: string | null
-          name: string
           onhand_uom?: string | null
           order_per_pallet?: number
           order_uom?: string | null
@@ -4018,12 +4018,13 @@ export type Database = {
           created_by?: string | null
           cushion_weeks?: number
           description?: string | null
-          equipment_name?: string | null
-          farm_name?: string | null
+          equipment_id?: string | null
+          farm_id?: string | null
           grow_variety_id?: string | null
+          id?: string
           invnt_category_id?: string | null
           invnt_subcategory_id?: string | null
-          invnt_vendor_name?: string | null
+          invnt_vendor_id?: string | null
           is_active?: boolean
           is_auto_reorder?: boolean
           is_deleted?: boolean
@@ -4032,7 +4033,6 @@ export type Database = {
           maint_part_number?: string | null
           maint_part_type?: string | null
           manufacturer?: string | null
-          name?: string
           onhand_uom?: string | null
           order_per_pallet?: number
           order_uom?: string | null
@@ -4055,28 +4055,28 @@ export type Database = {
             columns: ["burn_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invnt_item_equipment_name_fkey"
-            columns: ["equipment_name"]
+            foreignKeyName: "invnt_item_equipment_id_fkey"
+            columns: ["equipment_id"]
             isOneToOne: false
             referencedRelation: "org_equipment"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invnt_item_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "invnt_item_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invnt_item_grow_variety_id_fkey"
             columns: ["grow_variety_id"]
             isOneToOne: false
             referencedRelation: "grow_variety"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invnt_item_invnt_category_id_fkey"
@@ -4093,25 +4093,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invnt_item_invnt_vendor_name_fkey"
-            columns: ["invnt_vendor_name"]
+            foreignKeyName: "invnt_item_invnt_vendor_id_fkey"
+            columns: ["invnt_vendor_id"]
             isOneToOne: false
             referencedRelation: "invnt_vendor"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invnt_item_onhand_uom_fkey"
             columns: ["onhand_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invnt_item_order_uom_fkey"
             columns: ["order_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invnt_item_org_id_fkey"
@@ -4133,9 +4133,9 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           id: string
-          invnt_item_name: string
+          invnt_item_id: string
           is_active: boolean
           is_deleted: boolean
           lot_expiry_date: string | null
@@ -4147,9 +4147,9 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           id: string
-          invnt_item_name: string
+          invnt_item_id: string
           is_active?: boolean
           is_deleted?: boolean
           lot_expiry_date?: string | null
@@ -4161,9 +4161,9 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           id?: string
-          invnt_item_name?: string
+          invnt_item_id?: string
           is_active?: boolean
           is_deleted?: boolean
           lot_expiry_date?: string | null
@@ -4174,25 +4174,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "invnt_lot_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "invnt_lot_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invnt_lot_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "invnt_lot_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invnt_lot_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "invnt_lot_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item_summary"
-            referencedColumns: ["invnt_item_name"]
+            referencedColumns: ["invnt_item_id"]
           },
           {
             foreignKeyName: "invnt_lot_org_id_fkey"
@@ -4209,9 +4209,9 @@ export type Database = {
           burn_uom: string | null
           created_at: string
           created_by: string | null
-          farm_name: string | null
+          farm_id: string | null
           id: string
-          invnt_item_name: string
+          invnt_item_id: string
           invnt_lot_id: string | null
           is_deleted: boolean
           notes: string | null
@@ -4227,9 +4227,9 @@ export type Database = {
           burn_uom?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
-          invnt_item_name: string
+          invnt_item_id: string
           invnt_lot_id?: string | null
           is_deleted?: boolean
           notes?: string | null
@@ -4245,9 +4245,9 @@ export type Database = {
           burn_uom?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
-          invnt_item_name?: string
+          invnt_item_id?: string
           invnt_lot_id?: string | null
           is_deleted?: boolean
           notes?: string | null
@@ -4264,28 +4264,28 @@ export type Database = {
             columns: ["burn_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invnt_onhand_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "invnt_onhand_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invnt_onhand_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "invnt_onhand_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invnt_onhand_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "invnt_onhand_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item_summary"
-            referencedColumns: ["invnt_item_name"]
+            referencedColumns: ["invnt_item_id"]
           },
           {
             foreignKeyName: "invnt_onhand_invnt_lot_id_fkey"
@@ -4299,7 +4299,7 @@ export type Database = {
             columns: ["onhand_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invnt_onhand_org_id_fkey"
@@ -4317,11 +4317,11 @@ export type Database = {
           created_at: string
           created_by: string | null
           expected_delivery_date: string | null
-          farm_name: string | null
+          farm_id: string | null
           id: string
           invnt_category_id: string
-          invnt_item_name: string | null
-          invnt_vendor_name: string | null
+          invnt_item_id: string | null
+          invnt_vendor_id: string | null
           is_deleted: boolean
           is_freight_included: boolean | null
           item_name: string
@@ -4352,11 +4352,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           expected_delivery_date?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           invnt_category_id: string
-          invnt_item_name?: string | null
-          invnt_vendor_name?: string | null
+          invnt_item_id?: string | null
+          invnt_vendor_id?: string | null
           is_deleted?: boolean
           is_freight_included?: boolean | null
           item_name: string
@@ -4387,11 +4387,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           expected_delivery_date?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           invnt_category_id?: string
-          invnt_item_name?: string | null
-          invnt_vendor_name?: string | null
+          invnt_item_id?: string | null
+          invnt_vendor_id?: string | null
           is_deleted?: boolean
           is_freight_included?: boolean | null
           item_name?: string
@@ -4422,14 +4422,14 @@ export type Database = {
             columns: ["burn_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invnt_po_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "invnt_po_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invnt_po_invnt_category_id_fkey"
@@ -4439,46 +4439,46 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invnt_po_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "invnt_po_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invnt_po_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "invnt_po_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item_summary"
-            referencedColumns: ["invnt_item_name"]
+            referencedColumns: ["invnt_item_id"]
           },
           {
-            foreignKeyName: "invnt_po_invnt_vendor_name_fkey"
-            columns: ["invnt_vendor_name"]
+            foreignKeyName: "invnt_po_invnt_vendor_id_fkey"
+            columns: ["invnt_vendor_id"]
             isOneToOne: false
             referencedRelation: "invnt_vendor"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invnt_po_order_uom_fkey"
             columns: ["order_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invnt_po_ordered_by_fkey"
             columns: ["ordered_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invnt_po_ordered_by_fkey"
             columns: ["ordered_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "invnt_po_org_id_fkey"
@@ -4492,28 +4492,28 @@ export type Database = {
             columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invnt_po_requested_by_fkey"
             columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "invnt_po_reviewed_by_fkey"
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invnt_po_reviewed_by_fkey"
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
         ]
       }
@@ -4522,7 +4522,7 @@ export type Database = {
           burn_per_received: number
           created_at: string
           created_by: string | null
-          farm_name: string | null
+          farm_id: string | null
           fsafe_delivery_acceptable: boolean | null
           fsafe_delivery_truck_clean: boolean | null
           id: string
@@ -4544,7 +4544,7 @@ export type Database = {
           burn_per_received?: number
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           fsafe_delivery_acceptable?: boolean | null
           fsafe_delivery_truck_clean?: boolean | null
           id?: string
@@ -4566,7 +4566,7 @@ export type Database = {
           burn_per_received?: number
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           fsafe_delivery_acceptable?: boolean | null
           fsafe_delivery_truck_clean?: boolean | null
           id?: string
@@ -4586,11 +4586,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "invnt_po_received_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "invnt_po_received_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invnt_po_received_invnt_lot_id_fkey"
@@ -4618,7 +4618,7 @@ export type Database = {
             columns: ["received_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4629,8 +4629,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           email: string | null
+          id: string
           is_deleted: boolean
-          name: string
           org_id: string
           payment_terms: string | null
           phone: string | null
@@ -4643,8 +4643,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           email?: string | null
+          id: string
           is_deleted?: boolean
-          name: string
           org_id: string
           payment_terms?: string | null
           phone?: string | null
@@ -4657,8 +4657,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           email?: string | null
+          id?: string
           is_deleted?: boolean
-          name?: string
           org_id?: string
           payment_terms?: string | null
           phone?: string | null
@@ -4681,10 +4681,10 @@ export type Database = {
           created_at: string
           created_by: string | null
           due_date: string | null
-          equipment_name: string | null
-          farm_name: string | null
+          equipment_id: string | null
+          farm_id: string | null
           fixer_description: string | null
-          fixer_name: string | null
+          fixer_id: string | null
           id: string
           is_deleted: boolean
           org_id: string
@@ -4702,10 +4702,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           due_date?: string | null
-          equipment_name?: string | null
-          farm_name?: string | null
+          equipment_id?: string | null
+          farm_id?: string | null
           fixer_description?: string | null
-          fixer_name?: string | null
+          fixer_id?: string | null
           id?: string
           is_deleted?: boolean
           org_id: string
@@ -4723,10 +4723,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           due_date?: string | null
-          equipment_name?: string | null
-          farm_name?: string | null
+          equipment_id?: string | null
+          farm_id?: string | null
           fixer_description?: string | null
-          fixer_name?: string | null
+          fixer_id?: string | null
           id?: string
           is_deleted?: boolean
           org_id?: string
@@ -4742,45 +4742,45 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fk_maint_request_fixer"
-            columns: ["fixer_name"]
+            columns: ["fixer_id"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_maint_request_fixer"
-            columns: ["fixer_name"]
+            columns: ["fixer_id"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "fk_maint_request_requested_by"
             columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_maint_request_requested_by"
             columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
-            foreignKeyName: "maint_request_equipment_name_fkey"
-            columns: ["equipment_name"]
+            foreignKeyName: "maint_request_equipment_id_fkey"
+            columns: ["equipment_id"]
             isOneToOne: false
             referencedRelation: "org_equipment"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "maint_request_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "maint_request_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "maint_request_org_id_fkey"
@@ -4802,9 +4802,9 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string | null
+          farm_id: string | null
           id: string
-          invnt_item_name: string
+          invnt_item_id: string
           is_deleted: boolean
           maint_request_id: string
           org_id: string
@@ -4816,9 +4816,9 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
-          invnt_item_name: string
+          invnt_item_id: string
           is_deleted?: boolean
           maint_request_id: string
           org_id: string
@@ -4830,9 +4830,9 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
-          invnt_item_name?: string
+          invnt_item_id?: string
           is_deleted?: boolean
           maint_request_id?: string
           org_id?: string
@@ -4843,25 +4843,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "maint_request_invnt_item_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "maint_request_invnt_item_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "maint_request_invnt_item_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "maint_request_invnt_item_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "maint_request_invnt_item_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "maint_request_invnt_item_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item_summary"
-            referencedColumns: ["invnt_item_name"]
+            referencedColumns: ["invnt_item_id"]
           },
           {
             foreignKeyName: "maint_request_invnt_item_maint_request_id_fkey"
@@ -4882,7 +4882,7 @@ export type Database = {
             columns: ["uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4891,7 +4891,7 @@ export type Database = {
           caption: string | null
           created_at: string
           created_by: string | null
-          farm_name: string | null
+          farm_id: string | null
           id: string
           is_deleted: boolean
           maint_request_id: string
@@ -4905,7 +4905,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           is_deleted?: boolean
           maint_request_id: string
@@ -4919,7 +4919,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           is_deleted?: boolean
           maint_request_id?: string
@@ -4931,11 +4931,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "maint_request_photo_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "maint_request_photo_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "maint_request_photo_maint_request_id_fkey"
@@ -4958,8 +4958,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          id: string
           is_deleted: boolean
-          name: string
           org_id: string
           updated_at: string
           updated_by: string | null
@@ -4968,8 +4968,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          id: string
           is_deleted?: boolean
-          name: string
           org_id: string
           updated_at?: string
           updated_by?: string | null
@@ -4978,8 +4978,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          id?: string
           is_deleted?: boolean
-          name?: string
           org_id?: string
           updated_at?: string
           updated_by?: string | null
@@ -5001,15 +5001,15 @@ export type Database = {
           created_at: string
           created_by: string | null
           due_date: string | null
-          farm_name: string | null
+          farm_id: string | null
           fsafe_pest_result_id: string | null
           fsafe_result_id: string | null
           id: string
           is_deleted: boolean
           is_resolved: boolean
           notes: string | null
-          ops_corrective_action_choice_name: string | null
-          ops_template_name: string | null
+          ops_corrective_action_choice_id: string | null
+          ops_template_id: string | null
           ops_template_result_id: string | null
           org_id: string
           other_action: string | null
@@ -5025,15 +5025,15 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           due_date?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           fsafe_pest_result_id?: string | null
           fsafe_result_id?: string | null
           id?: string
           is_deleted?: boolean
           is_resolved?: boolean
           notes?: string | null
-          ops_corrective_action_choice_name?: string | null
-          ops_template_name?: string | null
+          ops_corrective_action_choice_id?: string | null
+          ops_template_id?: string | null
           ops_template_result_id?: string | null
           org_id: string
           other_action?: string | null
@@ -5049,15 +5049,15 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           due_date?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           fsafe_pest_result_id?: string | null
           fsafe_result_id?: string | null
           id?: string
           is_deleted?: boolean
           is_resolved?: boolean
           notes?: string | null
-          ops_corrective_action_choice_name?: string | null
-          ops_template_name?: string | null
+          ops_corrective_action_choice_id?: string | null
+          ops_template_id?: string | null
           ops_template_result_id?: string | null
           org_id?: string
           other_action?: string | null
@@ -5073,35 +5073,35 @@ export type Database = {
             columns: ["assigned_to"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_ops_corrective_action_taken_assigned_to"
             columns: ["assigned_to"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "fk_ops_corrective_action_taken_verified_by"
             columns: ["verified_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_ops_corrective_action_taken_verified_by"
             columns: ["verified_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
-            foreignKeyName: "ops_corrective_action_taken_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "ops_corrective_action_taken_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ops_corrective_action_taken_fsafe_pest_result_id_fkey"
@@ -5118,18 +5118,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ops_corrective_action_taken_ops_corrective_action_choice_n_fkey"
-            columns: ["ops_corrective_action_choice_name"]
+            foreignKeyName: "ops_corrective_action_taken_ops_corrective_action_choice_i_fkey"
+            columns: ["ops_corrective_action_choice_id"]
             isOneToOne: false
             referencedRelation: "ops_corrective_action_choice"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ops_corrective_action_taken_ops_template_name_fkey"
-            columns: ["ops_template_name"]
+            foreignKeyName: "ops_corrective_action_taken_ops_template_id_fkey"
+            columns: ["ops_template_id"]
             isOneToOne: false
             referencedRelation: "ops_template"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ops_corrective_action_taken_ops_template_result_id_fkey"
@@ -5152,9 +5152,9 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
-          farm_name: string | null
+          farm_id: string | null
+          id: string
           is_deleted: boolean
-          name: string
           org_id: string
           qb_account: string | null
           updated_at: string
@@ -5164,9 +5164,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
+          id: string
           is_deleted?: boolean
-          name: string
           org_id: string
           qb_account?: string | null
           updated_at?: string
@@ -5176,9 +5176,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
+          id?: string
           is_deleted?: boolean
-          name?: string
           org_id?: string
           qb_account?: string | null
           updated_at?: string
@@ -5186,11 +5186,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ops_task_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "ops_task_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ops_task_org_id_fkey"
@@ -5205,11 +5205,11 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string | null
-          hr_employee_name: string
+          farm_id: string | null
+          hr_employee_id: string
           id: string
           is_deleted: boolean
-          ops_task_name: string
+          ops_task_id: string
           ops_task_tracker_id: string | null
           org_id: string
           start_time: string
@@ -5221,11 +5221,11 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
-          hr_employee_name: string
+          farm_id?: string | null
+          hr_employee_id: string
           id?: string
           is_deleted?: boolean
-          ops_task_name: string
+          ops_task_id: string
           ops_task_tracker_id?: string | null
           org_id: string
           start_time: string
@@ -5237,11 +5237,11 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
-          hr_employee_name?: string
+          farm_id?: string | null
+          hr_employee_id?: string
           id?: string
           is_deleted?: boolean
-          ops_task_name?: string
+          ops_task_id?: string
           ops_task_tracker_id?: string | null
           org_id?: string
           start_time?: string
@@ -5252,36 +5252,36 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ops_task_schedule_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "ops_task_schedule_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ops_task_schedule_hr_employee_name_fkey"
-            columns: ["hr_employee_name"]
+            foreignKeyName: "ops_task_schedule_hr_employee_id_fkey"
+            columns: ["hr_employee_id"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ops_task_schedule_hr_employee_name_fkey"
-            columns: ["hr_employee_name"]
+            foreignKeyName: "ops_task_schedule_hr_employee_id_fkey"
+            columns: ["hr_employee_id"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
-            foreignKeyName: "ops_task_schedule_ops_task_name_fkey"
-            columns: ["ops_task_name"]
+            foreignKeyName: "ops_task_schedule_ops_task_id_fkey"
+            columns: ["ops_task_id"]
             isOneToOne: false
             referencedRelation: "ops_task"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ops_task_schedule_ops_task_name_fkey"
-            columns: ["ops_task_name"]
+            foreignKeyName: "ops_task_schedule_ops_task_id_fkey"
+            columns: ["ops_task_id"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
             referencedColumns: ["task"]
@@ -5306,11 +5306,11 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string | null
+          farm_id: string | null
           id: string
           is_deleted: boolean
-          ops_task_name: string
-          ops_template_name: string
+          ops_task_id: string
+          ops_template_id: string
           org_id: string
           updated_at: string
           updated_by: string | null
@@ -5318,11 +5318,11 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           is_deleted?: boolean
-          ops_task_name: string
-          ops_template_name: string
+          ops_task_id: string
+          ops_template_id: string
           org_id: string
           updated_at?: string
           updated_by?: string | null
@@ -5330,43 +5330,43 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           is_deleted?: boolean
-          ops_task_name?: string
-          ops_template_name?: string
+          ops_task_id?: string
+          ops_template_id?: string
           org_id?: string
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "ops_task_template_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "ops_task_template_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ops_task_template_ops_task_name_fkey"
-            columns: ["ops_task_name"]
+            foreignKeyName: "ops_task_template_ops_task_id_fkey"
+            columns: ["ops_task_id"]
             isOneToOne: false
             referencedRelation: "ops_task"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ops_task_template_ops_task_name_fkey"
-            columns: ["ops_task_name"]
+            foreignKeyName: "ops_task_template_ops_task_id_fkey"
+            columns: ["ops_task_id"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
             referencedColumns: ["task"]
           },
           {
-            foreignKeyName: "ops_task_template_ops_template_name_fkey"
-            columns: ["ops_template_name"]
+            foreignKeyName: "ops_task_template_ops_template_id_fkey"
+            columns: ["ops_template_id"]
             isOneToOne: false
             referencedRelation: "ops_template"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ops_task_template_org_id_fkey"
@@ -5381,13 +5381,13 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string | null
+          farm_id: string | null
           id: string
           is_completed: boolean
           is_deleted: boolean
           notes: string | null
           number_of_people: number | null
-          ops_task_name: string
+          ops_task_id: string
           org_id: string
           sales_product_id: string | null
           site_id: string | null
@@ -5401,13 +5401,13 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           is_completed?: boolean
           is_deleted?: boolean
           notes?: string | null
           number_of_people?: number | null
-          ops_task_name: string
+          ops_task_id: string
           org_id: string
           sales_product_id?: string | null
           site_id?: string | null
@@ -5421,13 +5421,13 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           is_completed?: boolean
           is_deleted?: boolean
           notes?: string | null
           number_of_people?: number | null
-          ops_task_name?: string
+          ops_task_id?: string
           org_id?: string
           sales_product_id?: string | null
           site_id?: string | null
@@ -5440,22 +5440,22 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ops_task_tracker_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "ops_task_tracker_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ops_task_tracker_ops_task_name_fkey"
-            columns: ["ops_task_name"]
+            foreignKeyName: "ops_task_tracker_ops_task_id_fkey"
+            columns: ["ops_task_id"]
             isOneToOne: false
             referencedRelation: "ops_task"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ops_task_tracker_ops_task_name_fkey"
-            columns: ["ops_task_name"]
+            foreignKeyName: "ops_task_tracker_ops_task_id_fkey"
+            columns: ["ops_task_id"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
             referencedColumns: ["task"]
@@ -5472,7 +5472,7 @@ export type Database = {
             columns: ["sales_product_id"]
             isOneToOne: false
             referencedRelation: "sales_product"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ops_task_tracker_site_id_fkey"
@@ -5486,14 +5486,14 @@ export type Database = {
             columns: ["verified_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ops_task_tracker_verified_by_fkey"
             columns: ["verified_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
         ]
       }
@@ -5503,11 +5503,11 @@ export type Database = {
           created_by: string | null
           description: string | null
           display_order: number
-          farm_name: string | null
+          farm_id: string | null
+          id: string
           is_deleted: boolean
-          name: string
           org_id: string
-          org_module_name: string | null
+          org_module_id: string | null
           updated_at: string
           updated_by: string | null
         }
@@ -5516,11 +5516,11 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           display_order?: number
-          farm_name?: string | null
+          farm_id?: string | null
+          id: string
           is_deleted?: boolean
-          name: string
           org_id: string
-          org_module_name?: string | null
+          org_module_id?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -5529,21 +5529,21 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           display_order?: number
-          farm_name?: string | null
+          farm_id?: string | null
+          id?: string
           is_deleted?: boolean
-          name?: string
           org_id?: string
-          org_module_name?: string | null
+          org_module_id?: string | null
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "ops_template_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "ops_template_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ops_template_org_id_fkey"
@@ -5553,25 +5553,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ops_template_org_module_name_fkey"
-            columns: ["org_module_name"]
+            foreignKeyName: "ops_template_org_module_id_fkey"
+            columns: ["org_module_id"]
             isOneToOne: false
             referencedRelation: "hr_rba_navigation"
             referencedColumns: ["module_display_name"]
           },
           {
-            foreignKeyName: "ops_template_org_module_name_fkey"
-            columns: ["org_module_name"]
+            foreignKeyName: "ops_template_org_module_id_fkey"
+            columns: ["org_module_id"]
             isOneToOne: false
             referencedRelation: "hr_rba_navigation"
             referencedColumns: ["module_id"]
           },
           {
-            foreignKeyName: "ops_template_org_module_name_fkey"
-            columns: ["org_module_name"]
+            foreignKeyName: "ops_template_org_module_id_fkey"
+            columns: ["org_module_id"]
             isOneToOne: false
             referencedRelation: "org_module"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5583,7 +5583,7 @@ export type Database = {
           display_order: number
           enum_options: Json | null
           enum_pass_options: Json | null
-          farm_name: string | null
+          farm_id: string | null
           id: string
           include_photo: boolean
           is_deleted: boolean
@@ -5591,7 +5591,7 @@ export type Database = {
           maximum_value: number | null
           minimum_value: number | null
           ops_corrective_action_choice_ids: Json | null
-          ops_template_name: string
+          ops_template_id: string
           org_id: string
           question_text: string
           response_type: string
@@ -5606,7 +5606,7 @@ export type Database = {
           display_order?: number
           enum_options?: Json | null
           enum_pass_options?: Json | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           include_photo?: boolean
           is_deleted?: boolean
@@ -5614,7 +5614,7 @@ export type Database = {
           maximum_value?: number | null
           minimum_value?: number | null
           ops_corrective_action_choice_ids?: Json | null
-          ops_template_name: string
+          ops_template_id: string
           org_id: string
           question_text: string
           response_type: string
@@ -5629,7 +5629,7 @@ export type Database = {
           display_order?: number
           enum_options?: Json | null
           enum_pass_options?: Json | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           include_photo?: boolean
           is_deleted?: boolean
@@ -5637,7 +5637,7 @@ export type Database = {
           maximum_value?: number | null
           minimum_value?: number | null
           ops_corrective_action_choice_ids?: Json | null
-          ops_template_name?: string
+          ops_template_id?: string
           org_id?: string
           question_text?: string
           response_type?: string
@@ -5647,18 +5647,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ops_template_question_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "ops_template_question_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ops_template_question_ops_template_name_fkey"
-            columns: ["ops_template_name"]
+            foreignKeyName: "ops_template_question_ops_template_id_fkey"
+            columns: ["ops_template_id"]
             isOneToOne: false
             referencedRelation: "ops_template"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ops_template_question_org_id_fkey"
@@ -5673,12 +5673,12 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          equipment_name: string | null
-          farm_name: string | null
+          equipment_id: string | null
+          farm_id: string | null
           id: string
           is_deleted: boolean
           ops_task_tracker_id: string
-          ops_template_name: string
+          ops_template_id: string
           ops_template_question_id: string | null
           org_id: string
           response_boolean: boolean | null
@@ -5692,12 +5692,12 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          equipment_name?: string | null
-          farm_name?: string | null
+          equipment_id?: string | null
+          farm_id?: string | null
           id?: string
           is_deleted?: boolean
           ops_task_tracker_id: string
-          ops_template_name: string
+          ops_template_id: string
           ops_template_question_id?: string | null
           org_id: string
           response_boolean?: boolean | null
@@ -5711,12 +5711,12 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          equipment_name?: string | null
-          farm_name?: string | null
+          equipment_id?: string | null
+          farm_id?: string | null
           id?: string
           is_deleted?: boolean
           ops_task_tracker_id?: string
-          ops_template_name?: string
+          ops_template_id?: string
           ops_template_question_id?: string | null
           org_id?: string
           response_boolean?: boolean | null
@@ -5729,18 +5729,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ops_template_result_equipment_name_fkey"
-            columns: ["equipment_name"]
+            foreignKeyName: "ops_template_result_equipment_id_fkey"
+            columns: ["equipment_id"]
             isOneToOne: false
             referencedRelation: "org_equipment"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ops_template_result_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "ops_template_result_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ops_template_result_ops_task_tracker_id_fkey"
@@ -5750,11 +5750,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ops_template_result_ops_template_name_fkey"
-            columns: ["ops_template_name"]
+            foreignKeyName: "ops_template_result_ops_template_id_fkey"
+            columns: ["ops_template_id"]
             isOneToOne: false
             referencedRelation: "ops_template"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ops_template_result_ops_template_question_id_fkey"
@@ -5784,7 +5784,7 @@ export type Database = {
           caption: string | null
           created_at: string
           created_by: string | null
-          farm_name: string | null
+          farm_id: string | null
           id: string
           is_deleted: boolean
           ops_template_result_id: string
@@ -5797,7 +5797,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           is_deleted?: boolean
           ops_template_result_id: string
@@ -5810,7 +5810,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           is_deleted?: boolean
           ops_template_result_id?: string
@@ -5821,11 +5821,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ops_template_result_photo_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "ops_template_result_photo_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ops_template_result_photo_ops_template_result_id_fkey"
@@ -5847,15 +5847,15 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string | null
+          farm_id: string | null
           id: string
           is_deleted: boolean
           materials_url: string | null
           notes: string | null
-          ops_training_type_name: string | null
+          ops_training_type_id: string | null
           org_id: string
           topics_covered: Json
-          trainer_name: string | null
+          trainer_id: string | null
           training_date: string | null
           updated_at: string
           updated_by: string | null
@@ -5865,15 +5865,15 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           is_deleted?: boolean
           materials_url?: string | null
           notes?: string | null
-          ops_training_type_name?: string | null
+          ops_training_type_id?: string | null
           org_id: string
           topics_covered?: Json
-          trainer_name?: string | null
+          trainer_id?: string | null
           training_date?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -5883,15 +5883,15 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           is_deleted?: boolean
           materials_url?: string | null
           notes?: string | null
-          ops_training_type_name?: string | null
+          ops_training_type_id?: string | null
           org_id?: string
           topics_covered?: Json
-          trainer_name?: string | null
+          trainer_id?: string | null
           training_date?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -5901,45 +5901,45 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fk_ops_training_trainer"
-            columns: ["trainer_name"]
+            columns: ["trainer_id"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_ops_training_trainer"
-            columns: ["trainer_name"]
+            columns: ["trainer_id"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "fk_ops_training_verified_by"
             columns: ["verified_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_ops_training_verified_by"
             columns: ["verified_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
-            foreignKeyName: "ops_training_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "ops_training_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ops_training_ops_training_type_name_fkey"
-            columns: ["ops_training_type_name"]
+            foreignKeyName: "ops_training_ops_training_type_id_fkey"
+            columns: ["ops_training_type_id"]
             isOneToOne: false
             referencedRelation: "ops_training_type"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ops_training_org_id_fkey"
@@ -5959,8 +5959,8 @@ export type Database = {
           certification_number: string | null
           created_at: string
           created_by: string | null
-          farm_name: string | null
-          hr_employee_name: string
+          farm_id: string | null
+          hr_employee_id: string
           id: string
           is_deleted: boolean
           notes: string | null
@@ -5978,8 +5978,8 @@ export type Database = {
           certification_number?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
-          hr_employee_name: string
+          farm_id?: string | null
+          hr_employee_id: string
           id?: string
           is_deleted?: boolean
           notes?: string | null
@@ -5997,8 +5997,8 @@ export type Database = {
           certification_number?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
-          hr_employee_name?: string
+          farm_id?: string | null
+          hr_employee_id?: string
           id?: string
           is_deleted?: boolean
           notes?: string | null
@@ -6010,25 +6010,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ops_training_attendee_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "ops_training_attendee_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ops_training_attendee_hr_employee_name_fkey"
-            columns: ["hr_employee_name"]
+            foreignKeyName: "ops_training_attendee_hr_employee_id_fkey"
+            columns: ["hr_employee_id"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ops_training_attendee_hr_employee_name_fkey"
-            columns: ["hr_employee_name"]
+            foreignKeyName: "ops_training_attendee_hr_employee_id_fkey"
+            columns: ["hr_employee_id"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "ops_training_attendee_ops_training_id_fkey"
@@ -6051,8 +6051,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          id: string
           is_deleted: boolean
-          name: string
           org_id: string
           updated_at: string
           updated_by: string | null
@@ -6061,8 +6061,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          id: string
           is_deleted?: boolean
-          name: string
           org_id: string
           updated_at?: string
           updated_by?: string | null
@@ -6071,8 +6071,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          id?: string
           is_deleted?: boolean
-          name?: string
           org_id?: string
           updated_at?: string
           updated_by?: string | null
@@ -6190,12 +6190,12 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
-          farm_name: string | null
+          farm_id: string | null
+          id: string
           is_deleted: boolean
           manual_url: string | null
           manufacturer: string | null
           model: string | null
-          name: string
           org_id: string
           purchase_date: string | null
           serial_number: string | null
@@ -6207,12 +6207,12 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
+          id: string
           is_deleted?: boolean
           manual_url?: string | null
           manufacturer?: string | null
           model?: string | null
-          name: string
           org_id: string
           purchase_date?: string | null
           serial_number?: string | null
@@ -6224,12 +6224,12 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
+          id?: string
           is_deleted?: boolean
           manual_url?: string | null
           manufacturer?: string | null
           model?: string | null
-          name?: string
           org_id?: string
           purchase_date?: string | null
           serial_number?: string | null
@@ -6239,11 +6239,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "org_equipment_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "org_equipment_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "org_equipment_org_id_fkey"
@@ -6259,8 +6259,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           growing_uom: string | null
+          id: string
           is_deleted: boolean
-          name: string
           org_id: string
           updated_at: string
           updated_by: string | null
@@ -6271,8 +6271,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           growing_uom?: string | null
+          id: string
           is_deleted?: boolean
-          name: string
           org_id: string
           updated_at?: string
           updated_by?: string | null
@@ -6283,8 +6283,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           growing_uom?: string | null
+          id?: string
           is_deleted?: boolean
-          name?: string
           org_id?: string
           updated_at?: string
           updated_by?: string | null
@@ -6297,7 +6297,7 @@ export type Database = {
             columns: ["growing_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "org_farm_org_id_fkey"
@@ -6311,14 +6311,14 @@ export type Database = {
             columns: ["volume_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "org_farm_weighing_uom_fkey"
             columns: ["weighing_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -6327,11 +6327,11 @@ export type Database = {
           created_at: string
           created_by: string | null
           display_order: number
+          id: string
           is_deleted: boolean
           is_enabled: boolean
-          name: string
           org_id: string
-          sys_module_name: string
+          sys_module_id: string
           updated_at: string
           updated_by: string | null
         }
@@ -6339,11 +6339,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           display_order?: number
+          id: string
           is_deleted?: boolean
           is_enabled?: boolean
-          name: string
           org_id: string
-          sys_module_name: string
+          sys_module_id: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -6351,11 +6351,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           display_order?: number
+          id?: string
           is_deleted?: boolean
           is_enabled?: boolean
-          name?: string
           org_id?: string
-          sys_module_name?: string
+          sys_module_id?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -6368,18 +6368,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "org_module_sys_module_name_fkey"
-            columns: ["sys_module_name"]
+            foreignKeyName: "org_module_sys_module_id_fkey"
+            columns: ["sys_module_id"]
             isOneToOne: false
             referencedRelation: "hr_rba_navigation"
             referencedColumns: ["module_slug"]
           },
           {
-            foreignKeyName: "org_module_sys_module_name_fkey"
-            columns: ["sys_module_name"]
+            foreignKeyName: "org_module_sys_module_id_fkey"
+            columns: ["sys_module_id"]
             isOneToOne: false
             referencedRelation: "sys_module"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -6390,7 +6390,7 @@ export type Database = {
           created_by: string | null
           display_order: number
           elevation: number | null
-          farm_name: string | null
+          farm_id: string | null
           id: string
           is_active: boolean
           is_deleted: boolean
@@ -6413,7 +6413,7 @@ export type Database = {
           created_by?: string | null
           display_order?: number
           elevation?: number | null
-          farm_name?: string | null
+          farm_id?: string | null
           id: string
           is_active?: boolean
           is_deleted?: boolean
@@ -6436,7 +6436,7 @@ export type Database = {
           created_by?: string | null
           display_order?: number
           elevation?: number | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           is_active?: boolean
           is_deleted?: boolean
@@ -6469,11 +6469,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "org_site_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "org_site_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "org_site_org_id_fkey"
@@ -6544,7 +6544,7 @@ export type Database = {
           blocks_vertical: boolean
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           farm_section: string
           id: string
           is_deleted: boolean
@@ -6562,7 +6562,7 @@ export type Database = {
           blocks_vertical?: boolean
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           farm_section: string
           id: string
           is_deleted?: boolean
@@ -6580,7 +6580,7 @@ export type Database = {
           blocks_vertical?: boolean
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           farm_section?: string
           id?: string
           is_deleted?: boolean
@@ -6595,11 +6595,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "org_site_cuke_gh_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "org_site_cuke_gh_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "org_site_cuke_gh_org_id_fkey"
@@ -6616,7 +6616,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           direction: string
-          farm_name: string
+          farm_id: string
           id: string
           is_deleted: boolean
           name: string
@@ -6632,7 +6632,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           direction: string
-          farm_name: string
+          farm_id: string
           id?: string
           is_deleted?: boolean
           name: string
@@ -6648,7 +6648,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           direction?: string
-          farm_name?: string
+          farm_id?: string
           id?: string
           is_deleted?: boolean
           name?: string
@@ -6661,11 +6661,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "org_site_cuke_gh_block_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "org_site_cuke_gh_block_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "org_site_cuke_gh_block_org_id_fkey"
@@ -6687,7 +6687,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           id: string
           is_deleted: boolean
           notes: string | null
@@ -6700,7 +6700,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           id?: string
           is_deleted?: boolean
           notes?: string | null
@@ -6713,7 +6713,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           id?: string
           is_deleted?: boolean
           notes?: string | null
@@ -6725,11 +6725,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "org_site_cuke_gh_row_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "org_site_cuke_gh_row_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "org_site_cuke_gh_row_org_id_fkey"
@@ -6752,9 +6752,9 @@ export type Database = {
           address: string | null
           created_at: string
           created_by: string | null
+          id: string
           is_deleted: boolean
           maximum_beds: number | null
-          name: string
           notes: string | null
           org_id: string
           updated_at: string
@@ -6764,9 +6764,9 @@ export type Database = {
           address?: string | null
           created_at?: string
           created_by?: string | null
+          id: string
           is_deleted?: boolean
           maximum_beds?: number | null
-          name: string
           notes?: string | null
           org_id: string
           updated_at?: string
@@ -6776,9 +6776,9 @@ export type Database = {
           address?: string | null
           created_at?: string
           created_by?: string | null
+          id?: string
           is_deleted?: boolean
           maximum_beds?: number | null
-          name?: string
           notes?: string | null
           org_id?: string
           updated_at?: string
@@ -6798,9 +6798,9 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          housing_name: string
+          housing_id: string
+          id: string
           is_deleted: boolean
-          name: string
           org_id: string
           updated_at: string
           updated_by: string | null
@@ -6808,9 +6808,9 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          housing_name: string
+          housing_id: string
+          id: string
           is_deleted?: boolean
-          name: string
           org_id: string
           updated_at?: string
           updated_by?: string | null
@@ -6818,20 +6818,20 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          housing_name?: string
+          housing_id?: string
+          id?: string
           is_deleted?: boolean
-          name?: string
           org_id?: string
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "org_site_housing_area_housing_name_fkey"
-            columns: ["housing_name"]
+            foreignKeyName: "org_site_housing_area_housing_id_fkey"
+            columns: ["housing_id"]
             isOneToOne: false
             referencedRelation: "org_site_housing"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "org_site_housing_area_org_id_fkey"
@@ -6847,13 +6847,13 @@ export type Database = {
           created_at: string
           created_by: string | null
           display_order: number
+          id: string
           is_deleted: boolean
           is_enabled: boolean
-          name: string
           org_id: string
-          sys_access_level_name: string
-          sys_module_name: string
-          sys_sub_module_name: string
+          sys_access_level_id: string
+          sys_module_id: string
+          sys_sub_module_id: string
           updated_at: string
           updated_by: string | null
         }
@@ -6861,13 +6861,13 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           display_order?: number
+          id: string
           is_deleted?: boolean
           is_enabled?: boolean
-          name: string
           org_id: string
-          sys_access_level_name: string
-          sys_module_name: string
-          sys_sub_module_name: string
+          sys_access_level_id: string
+          sys_module_id: string
+          sys_sub_module_id: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -6875,13 +6875,13 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           display_order?: number
+          id?: string
           is_deleted?: boolean
           is_enabled?: boolean
-          name?: string
           org_id?: string
-          sys_access_level_name?: string
-          sys_module_name?: string
-          sys_sub_module_name?: string
+          sys_access_level_id?: string
+          sys_module_id?: string
+          sys_sub_module_id?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -6894,39 +6894,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "org_sub_module_sys_access_level_name_fkey"
-            columns: ["sys_access_level_name"]
+            foreignKeyName: "org_sub_module_sys_access_level_id_fkey"
+            columns: ["sys_access_level_id"]
             isOneToOne: false
             referencedRelation: "sys_access_level"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "org_sub_module_sys_module_name_fkey"
-            columns: ["sys_module_name"]
+            foreignKeyName: "org_sub_module_sys_module_id_fkey"
+            columns: ["sys_module_id"]
             isOneToOne: false
             referencedRelation: "hr_rba_navigation"
             referencedColumns: ["module_slug"]
           },
           {
-            foreignKeyName: "org_sub_module_sys_module_name_fkey"
-            columns: ["sys_module_name"]
+            foreignKeyName: "org_sub_module_sys_module_id_fkey"
+            columns: ["sys_module_id"]
             isOneToOne: false
             referencedRelation: "sys_module"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "org_sub_module_sys_sub_module_name_fkey"
-            columns: ["sys_sub_module_name"]
+            foreignKeyName: "org_sub_module_sys_sub_module_id_fkey"
+            columns: ["sys_sub_module_id"]
             isOneToOne: false
             referencedRelation: "hr_rba_navigation"
             referencedColumns: ["sub_module_slug"]
           },
           {
-            foreignKeyName: "org_sub_module_sys_sub_module_name_fkey"
-            columns: ["sys_sub_module_name"]
+            foreignKeyName: "org_sub_module_sys_sub_module_id_fkey"
+            columns: ["sys_sub_module_id"]
             isOneToOne: false
             referencedRelation: "sys_sub_module"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -6937,11 +6937,11 @@ export type Database = {
           created_at: string
           created_by: string | null
           dryer_temperature: number | null
-          farm_name: string
+          farm_id: string
           greenhouse_temperature: number | null
           grow_lettuce_seed_batch_id: string | null
           id: string
-          invnt_item_name: string | null
+          invnt_item_id: string | null
           is_deleted: boolean
           moisture_after_dryer: number | null
           moisture_before_dryer: number | null
@@ -6963,11 +6963,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           dryer_temperature?: number | null
-          farm_name: string
+          farm_id: string
           greenhouse_temperature?: number | null
           grow_lettuce_seed_batch_id?: string | null
           id?: string
-          invnt_item_name?: string | null
+          invnt_item_id?: string | null
           is_deleted?: boolean
           moisture_after_dryer?: number | null
           moisture_before_dryer?: number | null
@@ -6989,11 +6989,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           dryer_temperature?: number | null
-          farm_name?: string
+          farm_id?: string
           greenhouse_temperature?: number | null
           grow_lettuce_seed_batch_id?: string | null
           id?: string
-          invnt_item_name?: string | null
+          invnt_item_id?: string | null
           is_deleted?: boolean
           moisture_after_dryer?: number | null
           moisture_before_dryer?: number | null
@@ -7011,11 +7011,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pack_dryer_result_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "pack_dryer_result_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "pack_dryer_result_grow_lettuce_seed_batch_id_fkey"
@@ -7025,25 +7025,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "pack_dryer_result_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "pack_dryer_result_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "pack_dryer_result_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "pack_dryer_result_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item_summary"
-            referencedColumns: ["invnt_item_name"]
+            referencedColumns: ["invnt_item_id"]
           },
           {
             foreignKeyName: "pack_dryer_result_moisture_uom_fkey"
             columns: ["moisture_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "pack_dryer_result_org_id_fkey"
@@ -7071,7 +7071,7 @@ export type Database = {
             columns: ["temperature_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -7079,7 +7079,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           harvest_date: string | null
           id: string
           is_deleted: boolean
@@ -7092,7 +7092,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           harvest_date?: string | null
           id?: string
           is_deleted?: boolean
@@ -7105,7 +7105,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           harvest_date?: string | null
           id?: string
           is_deleted?: boolean
@@ -7117,11 +7117,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pack_lot_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "pack_lot_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "pack_lot_org_id_fkey"
@@ -7137,7 +7137,7 @@ export type Database = {
           best_by_date: string
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           id: string
           is_deleted: boolean
           org_id: string
@@ -7151,7 +7151,7 @@ export type Database = {
           best_by_date: string
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           id?: string
           is_deleted?: boolean
           org_id: string
@@ -7165,7 +7165,7 @@ export type Database = {
           best_by_date?: string
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           id?: string
           is_deleted?: boolean
           org_id?: string
@@ -7177,11 +7177,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pack_lot_item_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "pack_lot_item_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "pack_lot_item_org_id_fkey"
@@ -7202,7 +7202,7 @@ export type Database = {
             columns: ["sales_product_id"]
             isOneToOne: false
             referencedRelation: "sales_product"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -7212,10 +7212,10 @@ export type Database = {
           created_by: string | null
           description: string | null
           display_order: number
-          farm_name: string | null
+          farm_id: string | null
+          id: string
           is_active: boolean
           is_deleted: boolean
-          name: string
           org_id: string
           updated_at: string
           updated_by: string | null
@@ -7225,10 +7225,10 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           display_order?: number
-          farm_name?: string | null
+          farm_id?: string | null
+          id: string
           is_active?: boolean
           is_deleted?: boolean
-          name: string
           org_id: string
           updated_at?: string
           updated_by?: string | null
@@ -7238,21 +7238,21 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           display_order?: number
-          farm_name?: string | null
+          farm_id?: string | null
+          id?: string
           is_active?: boolean
           is_deleted?: boolean
-          name?: string
           org_id?: string
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "pack_productivity_fail_category_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "pack_productivity_fail_category_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "pack_productivity_fail_category_org_id_fkey"
@@ -7270,7 +7270,7 @@ export type Database = {
           catchers: number
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           fsafe_metal_detected_at: string | null
           id: string
           is_deleted: boolean
@@ -7290,7 +7290,7 @@ export type Database = {
           catchers?: number
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           fsafe_metal_detected_at?: string | null
           id?: string
           is_deleted?: boolean
@@ -7310,7 +7310,7 @@ export type Database = {
           catchers?: number
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           fsafe_metal_detected_at?: string | null
           id?: string
           is_deleted?: boolean
@@ -7326,11 +7326,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pack_productivity_hour_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "pack_productivity_hour_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "pack_productivity_hour_ops_task_tracker_id_fkey"
@@ -7353,12 +7353,12 @@ export type Database = {
           created_at: string
           created_by: string | null
           fail_count: number
-          farm_name: string
+          farm_id: string
           id: string
           is_deleted: boolean
           notes: string | null
           org_id: string
-          pack_productivity_fail_category_name: string
+          pack_productivity_fail_category_id: string
           pack_productivity_hour_id: string
           updated_at: string
           updated_by: string | null
@@ -7367,12 +7367,12 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           fail_count?: number
-          farm_name: string
+          farm_id: string
           id?: string
           is_deleted?: boolean
           notes?: string | null
           org_id: string
-          pack_productivity_fail_category_name: string
+          pack_productivity_fail_category_id: string
           pack_productivity_hour_id: string
           updated_at?: string
           updated_by?: string | null
@@ -7381,23 +7381,23 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           fail_count?: number
-          farm_name?: string
+          farm_id?: string
           id?: string
           is_deleted?: boolean
           notes?: string | null
           org_id?: string
-          pack_productivity_fail_category_name?: string
+          pack_productivity_fail_category_id?: string
           pack_productivity_hour_id?: string
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "pack_productivity_hour_fail_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "pack_productivity_hour_fail_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "pack_productivity_hour_fail_org_id_fkey"
@@ -7408,10 +7408,10 @@ export type Database = {
           },
           {
             foreignKeyName: "pack_productivity_hour_fail_pack_productivity_fail_categor_fkey"
-            columns: ["pack_productivity_fail_category_name"]
+            columns: ["pack_productivity_fail_category_id"]
             isOneToOne: false
             referencedRelation: "pack_productivity_fail_category"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "pack_productivity_hour_fail_pack_productivity_hour_id_fkey"
@@ -7426,9 +7426,9 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string | null
+          farm_id: string | null
           id: string
-          invnt_item_name: string | null
+          invnt_item_id: string | null
           is_deleted: boolean
           is_terminated: boolean
           notes: string | null
@@ -7446,9 +7446,9 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
-          invnt_item_name?: string | null
+          invnt_item_id?: string | null
           is_deleted?: boolean
           is_terminated?: boolean
           notes?: string | null
@@ -7466,9 +7466,9 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
-          invnt_item_name?: string | null
+          invnt_item_id?: string | null
           is_deleted?: boolean
           is_terminated?: boolean
           notes?: string | null
@@ -7485,25 +7485,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pack_shelf_life_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "pack_shelf_life_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "pack_shelf_life_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "pack_shelf_life_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "pack_shelf_life_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "pack_shelf_life_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item_summary"
-            referencedColumns: ["invnt_item_name"]
+            referencedColumns: ["invnt_item_id"]
           },
           {
             foreignKeyName: "pack_shelf_life_org_id_fkey"
@@ -7524,7 +7524,7 @@ export type Database = {
             columns: ["sales_product_id"]
             isOneToOne: false
             referencedRelation: "sales_product"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "pack_shelf_life_site_id_fkey"
@@ -7546,10 +7546,10 @@ export type Database = {
           fail_enum_values: Json | null
           fail_maximum_value: number | null
           fail_minimum_value: number | null
-          farm_name: string | null
+          farm_id: string | null
+          id: string
           is_active: boolean
           is_deleted: boolean
-          name: string
           org_id: string
           response_type: string
           updated_at: string
@@ -7565,10 +7565,10 @@ export type Database = {
           fail_enum_values?: Json | null
           fail_maximum_value?: number | null
           fail_minimum_value?: number | null
-          farm_name?: string | null
+          farm_id?: string | null
+          id: string
           is_active?: boolean
           is_deleted?: boolean
-          name: string
           org_id: string
           response_type: string
           updated_at?: string
@@ -7584,10 +7584,10 @@ export type Database = {
           fail_enum_values?: Json | null
           fail_maximum_value?: number | null
           fail_minimum_value?: number | null
-          farm_name?: string | null
+          farm_id?: string | null
+          id?: string
           is_active?: boolean
           is_deleted?: boolean
-          name?: string
           org_id?: string
           response_type?: string
           updated_at?: string
@@ -7595,11 +7595,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pack_shelf_life_metric_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "pack_shelf_life_metric_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "pack_shelf_life_metric_org_id_fkey"
@@ -7615,7 +7615,7 @@ export type Database = {
           caption: string | null
           created_at: string
           created_by: string | null
-          farm_name: string | null
+          farm_id: string | null
           id: string
           is_deleted: boolean
           observation_date: string
@@ -7631,7 +7631,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           is_deleted?: boolean
           observation_date: string
@@ -7647,7 +7647,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           is_deleted?: boolean
           observation_date?: string
@@ -7661,11 +7661,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pack_shelf_life_photo_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "pack_shelf_life_photo_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "pack_shelf_life_photo_org_id_fkey"
@@ -7687,14 +7687,14 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string | null
+          farm_id: string | null
           id: string
           is_deleted: boolean
           notes: string | null
           observation_date: string
           org_id: string
           pack_shelf_life_id: string
-          pack_shelf_life_metric_name: string
+          pack_shelf_life_metric_id: string
           response_boolean: boolean | null
           response_enum: string | null
           response_numeric: number | null
@@ -7706,14 +7706,14 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           is_deleted?: boolean
           notes?: string | null
           observation_date: string
           org_id: string
           pack_shelf_life_id: string
-          pack_shelf_life_metric_name: string
+          pack_shelf_life_metric_id: string
           response_boolean?: boolean | null
           response_enum?: string | null
           response_numeric?: number | null
@@ -7725,14 +7725,14 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string
           is_deleted?: boolean
           notes?: string | null
           observation_date?: string
           org_id?: string
           pack_shelf_life_id?: string
-          pack_shelf_life_metric_name?: string
+          pack_shelf_life_metric_id?: string
           response_boolean?: boolean | null
           response_enum?: string | null
           response_numeric?: number | null
@@ -7743,11 +7743,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pack_shelf_life_result_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "pack_shelf_life_result_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "pack_shelf_life_result_org_id_fkey"
@@ -7764,11 +7764,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "pack_shelf_life_result_pack_shelf_life_metric_name_fkey"
-            columns: ["pack_shelf_life_metric_name"]
+            foreignKeyName: "pack_shelf_life_result_pack_shelf_life_metric_id_fkey"
+            columns: ["pack_shelf_life_metric_id"]
             isOneToOne: false
             referencedRelation: "pack_shelf_life_metric"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -7776,10 +7776,10 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          id: string
           is_active: boolean
           is_deleted: boolean
           maximum_spaces: number
-          name: string
           org_id: string
           updated_at: string
           updated_by: string | null
@@ -7787,10 +7787,10 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          id: string
           is_active?: boolean
           is_deleted?: boolean
           maximum_spaces: number
-          name: string
           org_id: string
           updated_at?: string
           updated_by?: string | null
@@ -7798,10 +7798,10 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          id?: string
           is_active?: boolean
           is_deleted?: boolean
           maximum_spaces?: number
-          name?: string
           org_id?: string
           updated_at?: string
           updated_by?: string | null
@@ -7821,9 +7821,9 @@ export type Database = {
           created_at: string
           created_by: string | null
           display_order: number
+          id: string
           is_active: boolean
           is_deleted: boolean
-          name: string
           org_id: string
           updated_at: string
           updated_by: string | null
@@ -7832,9 +7832,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           display_order?: number
+          id: string
           is_active?: boolean
           is_deleted?: boolean
-          name: string
           org_id: string
           updated_at?: string
           updated_by?: string | null
@@ -7843,9 +7843,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           display_order?: number
+          id?: string
           is_active?: boolean
           is_deleted?: boolean
-          name?: string
           org_id?: string
           updated_at?: string
           updated_by?: string | null
@@ -7869,13 +7869,13 @@ export type Database = {
           contact_title: string | null
           created_at: string
           created_by: string | null
+          id: string
           is_active: boolean
           is_deleted: boolean
           island: string | null
           location: string | null
-          name: string
           org_id: string
-          sales_customer_name: string | null
+          sales_customer_id: string | null
           updated_at: string
           updated_by: string | null
         }
@@ -7887,13 +7887,13 @@ export type Database = {
           contact_title?: string | null
           created_at?: string
           created_by?: string | null
+          id: string
           is_active?: boolean
           is_deleted?: boolean
           island?: string | null
           location?: string | null
-          name: string
           org_id: string
-          sales_customer_name?: string | null
+          sales_customer_id?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -7905,13 +7905,13 @@ export type Database = {
           contact_title?: string | null
           created_at?: string
           created_by?: string | null
+          id?: string
           is_active?: boolean
           is_deleted?: boolean
           island?: string | null
           location?: string | null
-          name?: string
           org_id?: string
-          sales_customer_name?: string | null
+          sales_customer_id?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -7924,11 +7924,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sales_crm_store_sales_customer_name_fkey"
-            columns: ["sales_customer_name"]
+            foreignKeyName: "sales_crm_store_sales_customer_id_fkey"
+            columns: ["sales_customer_id"]
             isOneToOne: false
             referencedRelation: "sales_customer"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -7940,7 +7940,7 @@ export type Database = {
           is_deleted: boolean
           notes: string | null
           org_id: string
-          sales_crm_store_name: string
+          sales_crm_store_id: string
           updated_at: string
           updated_by: string | null
           visit_date: string
@@ -7953,7 +7953,7 @@ export type Database = {
           is_deleted?: boolean
           notes?: string | null
           org_id: string
-          sales_crm_store_name: string
+          sales_crm_store_id: string
           updated_at?: string
           updated_by?: string | null
           visit_date: string
@@ -7966,7 +7966,7 @@ export type Database = {
           is_deleted?: boolean
           notes?: string | null
           org_id?: string
-          sales_crm_store_name?: string
+          sales_crm_store_id?: string
           updated_at?: string
           updated_by?: string | null
           visit_date?: string
@@ -7981,25 +7981,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sales_crm_store_visit_sales_crm_store_name_fkey"
-            columns: ["sales_crm_store_name"]
+            foreignKeyName: "sales_crm_store_visit_sales_crm_store_id_fkey"
+            columns: ["sales_crm_store_id"]
             isOneToOne: false
             referencedRelation: "sales_crm_store"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "sales_crm_store_visit_visited_by_fkey"
             columns: ["visited_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "sales_crm_store_visit_visited_by_fkey"
             columns: ["visited_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
         ]
       }
@@ -8067,7 +8067,7 @@ export type Database = {
           is_deleted: boolean
           notes: string | null
           org_id: string
-          sales_crm_external_product_name: string | null
+          sales_crm_external_product_id: string | null
           sales_crm_store_visit_id: string
           sales_product_id: string | null
           shelf_price: number | null
@@ -8084,7 +8084,7 @@ export type Database = {
           is_deleted?: boolean
           notes?: string | null
           org_id: string
-          sales_crm_external_product_name?: string | null
+          sales_crm_external_product_id?: string | null
           sales_crm_store_visit_id: string
           sales_product_id?: string | null
           shelf_price?: number | null
@@ -8101,7 +8101,7 @@ export type Database = {
           is_deleted?: boolean
           notes?: string | null
           org_id?: string
-          sales_crm_external_product_name?: string | null
+          sales_crm_external_product_id?: string | null
           sales_crm_store_visit_id?: string
           sales_product_id?: string | null
           shelf_price?: number | null
@@ -8118,11 +8118,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sales_crm_store_visit_result_sales_crm_external_product_na_fkey"
-            columns: ["sales_crm_external_product_name"]
+            foreignKeyName: "sales_crm_store_visit_result_sales_crm_external_product_id_fkey"
+            columns: ["sales_crm_external_product_id"]
             isOneToOne: false
             referencedRelation: "sales_crm_external_product"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "sales_crm_store_visit_result_sales_crm_store_visit_id_fkey"
@@ -8136,7 +8136,7 @@ export type Database = {
             columns: ["sales_product_id"]
             isOneToOne: false
             referencedRelation: "sales_product"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -8147,13 +8147,13 @@ export type Database = {
           created_at: string
           created_by: string | null
           email: string | null
+          id: string
           is_active: boolean
           is_deleted: boolean
-          name: string
           org_id: string
           qb_account: string | null
-          sales_customer_group_name: string | null
-          sales_fob_name: string | null
+          sales_customer_group_id: string | null
+          sales_fob_id: string | null
           updated_at: string
           updated_by: string | null
         }
@@ -8163,13 +8163,13 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           email?: string | null
+          id: string
           is_active?: boolean
           is_deleted?: boolean
-          name: string
           org_id: string
           qb_account?: string | null
-          sales_customer_group_name?: string | null
-          sales_fob_name?: string | null
+          sales_customer_group_id?: string | null
+          sales_fob_id?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -8179,13 +8179,13 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           email?: string | null
+          id?: string
           is_active?: boolean
           is_deleted?: boolean
-          name?: string
           org_id?: string
           qb_account?: string | null
-          sales_customer_group_name?: string | null
-          sales_fob_name?: string | null
+          sales_customer_group_id?: string | null
+          sales_fob_id?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -8198,18 +8198,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sales_customer_sales_customer_group_name_fkey"
-            columns: ["sales_customer_group_name"]
+            foreignKeyName: "sales_customer_sales_customer_group_id_fkey"
+            columns: ["sales_customer_group_id"]
             isOneToOne: false
             referencedRelation: "sales_customer_group"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sales_customer_sales_fob_name_fkey"
-            columns: ["sales_fob_name"]
+            foreignKeyName: "sales_customer_sales_fob_id_fkey"
+            columns: ["sales_fob_id"]
             isOneToOne: false
             referencedRelation: "sales_fob"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -8217,8 +8217,8 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          id: string
           is_deleted: boolean
-          name: string
           org_id: string
           updated_at: string
           updated_by: string | null
@@ -8226,8 +8226,8 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          id: string
           is_deleted?: boolean
-          name: string
           org_id: string
           updated_at?: string
           updated_by?: string | null
@@ -8235,8 +8235,8 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          id?: string
           is_deleted?: boolean
-          name?: string
           org_id?: string
           updated_at?: string
           updated_by?: string | null
@@ -8255,8 +8255,8 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          id: string
           is_deleted: boolean
-          name: string
           org_id: string
           updated_at: string
           updated_by: string | null
@@ -8264,8 +8264,8 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          id: string
           is_deleted?: boolean
-          name: string
           org_id: string
           updated_at?: string
           updated_by?: string | null
@@ -8273,8 +8273,8 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          id?: string
           is_deleted?: boolean
-          name?: string
           org_id?: string
           updated_at?: string
           updated_by?: string | null
@@ -8297,7 +8297,7 @@ export type Database = {
           customer_group: string | null
           customer_name: string
           dollars: number
-          farm_name: string | null
+          farm_id: string | null
           grade: string | null
           id: string
           invoice_date: string
@@ -8318,7 +8318,7 @@ export type Database = {
           customer_group?: string | null
           customer_name: string
           dollars: number
-          farm_name?: string | null
+          farm_id?: string | null
           grade?: string | null
           id?: string
           invoice_date: string
@@ -8339,7 +8339,7 @@ export type Database = {
           customer_group?: string | null
           customer_name?: string
           dollars?: number
-          farm_name?: string | null
+          farm_id?: string | null
           grade?: string | null
           id?: string
           invoice_date?: string
@@ -8355,11 +8355,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "sales_invoice_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "sales_invoice_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "sales_invoice_org_id_fkey"
@@ -8386,9 +8386,9 @@ export type Database = {
           qb_uploaded_at: string | null
           qb_uploaded_by: string | null
           recurring_frequency: string | null
-          sales_customer_group_name: string | null
-          sales_customer_name: string
-          sales_fob_name: string | null
+          sales_customer_group_id: string | null
+          sales_customer_id: string
+          sales_fob_id: string | null
           status: string
           updated_at: string
           updated_by: string | null
@@ -8408,9 +8408,9 @@ export type Database = {
           qb_uploaded_at?: string | null
           qb_uploaded_by?: string | null
           recurring_frequency?: string | null
-          sales_customer_group_name?: string | null
-          sales_customer_name: string
-          sales_fob_name?: string | null
+          sales_customer_group_id?: string | null
+          sales_customer_id: string
+          sales_fob_id?: string | null
           status?: string
           updated_at?: string
           updated_by?: string | null
@@ -8430,9 +8430,9 @@ export type Database = {
           qb_uploaded_at?: string | null
           qb_uploaded_by?: string | null
           recurring_frequency?: string | null
-          sales_customer_group_name?: string | null
-          sales_customer_name?: string
-          sales_fob_name?: string | null
+          sales_customer_group_id?: string | null
+          sales_customer_id?: string
+          sales_fob_id?: string | null
           status?: string
           updated_at?: string
           updated_by?: string | null
@@ -8443,28 +8443,28 @@ export type Database = {
             columns: ["approved_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_sales_po_approved_by"
             columns: ["approved_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "fk_sales_po_qb_uploaded_by"
             columns: ["qb_uploaded_by"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_sales_po_qb_uploaded_by"
             columns: ["qb_uploaded_by"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
           {
             foreignKeyName: "sales_po_org_id_fkey"
@@ -8474,25 +8474,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sales_po_sales_customer_group_name_fkey"
-            columns: ["sales_customer_group_name"]
+            foreignKeyName: "sales_po_sales_customer_group_id_fkey"
+            columns: ["sales_customer_group_id"]
             isOneToOne: false
             referencedRelation: "sales_customer_group"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sales_po_sales_customer_name_fkey"
-            columns: ["sales_customer_name"]
+            foreignKeyName: "sales_po_sales_customer_id_fkey"
+            columns: ["sales_customer_id"]
             isOneToOne: false
             referencedRelation: "sales_customer"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sales_po_sales_fob_name_fkey"
-            columns: ["sales_fob_name"]
+            foreignKeyName: "sales_po_sales_fob_id_fkey"
+            columns: ["sales_fob_id"]
             isOneToOne: false
             referencedRelation: "sales_fob"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -8503,7 +8503,7 @@ export type Database = {
           container_space: string | null
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           fulfilled_quantity: number
           id: string
           is_deleted: boolean
@@ -8511,7 +8511,7 @@ export type Database = {
           org_id: string
           pack_lot_id: string | null
           pallet_number: string | null
-          sales_container_type_name: string | null
+          sales_container_type_id: string | null
           sales_po_id: string
           sales_po_line_id: string
           updated_at: string
@@ -8523,7 +8523,7 @@ export type Database = {
           container_space?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           fulfilled_quantity: number
           id?: string
           is_deleted?: boolean
@@ -8531,7 +8531,7 @@ export type Database = {
           org_id: string
           pack_lot_id?: string | null
           pallet_number?: string | null
-          sales_container_type_name?: string | null
+          sales_container_type_id?: string | null
           sales_po_id: string
           sales_po_line_id: string
           updated_at?: string
@@ -8543,7 +8543,7 @@ export type Database = {
           container_space?: string | null
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           fulfilled_quantity?: number
           id?: string
           is_deleted?: boolean
@@ -8551,7 +8551,7 @@ export type Database = {
           org_id?: string
           pack_lot_id?: string | null
           pallet_number?: string | null
-          sales_container_type_name?: string | null
+          sales_container_type_id?: string | null
           sales_po_id?: string
           sales_po_line_id?: string
           updated_at?: string
@@ -8559,11 +8559,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "sales_po_fulfillment_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "sales_po_fulfillment_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "sales_po_fulfillment_org_id_fkey"
@@ -8580,11 +8580,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sales_po_fulfillment_sales_container_type_name_fkey"
-            columns: ["sales_container_type_name"]
+            foreignKeyName: "sales_po_fulfillment_sales_container_type_id_fkey"
+            columns: ["sales_container_type_id"]
             isOneToOne: false
             referencedRelation: "sales_container_type"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "sales_po_fulfillment_sales_po_id_fkey"
@@ -8606,7 +8606,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          farm_name: string
+          farm_id: string
           id: string
           is_deleted: boolean
           notes: string | null
@@ -8621,7 +8621,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          farm_name: string
+          farm_id: string
           id?: string
           is_deleted?: boolean
           notes?: string | null
@@ -8636,7 +8636,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          farm_name?: string
+          farm_id?: string
           id?: string
           is_deleted?: boolean
           notes?: string | null
@@ -8650,11 +8650,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "sales_po_line_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "sales_po_line_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "sales_po_line_org_id_fkey"
@@ -8675,7 +8675,7 @@ export type Database = {
             columns: ["sales_product_id"]
             isOneToOne: false
             referencedRelation: "sales_product"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -8685,16 +8685,16 @@ export type Database = {
           case_length: number | null
           case_net_weight: number | null
           case_width: number | null
-          code: string
           created_at: string
           created_by: string | null
           description: string | null
           dimension_uom: string | null
           display_order: number
-          farm_name: string
+          farm_id: string
           grow_grade_id: string | null
           gtin: string | null
-          invnt_item_name: string | null
+          id: string
+          invnt_item_id: string | null
           is_active: boolean
           is_catch_weight: boolean
           is_deleted: boolean
@@ -8728,16 +8728,16 @@ export type Database = {
           case_length?: number | null
           case_net_weight?: number | null
           case_width?: number | null
-          code: string
           created_at?: string
           created_by?: string | null
           description?: string | null
           dimension_uom?: string | null
           display_order?: number
-          farm_name: string
+          farm_id: string
           grow_grade_id?: string | null
           gtin?: string | null
-          invnt_item_name?: string | null
+          id: string
+          invnt_item_id?: string | null
           is_active?: boolean
           is_catch_weight?: boolean
           is_deleted?: boolean
@@ -8771,16 +8771,16 @@ export type Database = {
           case_length?: number | null
           case_net_weight?: number | null
           case_width?: number | null
-          code?: string
           created_at?: string
           created_by?: string | null
           description?: string | null
           dimension_uom?: string | null
           display_order?: number
-          farm_name?: string
+          farm_id?: string
           grow_grade_id?: string | null
           gtin?: string | null
-          invnt_item_name?: string | null
+          id?: string
+          invnt_item_id?: string | null
           is_active?: boolean
           is_catch_weight?: boolean
           is_deleted?: boolean
@@ -8815,42 +8815,42 @@ export type Database = {
             columns: ["dimension_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sales_product_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "sales_product_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "sales_product_grow_grade_id_fkey"
             columns: ["grow_grade_id"]
             isOneToOne: false
             referencedRelation: "grow_grade"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sales_product_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "sales_product_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sales_product_invnt_item_name_fkey"
-            columns: ["invnt_item_name"]
+            foreignKeyName: "sales_product_invnt_item_id_fkey"
+            columns: ["invnt_item_id"]
             isOneToOne: false
             referencedRelation: "invnt_item_summary"
-            referencedColumns: ["invnt_item_name"]
+            referencedColumns: ["invnt_item_id"]
           },
           {
             foreignKeyName: "sales_product_item_uom_fkey"
             columns: ["item_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "sales_product_org_id_fkey"
@@ -8864,21 +8864,21 @@ export type Database = {
             columns: ["pack_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "sales_product_temperature_uom_fkey"
             columns: ["temperature_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "sales_product_weight_uom_fkey"
             columns: ["weight_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -8888,14 +8888,14 @@ export type Database = {
           created_by: string | null
           effective_from: string
           effective_to: string | null
-          farm_name: string
+          farm_id: string
           id: string
           is_deleted: boolean
           org_id: string
           price_per_case: number
-          sales_customer_group_name: string | null
-          sales_customer_name: string | null
-          sales_fob_name: string
+          sales_customer_group_id: string | null
+          sales_customer_id: string | null
+          sales_fob_id: string
           sales_product_id: string
           updated_at: string
           updated_by: string | null
@@ -8905,14 +8905,14 @@ export type Database = {
           created_by?: string | null
           effective_from: string
           effective_to?: string | null
-          farm_name: string
+          farm_id: string
           id?: string
           is_deleted?: boolean
           org_id: string
           price_per_case: number
-          sales_customer_group_name?: string | null
-          sales_customer_name?: string | null
-          sales_fob_name: string
+          sales_customer_group_id?: string | null
+          sales_customer_id?: string | null
+          sales_fob_id: string
           sales_product_id: string
           updated_at?: string
           updated_by?: string | null
@@ -8922,25 +8922,25 @@ export type Database = {
           created_by?: string | null
           effective_from?: string
           effective_to?: string | null
-          farm_name?: string
+          farm_id?: string
           id?: string
           is_deleted?: boolean
           org_id?: string
           price_per_case?: number
-          sales_customer_group_name?: string | null
-          sales_customer_name?: string | null
-          sales_fob_name?: string
+          sales_customer_group_id?: string | null
+          sales_customer_id?: string | null
+          sales_fob_id?: string
           sales_product_id?: string
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "sales_product_price_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "sales_product_price_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "sales_product_price_org_id_fkey"
@@ -8950,32 +8950,32 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sales_product_price_sales_customer_group_name_fkey"
-            columns: ["sales_customer_group_name"]
+            foreignKeyName: "sales_product_price_sales_customer_group_id_fkey"
+            columns: ["sales_customer_group_id"]
             isOneToOne: false
             referencedRelation: "sales_customer_group"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sales_product_price_sales_customer_name_fkey"
-            columns: ["sales_customer_name"]
+            foreignKeyName: "sales_product_price_sales_customer_id_fkey"
+            columns: ["sales_customer_id"]
             isOneToOne: false
             referencedRelation: "sales_customer"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sales_product_price_sales_fob_name_fkey"
-            columns: ["sales_fob_name"]
+            foreignKeyName: "sales_product_price_sales_fob_id_fkey"
+            columns: ["sales_fob_id"]
             isOneToOne: false
             referencedRelation: "sales_fob"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "sales_product_price_sales_product_id_fkey"
             columns: ["sales_product_id"]
             isOneToOne: false
             referencedRelation: "sales_product"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -8985,9 +8985,9 @@ export type Database = {
           created_by: string | null
           description: string | null
           display_order: number
+          id: string
           is_deleted: boolean
           level: number
-          name: string
           updated_at: string
           updated_by: string | null
         }
@@ -8996,9 +8996,9 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           display_order?: number
+          id: string
           is_deleted?: boolean
           level: number
-          name: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -9007,9 +9007,9 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           display_order?: number
+          id?: string
           is_deleted?: boolean
           level?: number
-          name?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -9021,8 +9021,8 @@ export type Database = {
           created_by: string | null
           description: string | null
           display_order: number
+          id: string
           is_deleted: boolean
-          name: string
           updated_at: string
           updated_by: string | null
         }
@@ -9031,8 +9031,8 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           display_order?: number
+          id: string
           is_deleted?: boolean
-          name: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -9041,8 +9041,8 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           display_order?: number
+          id?: string
           is_deleted?: boolean
-          name?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -9054,10 +9054,10 @@ export type Database = {
           created_by: string | null
           description: string | null
           display_order: number
+          id: string
           is_deleted: boolean
-          name: string
-          sys_access_level_name: string
-          sys_module_name: string
+          sys_access_level_id: string
+          sys_module_id: string
           updated_at: string
           updated_by: string | null
         }
@@ -9066,10 +9066,10 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           display_order?: number
+          id: string
           is_deleted?: boolean
-          name: string
-          sys_access_level_name: string
-          sys_module_name: string
+          sys_access_level_id: string
+          sys_module_id: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -9078,65 +9078,62 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           display_order?: number
+          id?: string
           is_deleted?: boolean
-          name?: string
-          sys_access_level_name?: string
-          sys_module_name?: string
+          sys_access_level_id?: string
+          sys_module_id?: string
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "sys_sub_module_sys_access_level_name_fkey"
-            columns: ["sys_access_level_name"]
+            foreignKeyName: "sys_sub_module_sys_access_level_id_fkey"
+            columns: ["sys_access_level_id"]
             isOneToOne: false
             referencedRelation: "sys_access_level"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sys_sub_module_sys_module_name_fkey"
-            columns: ["sys_module_name"]
+            foreignKeyName: "sys_sub_module_sys_module_id_fkey"
+            columns: ["sys_module_id"]
             isOneToOne: false
             referencedRelation: "hr_rba_navigation"
             referencedColumns: ["module_slug"]
           },
           {
-            foreignKeyName: "sys_sub_module_sys_module_name_fkey"
-            columns: ["sys_module_name"]
+            foreignKeyName: "sys_sub_module_sys_module_id_fkey"
+            columns: ["sys_module_id"]
             isOneToOne: false
             referencedRelation: "sys_module"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
         ]
       }
       sys_uom: {
         Row: {
           category: string
-          code: string
           created_at: string
           created_by: string | null
+          id: string
           is_deleted: boolean
-          name: string
           updated_at: string
           updated_by: string | null
         }
         Insert: {
           category: string
-          code: string
           created_at?: string
           created_by?: string | null
+          id: string
           is_deleted?: boolean
-          name: string
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
           category?: string
-          code?: string
           created_at?: string
           created_by?: string | null
+          id?: string
           is_deleted?: boolean
-          name?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -9154,7 +9151,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           effective_amount: number | null
-          farm_name: string | null
+          farm_id: string | null
           id: string | null
           is_credit: boolean | null
           is_deleted: boolean | null
@@ -9177,7 +9174,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           effective_amount?: number | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string | null
           is_credit?: boolean | null
           is_deleted?: boolean | null
@@ -9200,7 +9197,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           effective_amount?: number | null
-          farm_name?: string | null
+          farm_id?: string | null
           id?: string | null
           is_credit?: boolean | null
           is_deleted?: boolean | null
@@ -9216,11 +9213,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fin_expense_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "fin_expense_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fin_expense_org_id_fkey"
@@ -9234,7 +9231,7 @@ export type Database = {
       grow_cuke_harvest: {
         Row: {
           days_since_seed: number | null
-          farm_name: string | null
+          farm_id: string | null
           grade: string | null
           greenhouse: string | null
           greenhouse_net_weight: number | null
@@ -9251,11 +9248,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "grow_harvest_weight_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_harvest_weight_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_harvest_weight_grow_cuke_seed_batch_id_fkey"
@@ -9269,7 +9266,7 @@ export type Database = {
             columns: ["grade"]
             isOneToOne: false
             referencedRelation: "grow_grade"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_harvest_weight_org_id_fkey"
@@ -9290,14 +9287,14 @@ export type Database = {
             columns: ["weight_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
         ]
       }
       grow_lettuce_harvest: {
         Row: {
           boards_per_pond: number | null
-          farm_name: string | null
+          farm_id: string | null
           greenhouse_net_weight: number | null
           gross_weight: number | null
           grow_lettuce_seed_batch_id: string | null
@@ -9310,11 +9307,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "grow_harvest_weight_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "grow_harvest_weight_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "grow_harvest_weight_grow_lettuce_seed_batch_id_fkey"
@@ -9335,7 +9332,7 @@ export type Database = {
       grow_spray_restriction: {
         Row: {
           end_time: string | null
-          farm_name: string | null
+          farm_id: string | null
           ops_task_tracker_id: string | null
           org_id: string | null
           restriction_date: string | null
@@ -9351,10 +9348,10 @@ export type Database = {
       hr_payroll_by_task: {
         Row: {
           check_date: string | null
-          compensation_manager_name: string | null
+          compensation_manager_id: string | null
           discretionary_overtime_hours: number | null
           discretionary_overtime_pay: number | null
-          hr_employee_name: string | null
+          hr_employee_id: string | null
           is_manager: boolean | null
           org_id: string | null
           regular_hours: number | null
@@ -9369,29 +9366,29 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fk_hr_employee_compensation_manager"
-            columns: ["compensation_manager_name"]
+            columns: ["compensation_manager_id"]
             isOneToOne: false
             referencedRelation: "hr_employee"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_hr_employee_compensation_manager"
-            columns: ["compensation_manager_name"]
+            columns: ["compensation_manager_id"]
             isOneToOne: false
             referencedRelation: "ops_task_weekly_schedule"
-            referencedColumns: ["hr_employee_name"]
+            referencedColumns: ["hr_employee_id"]
           },
         ]
       }
       hr_payroll_employee_comparison: {
         Row: {
           check_date: string | null
-          compensation_manager_name: string | null
+          compensation_manager_id: string | null
           discretionary_overtime_hours: number | null
           discretionary_overtime_pay: number | null
           discretionary_overtime_pay_delta: number | null
           hours_delta: number | null
-          hr_employee_name: string | null
+          hr_employee_id: string | null
           org_id: string | null
           other_pay_delta: number | null
           regular_pay: number | null
@@ -9439,11 +9436,11 @@ export type Database = {
           burn_uom: string | null
           cushion_weeks: number | null
           days_since_onhand: number | null
-          farm_name: string | null
+          farm_id: string | null
           invnt_category_id: string | null
-          invnt_item_name: string | null
+          invnt_item_id: string | null
           invnt_subcategory_id: string | null
-          invnt_vendor_name: string | null
+          invnt_vendor_id: string | null
           is_auto_reorder: boolean | null
           is_frequently_used: boolean | null
           next_order_date: string | null
@@ -9466,14 +9463,14 @@ export type Database = {
             columns: ["burn_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invnt_item_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "invnt_item_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invnt_item_invnt_category_id_fkey"
@@ -9490,25 +9487,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invnt_item_invnt_vendor_name_fkey"
-            columns: ["invnt_vendor_name"]
+            foreignKeyName: "invnt_item_invnt_vendor_id_fkey"
+            columns: ["invnt_vendor_id"]
             isOneToOne: false
             referencedRelation: "invnt_vendor"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invnt_item_onhand_uom_fkey"
             columns: ["onhand_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invnt_item_order_uom_fkey"
             columns: ["order_uom"]
             isOneToOne: false
             referencedRelation: "sys_uom"
-            referencedColumns: ["code"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "invnt_item_org_id_fkey"
@@ -9522,9 +9519,9 @@ export type Database = {
       ops_task_weekly_schedule: {
         Row: {
           friday: string | null
-          hr_department_name: string | null
-          hr_employee_name: string | null
-          hr_work_authorization_name: string | null
+          hr_department_id: string | null
+          hr_employee_id: string | null
+          hr_work_authorization_id: string | null
           is_over_ot_threshold: boolean | null
           monday: string | null
           org_id: string | null
@@ -9540,18 +9537,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "hr_employee_hr_department_name_fkey"
-            columns: ["hr_department_name"]
+            foreignKeyName: "hr_employee_hr_department_id_fkey"
+            columns: ["hr_department_id"]
             isOneToOne: false
             referencedRelation: "hr_department"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "hr_employee_hr_work_authorization_name_fkey"
-            columns: ["hr_work_authorization_name"]
+            foreignKeyName: "hr_employee_hr_work_authorization_id_fkey"
+            columns: ["hr_work_authorization_id"]
             isOneToOne: false
             referencedRelation: "hr_work_authorization"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ops_task_schedule_org_id_fkey"
@@ -9571,7 +9568,7 @@ export type Database = {
           customer_name: string | null
           dollars: number | null
           dow: number | null
-          farm_name: string | null
+          farm_id: string | null
           grade: string | null
           id: string | null
           invoice_date: string | null
@@ -9597,7 +9594,7 @@ export type Database = {
           customer_name?: string | null
           dollars?: number | null
           dow?: never
-          farm_name?: string | null
+          farm_id?: string | null
           grade?: string | null
           id?: string | null
           invoice_date?: string | null
@@ -9623,7 +9620,7 @@ export type Database = {
           customer_name?: string | null
           dollars?: number | null
           dow?: never
-          farm_name?: string | null
+          farm_id?: string | null
           grade?: string | null
           id?: string | null
           invoice_date?: string | null
@@ -9643,11 +9640,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "sales_invoice_farm_name_fkey"
-            columns: ["farm_name"]
+            foreignKeyName: "sales_invoice_farm_id_fkey"
+            columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "org_farm"
-            referencedColumns: ["name"]
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "sales_invoice_org_id_fkey"
@@ -9660,8 +9657,6 @@ export type Database = {
       }
     }
     Functions: {
-      chat_query: { Args: { q: string }; Returns: Json }
-      chat_schema: { Args: never; Returns: Json }
       get_user_org_ids: { Args: never; Returns: string[] }
     }
     Enums: {
