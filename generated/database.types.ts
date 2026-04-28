@@ -3112,6 +3112,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "hr_employee_housing_id_fkey"
+            columns: ["housing_id"]
+            isOneToOne: false
+            referencedRelation: "org_site_housing_tenant_count"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "hr_employee_hr_department_id_fkey"
             columns: ["hr_department_id"]
             isOneToOne: false
@@ -6834,6 +6841,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "org_site_housing_area_housing_id_fkey"
+            columns: ["housing_id"]
+            isOneToOne: false
+            referencedRelation: "org_site_housing_tenant_count"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "org_site_housing_area_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
@@ -9552,6 +9566,31 @@ export type Database = {
           },
           {
             foreignKeyName: "ops_task_schedule_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "org"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_site_housing_tenant_count: {
+        Row: {
+          address: string | null
+          available_beds: number | null
+          created_at: string | null
+          created_by: string | null
+          id: string | null
+          is_deleted: boolean | null
+          maximum_beds: number | null
+          notes: string | null
+          org_id: string | null
+          tenant_count: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_site_housing_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "org"
