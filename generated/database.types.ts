@@ -9113,6 +9113,217 @@ export type Database = {
       }
     }
     Views: {
+      app_hr_employee_reviews: {
+        Row: {
+          attendance: number | null
+          average: number | null
+          created_at: string | null
+          created_by: string | null
+          department_name: string | null
+          engagement: number | null
+          full_name: string | null
+          hr_employee_id: string | null
+          id: string | null
+          is_deleted: boolean | null
+          is_locked: boolean | null
+          lead_id: string | null
+          lead_name: string | null
+          notes: string | null
+          org_id: string | null
+          productivity: number | null
+          profile_photo_url: string | null
+          quality: number | null
+          quarter_label: string | null
+          review_quarter: number | null
+          review_year: number | null
+          start_date: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_hr_employee_review_employee"
+            columns: ["hr_employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employee"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_hr_employee_review_employee"
+            columns: ["hr_employee_id"]
+            isOneToOne: false
+            referencedRelation: "ops_task_weekly_schedule"
+            referencedColumns: ["hr_employee_id"]
+          },
+          {
+            foreignKeyName: "fk_hr_employee_review_lead"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employee"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_hr_employee_review_lead"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "ops_task_weekly_schedule"
+            referencedColumns: ["hr_employee_id"]
+          },
+          {
+            foreignKeyName: "hr_employee_hr_department_id_fkey"
+            columns: ["department_name"]
+            isOneToOne: false
+            referencedRelation: "hr_department"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employee_review_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "hr_employee"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employee_review_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "ops_task_weekly_schedule"
+            referencedColumns: ["hr_employee_id"]
+          },
+          {
+            foreignKeyName: "hr_employee_review_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "org"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employee_review_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "hr_employee"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employee_review_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "ops_task_weekly_schedule"
+            referencedColumns: ["hr_employee_id"]
+          },
+        ]
+      }
+      app_hr_time_off_requests: {
+        Row: {
+          compensation_manager_id: string | null
+          created_at: string | null
+          created_by: string | null
+          denial_reason: string | null
+          department_name: string | null
+          full_name: string | null
+          hr_employee_id: string | null
+          id: string | null
+          is_deleted: boolean | null
+          non_pto_days: number | null
+          notes: string | null
+          org_id: string | null
+          profile_photo_url: string | null
+          pto_days: number | null
+          request_reason: string | null
+          requested_at: string | null
+          requested_by: string | null
+          requested_by_name: string | null
+          return_date: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewed_by_name: string | null
+          sick_leave_days: number | null
+          start_date: string | null
+          status: string | null
+          updated_at: string | null
+          updated_by: string | null
+          work_authorization_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_hr_employee_compensation_manager"
+            columns: ["compensation_manager_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employee"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_hr_employee_compensation_manager"
+            columns: ["compensation_manager_id"]
+            isOneToOne: false
+            referencedRelation: "ops_task_weekly_schedule"
+            referencedColumns: ["hr_employee_id"]
+          },
+          {
+            foreignKeyName: "fk_hr_time_off_request_employee"
+            columns: ["hr_employee_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employee"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_hr_time_off_request_employee"
+            columns: ["hr_employee_id"]
+            isOneToOne: false
+            referencedRelation: "ops_task_weekly_schedule"
+            referencedColumns: ["hr_employee_id"]
+          },
+          {
+            foreignKeyName: "fk_hr_time_off_request_requested_by"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "hr_employee"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_hr_time_off_request_requested_by"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "ops_task_weekly_schedule"
+            referencedColumns: ["hr_employee_id"]
+          },
+          {
+            foreignKeyName: "fk_hr_time_off_request_reviewed_by"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "hr_employee"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_hr_time_off_request_reviewed_by"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "ops_task_weekly_schedule"
+            referencedColumns: ["hr_employee_id"]
+          },
+          {
+            foreignKeyName: "hr_employee_hr_department_id_fkey"
+            columns: ["department_name"]
+            isOneToOne: false
+            referencedRelation: "hr_department"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employee_hr_work_authorization_id_fkey"
+            columns: ["work_authorization_name"]
+            isOneToOne: false
+            referencedRelation: "hr_work_authorization"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_time_off_request_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "org"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fin_expense_v: {
         Row: {
           account_name: string | null
@@ -9486,7 +9697,9 @@ export type Database = {
       }
       ops_task_weekly_schedule: {
         Row: {
+          department_name: string | null
           friday: string | null
+          full_name: string | null
           hr_department_id: string | null
           hr_employee_id: string | null
           hr_work_authorization_id: string | null
@@ -9494,6 +9707,7 @@ export type Database = {
           monday: string | null
           org_id: string | null
           ot_threshold_weekly: number | null
+          profile_photo_url: string | null
           saturday: string | null
           sunday: string | null
           task: string | null
@@ -9502,13 +9716,28 @@ export type Database = {
           tuesday: string | null
           wednesday: string | null
           week_start_date: string | null
+          work_authorization_name: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "hr_employee_hr_department_id_fkey"
+            columns: ["department_name"]
+            isOneToOne: false
+            referencedRelation: "hr_department"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "hr_employee_hr_department_id_fkey"
             columns: ["hr_department_id"]
             isOneToOne: false
             referencedRelation: "hr_department"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employee_hr_work_authorization_id_fkey"
+            columns: ["work_authorization_name"]
+            isOneToOne: false
+            referencedRelation: "hr_work_authorization"
             referencedColumns: ["id"]
           },
           {
