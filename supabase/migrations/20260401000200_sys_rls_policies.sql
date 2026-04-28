@@ -1241,3 +1241,26 @@ CREATE POLICY "fin_expense_read" ON public.fin_expense
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
 GRANT SELECT ON public.fin_expense TO authenticated;
+
+-- ============================================================
+-- Views
+-- ============================================================
+-- Views don't carry their own RLS policies. Each view is created with
+-- WITH (security_invoker = true) (set in the view's own migration file)
+-- so it executes as the calling user, and the per-table policies above
+-- gate which rows actually flow through. The grants here just allow the
+-- authenticated role to call SELECT on the view. Each view's create
+-- migration also issues the same grant — restated here so the central
+-- RLS file inventories every authenticated-readable surface.
+
+GRANT SELECT ON public.fin_expense_v                  TO authenticated;
+GRANT SELECT ON public.grow_cuke_harvest              TO authenticated;
+GRANT SELECT ON public.grow_lettuce_harvest           TO authenticated;
+GRANT SELECT ON public.grow_spray_restriction         TO authenticated;
+GRANT SELECT ON public.hr_payroll_by_task             TO authenticated;
+GRANT SELECT ON public.hr_payroll_employee_comparison TO authenticated;
+GRANT SELECT ON public.hr_rba_navigation              TO authenticated;
+GRANT SELECT ON public.invnt_item_summary             TO authenticated;
+GRANT SELECT ON public.ops_task_weekly_schedule       TO authenticated;
+GRANT SELECT ON public.org_site_housing_tenant_count  TO authenticated;
+GRANT SELECT ON public.sales_invoice_v                TO authenticated;
