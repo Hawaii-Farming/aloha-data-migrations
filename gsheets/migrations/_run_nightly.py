@@ -49,25 +49,22 @@ DEFAULT_SET = [
     "019",  # ops_training
     "020",  # fsafe_corrective_actions
     "021", "022", "023",  # sales
-    # 024 (grow_cuke_seeding) retired: cuke seed batches are now static,
-    # populated once by 20260417000001_cuke_plantmap.py.
-    "025",  # grow_cuke_harvest — re-enabled with derived batch code matching
-    "026",  # grow_cuke_harvest_sched
-    "027",  # grow_lettuce_seeding
-    "028",  # grow_fertigation
-    "029",  # grow_spraying
-    "030",  # grow_scouting
-    "031",  # grow_spray_pre_check
-    "032",  # grow_monitoring
-    "033",  # business_rule
-    "034",  # fin_expense + sales_invoice (nightly QB sheet sync)
+    "024",  # cuke_plantmap (cuke GH layout + initial seed batches/plantings)
+    "025",  # cuke_seed_batch_and_planting (rebuild seed batches + plantings + rotation)
+    "026",  # grow_cuke_harvest — re-enabled with derived batch code matching
+    "027",  # grow_cuke_harvest_sched
+    "028",  # grow_lettuce_seeding
+    "029",  # grow_fertigation
+    "030",  # grow_spraying
+    "031",  # grow_scouting
+    "032",  # grow_spray_pre_check
+    "033",  # grow_monitoring
+    "034",  # business_rule
+    "035",  # fin_expense + sales_invoice (nightly QB sheet sync)
 ]
 
-# 024 (grow_cuke_seeding) is retired — its target table was renamed to
-# grow_lettuce_seed_batch and the cuke seed batches are now static,
-# populated once by 20260417000001_cuke_plantmap.py.
-RETIRED = {"024"}
-ALL_SET = [f"{i:03d}" for i in range(1, 35) if f"{i:03d}" not in RETIRED]
+RETIRED = set()
+ALL_SET = [f"{i:03d}" for i in range(1, 36) if f"{i:03d}" not in RETIRED]
 
 
 def discover_scripts():

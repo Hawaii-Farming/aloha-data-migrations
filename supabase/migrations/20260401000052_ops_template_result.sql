@@ -26,9 +26,13 @@ CREATE INDEX idx_ops_template_result_org_id      ON ops_template_result (org_id)
 CREATE INDEX idx_ops_template_result_tracker     ON ops_template_result (ops_task_tracker_id);
 CREATE INDEX idx_ops_template_result_question    ON ops_template_result (ops_template_question_id);
 
--- Partial unique indexes: checklist responses are unique per tracker+question; ATP results are unique per tracker+site
-CREATE UNIQUE INDEX uq_ops_template_result_checklist ON ops_template_result (ops_task_tracker_id, ops_template_question_id) WHERE ops_template_question_id IS NOT NULL;
-CREATE UNIQUE INDEX uq_ops_template_result_atp      ON ops_template_result (ops_task_tracker_id, site_id) WHERE ops_template_question_id IS NULL AND site_id IS NOT NULL;
+-- Partial unique indexes:
+--   - site-level checklist responses are unique per tracker+question
+--   - equipment-scoped checklists (e.g. spray pre-check, calibration) are unique per tracker+question+equipment
+--   - ATP results are unique per tracker+site
+CREATE UNIQUE INDEX uq_ops_template_result_checklist           ON ops_template_result (ops_task_tracker_id, ops_template_question_id) WHERE ops_template_question_id IS NOT NULL AND equipment_id IS NULL;
+CREATE UNIQUE INDEX uq_ops_template_result_checklist_equipment ON ops_template_result (ops_task_tracker_id, ops_template_question_id, equipment_id) WHERE ops_template_question_id IS NOT NULL AND equipment_id IS NOT NULL;
+CREATE UNIQUE INDEX uq_ops_template_result_atp                 ON ops_template_result (ops_task_tracker_id, site_id) WHERE ops_template_question_id IS NULL AND site_id IS NOT NULL;
 
 COMMENT ON COLUMN ops_template_result.farm_id IS 'Inherited from ops_task_tracker.farm_id when response is created';
 COMMENT ON COLUMN ops_template_result.ops_template_id IS 'Sourced from ops_task_template; identifies which template this response belongs to';

@@ -42,9 +42,9 @@ SALES_SHEET_ID = "1lSWWLxyD0l83HfuiNI_iud6F9hopY4hoL0F_4P9nATc"
 
 # Own product columns in the wide price sheet → sales_product_id
 OWN_PRODUCT_COLS = {
-    "KR": "kr", "JR": "jr", "LR": "lr", "AR": "ar", "WR": "wr",
-    "LR14": "lr",  # 14oz variant → same product
-    "KW": "kw", "JW": "jw", "LW": "lw",
+    "KR": "KR", "JR": "JR", "LR": "LR", "AR": "AR", "WR": "WR",
+    "LR14": "LR",  # 14oz variant → same product
+    "KW": "KW", "JW": "JW", "LW": "LW",
 }
 
 # Competitor product columns → external product name
@@ -61,16 +61,15 @@ EXTERNAL_PRODUCT_COLS = {
 # STANDARD HELPERS
 # ─────────────────────────────────────────────────────────────
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
+from gsheets.migrations._config import proper_case  # noqa: E402
+
+
 def to_id(name: str) -> str:
     """Convert a display name to a TEXT PK."""
     return re.sub(r"[^a-z0-9_]+", "_", name.lower()).strip("_") if name else ""
-
-
-def proper_case(val):
-    """Normalize a string to title case, stripping extra whitespace."""
-    if not val or not str(val).strip():
-        return val
-    return str(val).strip().title()
 
 
 def audit(row: dict) -> dict:
@@ -131,9 +130,8 @@ def migrate_external_products(supabase):
 
     rows = [
         audit({
-            "id": to_id(name),
-            "org_id": ORG_ID,
             "id": name,
+            "org_id": ORG_ID,
         })
         for name in products
     ]
@@ -162,7 +160,7 @@ def migrate_stores(supabase, gc):
         if not store_name:
             continue
 
-        store_id = to_id(store_name)
+        store_id = store_name
         if store_id in seen:
             continue
         seen.add(store_id)
@@ -175,7 +173,6 @@ def migrate_stores(supabase, gc):
             "org_id": ORG_ID,
             "sales_customer_id": cust_id,
             "chain": str(r.get("Chain", "")).strip() or None,
-            "id": store_name,
             "location": str(r.get("Location", "")).strip() or None,
             "island": str(r.get("Island", "")).strip() or None,
             "contact_name": str(r.get("ContactName", "")).strip() or None,
@@ -303,8 +300,8 @@ def migrate_visit_results(supabase, gc):
 
     # Stock level normalization
     stock_map = {
-        "zero": "zero", "low": "low", "medium": "medium", "full": "full",
-        "med": "medium", "none": "zero",
+        "zero": "Zero", "low": "Low", "medium": "Medium", "full": "Full",
+        "med": "Medium", "none": "Zero",
     }
 
     rows = []

@@ -64,7 +64,7 @@ from _pg import get_pg_conn, paginate_select, pg_bulk_insert
 
 GROW_SHEET_ID = SHEET_IDS.get("grow") or "1VtEecYn-W1pbnIU1hRHfxIpkH2DtK7hj0CpcpiLoziM"
 NOTES_MARKER = "Legacy monitoring migration"
-OPS_TASK_ID = "monitoring"
+OPS_TASK_ID = "Monitoring"
 
 
 # ---------------------------------------------------------------------------
@@ -82,84 +82,84 @@ OPS_TASK_ID = "monitoring"
 
 METRICS = [
     # ----- cuke greenhouse (sites 01-08, HI, HK, KO, WA) -----
-    dict(id="cuke_gh_drip_ml",          farm="cuke", site_cat="greenhouse",
+    dict(id="cuke_gh_drip_ml",          farm="Cuke", site_cat="greenhouse",
          name="Drip Milliliters",       sheet_col="DripMilliliters",
-         uom="milliliter"),
-    dict(id="cuke_gh_drain_ml",         farm="cuke", site_cat="greenhouse",
+         uom="Milliliter"),
+    dict(id="cuke_gh_drain_ml",         farm="Cuke", site_cat="greenhouse",
          name="Drain Milliliters",      sheet_col="DrainMilliliters",
-         uom="milliliter"),
-    dict(id="cuke_gh_drain_percent",    farm="cuke", site_cat="greenhouse",
+         uom="Milliliter"),
+    dict(id="cuke_gh_drain_percent",    farm="Cuke", site_cat="greenhouse",
          name="Drain Percentage",       sheet_col="DrainPercentage",
-         uom="percent", min=15, max=35,
+         uom="Percent", min=15, max=35,
          is_calculated=True,
          formula="(drain_ml / (drip_ml * drippers)) * 100",
          input_point_ids=["cuke_gh_drain_ml", "cuke_gh_drip_ml", "cuke_gh_drippers"]),
-    dict(id="cuke_gh_drip_ec",          farm="cuke", site_cat="greenhouse",
+    dict(id="cuke_gh_drip_ec",          farm="Cuke", site_cat="greenhouse",
          name="Drip EC",                sheet_col="DripEC",
-         uom="millisiemens"),
-    dict(id="cuke_gh_drain_ec",         farm="cuke", site_cat="greenhouse",
+         uom="Millisiemens"),
+    dict(id="cuke_gh_drain_ec",         farm="Cuke", site_cat="greenhouse",
          name="Drain EC",               sheet_col="DrainEC",
-         uom="millisiemens", min=1.7, max=2.7),
-    dict(id="cuke_gh_drip_ph",          farm="cuke", site_cat="greenhouse",
+         uom="Millisiemens", min=1.7, max=2.7),
+    dict(id="cuke_gh_drip_ph",          farm="Cuke", site_cat="greenhouse",
          name="Drip pH",                sheet_col="DrippH",
-         uom="ph"),
-    dict(id="cuke_gh_drain_ph",         farm="cuke", site_cat="greenhouse",
+         uom="pH"),
+    dict(id="cuke_gh_drain_ph",         farm="Cuke", site_cat="greenhouse",
          name="Drain pH",               sheet_col="DrainpH",
-         uom="ph", min=5.9, max=6.2),
-    dict(id="cuke_gh_drippers",         farm="cuke", site_cat="greenhouse",
+         uom="pH", min=5.9, max=6.2),
+    dict(id="cuke_gh_drippers",         farm="Cuke", site_cat="greenhouse",
          name="Drippers",               sheet_col="Drippers"),
-    dict(id="cuke_gh_injection",        farm="cuke", site_cat="greenhouse",
+    dict(id="cuke_gh_injection",        farm="Cuke", site_cat="greenhouse",
          name="Injection",              sheet_col="Injection"),
-    dict(id="cuke_gh_crop_height_in",   farm="cuke", site_cat="greenhouse",
+    dict(id="cuke_gh_crop_height_in",   farm="Cuke", site_cat="greenhouse",
          name="Crop Height",            sheet_col="CropHeightInInches",
-         uom="inch"),
+         uom="Inch"),
 
     # ----- cuke nursery (sites ne, nw) — DripEC splits by station -----
-    dict(id="cuke_nursery_hi_ec",       farm="cuke", site_cat="nursery",
+    dict(id="cuke_nursery_hi_ec",       farm="Cuke", site_cat="nursery",
          name="Hi-EC",                  sheet_col="DripEC",
-         uom="millisiemens", min=2.5, max=3.0,
+         uom="Millisiemens", min=2.5, max=3.0,
          nursery_station_gate="High"),
-    dict(id="cuke_nursery_lo_ec",       farm="cuke", site_cat="nursery",
+    dict(id="cuke_nursery_lo_ec",       farm="Cuke", site_cat="nursery",
          name="Lo-EC",                  sheet_col="DripEC",
-         uom="millisiemens", min=2.0, max=2.3,
+         uom="Millisiemens", min=2.0, max=2.3,
          nursery_station_gate="Low"),
-    dict(id="cuke_nursery_water_ec",    farm="cuke", site_cat="nursery",
+    dict(id="cuke_nursery_water_ec",    farm="Cuke", site_cat="nursery",
          name="Water EC",               sheet_col="DripEC",
-         uom="millisiemens", min=0.0, max=0.2,
+         uom="Millisiemens", min=0.0, max=0.2,
          nursery_station_gate="Water"),
-    dict(id="cuke_nursery_drip_ph",     farm="cuke", site_cat="nursery",
+    dict(id="cuke_nursery_drip_ph",     farm="Cuke", site_cat="nursery",
          name="Drip pH",                sheet_col="DrippH",
-         uom="ph"),
-    dict(id="cuke_nursery_drain_percent", farm="cuke", site_cat="nursery",
+         uom="pH"),
+    dict(id="cuke_nursery_drain_percent", farm="Cuke", site_cat="nursery",
          name="Drain Percentage",       sheet_col="DrainPercentage",
-         uom="percent", min=15, max=35),
-    dict(id="cuke_nursery_drippers",    farm="cuke", site_cat="nursery",
+         uom="Percent", min=15, max=35),
+    dict(id="cuke_nursery_drippers",    farm="Cuke", site_cat="nursery",
          name="Drippers",               sheet_col="Drippers"),
 
     # ----- lettuce pond (sites p1-p7) -----
-    dict(id="lettuce_pond_ec",          farm="lettuce", site_cat="pond",
+    dict(id="lettuce_pond_ec",          farm="Lettuce", site_cat="pond",
          name="Pond EC",                sheet_col="DripEC",
-         uom="millisiemens", min=2.0, max=2.4),
-    dict(id="lettuce_pond_ph",          farm="lettuce", site_cat="pond",
+         uom="Millisiemens", min=2.0, max=2.4),
+    dict(id="lettuce_pond_ph",          farm="Lettuce", site_cat="pond",
          name="Pond pH",                sheet_col="DrippH",
-         uom="ph", min=5.3, max=6.3),
-    dict(id="lettuce_water_ec",         farm="lettuce", site_cat="pond",
+         uom="pH", min=5.3, max=6.3),
+    dict(id="lettuce_water_ec",         farm="Lettuce", site_cat="pond",
          name="Water EC",               sheet_col="DrainEC",
-         uom="millisiemens", min=0.0, max=0.2),
-    dict(id="lettuce_dissolved_oxygen", farm="lettuce", site_cat="pond",
+         uom="Millisiemens", min=0.0, max=0.2),
+    dict(id="lettuce_dissolved_oxygen", farm="Lettuce", site_cat="pond",
          name="Dissolved Oxygen",       sheet_col="DirectOxygen",
-         uom="ppm", min=12, max=20),
-    dict(id="lettuce_temperature",      farm="lettuce", site_cat="pond",
+         uom="PPM", min=12, max=20),
+    dict(id="lettuce_temperature",      farm="Lettuce", site_cat="pond",
          name="Water Temperature",      sheet_col="Temperature",
-         uom="fahrenheit", min=65, max=75),
-    dict(id="lettuce_water_level_cm",   farm="lettuce", site_cat="pond",
+         uom="Fahrenheit", min=65, max=75),
+    dict(id="lettuce_water_level_cm",   farm="Lettuce", site_cat="pond",
          name="Water Level",            sheet_col="WaterLevelInCentiMeters",
-         uom="centimeter"),
-    dict(id="lettuce_aerators",         farm="lettuce", site_cat="pond",
+         uom="Centimeter"),
+    dict(id="lettuce_aerators",         farm="Lettuce", site_cat="pond",
          name="Aerators",               sheet_col="Drippers"),
-    dict(id="lettuce_drain_percent",    farm="lettuce", site_cat="pond",
+    dict(id="lettuce_drain_percent",    farm="Lettuce", site_cat="pond",
          name="Drain Percentage",       sheet_col="DrainPercentage",
-         uom="percent", min=15, max=35),
+         uom="Percent", min=15, max=35),
 ]
 
 # Build fast lookup: (farm, site_cat, sheet_col, station_gate or None) -> metric_id
@@ -465,8 +465,10 @@ def match_lettuce_batches(cycle_cell: str, lettuce_by_base) -> list[str]:
 
 def build_rows(sheet_row, known_sites, cuke_list, lettuce_by_base):
     """Return {tracker, results, photos, seed_batch_links} or {'_skip': reason}."""
-    farm_raw = str(sheet_row.get("Farm", "")).strip().lower()
-    if farm_raw not in ("cuke", "lettuce"):
+    farm_raw = {"cuke": "Cuke", "lettuce": "Lettuce"}.get(
+        str(sheet_row.get("Farm", "")).strip().lower()
+    )
+    if not farm_raw:
         return {"_skip": "no_farm"}
 
     site_id = normalize_site(sheet_row.get("SiteName"))
@@ -589,8 +591,8 @@ def build_rows(sheet_row, known_sites, cuke_list, lettuce_by_base):
             "org_id": ORG_ID,
             "farm_id": farm_raw,
             "ops_task_tracker_id": tracker_id,
-            "grow_cuke_seed_batch_id": batch_id if farm_raw == "cuke" else None,
-            "grow_lettuce_seed_batch_id": batch_id if farm_raw == "lettuce" else None,
+            "grow_cuke_seed_batch_id": batch_id if farm_raw == "Cuke" else None,
+            "grow_lettuce_seed_batch_id": batch_id if farm_raw == "Lettuce" else None,
             "created_by": reporter,
             "updated_by": reporter,
         }
@@ -621,7 +623,7 @@ def main():
 
     # Load known cuke/lettuce sites
     sites = paginate_select(supabase, "org_site", "id,farm_id")
-    known_sites = {s["id"] for s in sites if s.get("farm_id") in ("cuke", "lettuce")}
+    known_sites = {s["id"] for s in sites if s.get("farm_id") in ("Cuke", "Lettuce")}
     print(f"\n  Known cuke/lettuce sites: {len(known_sites)}")
 
     # Load seed batch lookups for SeedingCycle linking

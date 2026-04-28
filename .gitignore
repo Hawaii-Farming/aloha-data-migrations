@@ -34,3 +34,7 @@ Thumbs.db
 # Supabase CLI
 supabase/.temp/
 supabase/.branches/
+
+# Scratch files
+*.tmp
+*.tmp.json

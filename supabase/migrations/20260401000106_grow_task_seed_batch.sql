@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS grow_task_seed_batch (
 
 COMMENT ON TABLE grow_task_seed_batch IS 'Unified join table linking any grow activity (scouting, spraying, fertigation, monitoring) to the seeding batches involved. Exactly one of grow_lettuce_seed_batch_id / grow_cuke_seed_batch_id is set, determined by the farm. Activity type is derived from ops_task_tracker -> ops_task_id.';
 
-COMMENT ON COLUMN grow_task_seed_batch.grow_lettuce_seed_batch_id IS 'The lettuce seeding batch covered by this activity. Populated when farm_id = lettuce; null for cuke';
-COMMENT ON COLUMN grow_task_seed_batch.grow_cuke_seed_batch_id IS 'The cuke seeding batch covered by this activity. Populated when farm_id = cuke; null for lettuce';
+COMMENT ON COLUMN grow_task_seed_batch.grow_lettuce_seed_batch_id IS 'The lettuce seeding batch covered by this activity. Populated when farm_id = Lettuce; null for Cuke';
+COMMENT ON COLUMN grow_task_seed_batch.grow_cuke_seed_batch_id IS 'The cuke seeding batch covered by this activity. Populated when farm_id = Cuke; null for Lettuce';
 
 CREATE INDEX idx_grow_task_seed_batch_tracker ON grow_task_seed_batch (ops_task_tracker_id);
 

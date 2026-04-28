@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS grow_spray_equipment (
     org_id              TEXT NOT NULL REFERENCES org(id),
     farm_id             TEXT NOT NULL REFERENCES org_farm(id),
     ops_task_tracker_id    UUID NOT NULL REFERENCES ops_task_tracker(id),
-    equipment_id        TEXT NOT NULL REFERENCES org_equipment(id),
+    equipment_id        TEXT REFERENCES org_equipment(id),
     water_uom           TEXT NOT NULL REFERENCES sys_uom(id),
     water_quantity      NUMERIC NOT NULL,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),

@@ -42,15 +42,15 @@ from gsheets.migrations._config import (
 from gsheets.migrations._pg import paginate_select
 
 FSAFE_SHEET_ID = SHEET_IDS["fsafe"]
-TASK_ID = "food_safety_log"
-FARM_ID = "cuke"
+TASK_ID = "Food Safety Log"
+FARM_ID = "Cuke"
 CATCH_ALL_SITE_ID = "cuke_ghs"
+MODULE_ID = "Food Safety"
 
-# Template definitions: (template_id, name, sheet_tab, question_columns_in_order)
+# Template definitions: (template_id, sheet_tab, question_columns_in_order)
 TEMPLATES = [
     {
-        "id": "cuke_gh_pre_ops",
-        "name": "GH Pre Ops",
+        "id": "Cuke GH Pre Ops",
         "tab": "fsafe_log_C_gh_pre",
         "questions": [
             "No Animal Intrusion",
@@ -63,8 +63,7 @@ TEMPLATES = [
         ],
     },
     {
-        "id": "cuke_gh_post_ops",
-        "name": "GH Post Ops",
+        "id": "Cuke GH Post Ops",
         "tab": "fsafe_log_C_gh_post",
         "questions": [
             "Harvest Carts Cleaned",
@@ -248,9 +247,8 @@ def upsert_templates(supabase):
             "id": t["id"],
             "org_id": ORG_ID,
             "farm_id": FARM_ID,
-            "id": t["name"],
-            "org_module_id": "food_safety",
-            "description": f"Cuke greenhouse {'pre' if 'pre' in t['id'] else 'post'}-operations checklist (migrated from legacy fsafe sheet)",
+            "org_module_id": MODULE_ID,
+            "description": f"Cuke greenhouse {'pre' if 'pre' in t['id'].lower() else 'post'}-operations checklist (migrated from legacy fsafe sheet)",
             "display_order": i + 1,
         }))
     insert_rows(supabase, "ops_template", rows, upsert=True)

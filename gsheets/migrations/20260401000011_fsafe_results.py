@@ -34,6 +34,7 @@ from gsheets.migrations._config import (
     ORG_ID,
     SHEET_IDS,
     SUPABASE_URL,
+    proper_case,
     require_supabase_key,
 )
 from gsheets.migrations._pg import paginate_select
@@ -65,20 +66,20 @@ LABS = [
 
 # EMP test name mapping: sheet TestName (lowered) -> fsafe_lab_test.id
 EMP_TEST_MAP = {
-    "apc": "apc",
-    "listeria": "listeria",
-    "listeria monocytogenes": "listeria_monocytogenes",
-    "salmonella": "salmonella",
+    "apc": "APC",
+    "listeria": "Listeria",
+    "listeria monocytogenes": "Listeria Monocytogenes",
+    "salmonella": "Salmonella",
 }
 
 # Test & Hold wide-column definitions: sheet_col -> (lab_test_id, is_enum)
 TH_TEST_COLS = {
-    "APC": ("apc", False),
-    "EColi": ("e_coli", True),
-    "EColiO157": ("e_coli", True),
-    "Salmonella": ("salmonella", True),
-    "Listeria": ("listeria", True),
-    "TotalColiform": ("tc", False),
+    "APC": ("APC", False),
+    "EColi": ("E. Coli", True),
+    "EColiO157": ("E. Coli", True),
+    "Salmonella": ("Salmonella", True),
+    "Listeria": ("Listeria", True),
+    "TotalColiform": ("TC", False),
 }
 
 
@@ -89,13 +90,6 @@ TH_TEST_COLS = {
 def to_id(name: str) -> str:
     """Convert a display name to a TEXT PK."""
     return re.sub(r"[^a-z0-9_]+", "_", name.lower()).strip("_") if name else ""
-
-
-def proper_case(val):
-    """Normalize a string to title case, stripping extra whitespace."""
-    if not val or not str(val).strip():
-        return val
-    return str(val).strip().title()
 
 
 def audit(row: dict) -> dict:
@@ -276,16 +270,15 @@ def setup_labs(supabase):
 def setup_listeria_mono_test(supabase):
     """Upsert the listeria_monocytogenes lab test."""
     row = audit({
-        "id": "listeria_monocytogenes",
+        "id": "Listeria Monocytogenes",
         "org_id": ORG_ID,
-        "test_name": "Listeria Monocytogenes",
         "result_type": "Enum",
         "enum_options": ["Positive", "Negative"],
         "enum_pass_options": ["Negative"],
     })
     supabase.table("fsafe_lab_test").upsert(row).execute()
     print("\n--- fsafe_lab_test ---")
-    print("  Upserted listeria_monocytogenes")
+    print("  Upserted Listeria Monocytogenes")
 
 
 def setup_water_sites(supabase, wb):
@@ -317,7 +310,7 @@ def setup_water_sites(supabase, wb):
         parent_id = BUILDING_SITE_MAP.get((farm, building))
         display_name = f"{building.upper()} Water - {sitename}"
         site_id = to_id(f"{farm}_{building}_water_{sitename}")
-        farm_id = farm if farm in ("cuke", "lettuce") else None
+        farm_id = {"cuke": "Cuke", "lettuce": "Lettuce"}.get(farm)
         water_site_map[(farm, building, sitename)] = site_id
 
         rows.append(audit({
@@ -371,16 +364,16 @@ def migrate_emp(supabase, wb, sampled_by_lookup, email_map):
         sitename = str(r.get("SiteName", "")).strip()
         site_lookup = f"{building} - {sitename}".lower() if building and sitename else ""
         site_id = site_by_name.get(site_lookup)
-        farm_id = farm if farm in ("cuke", "lettuce") else None
+        farm_id = {"cuke": "Cuke", "lettuce": "Lettuce"}.get(farm)
 
         # TestType -> initial_retest_vector
-        test_type_raw = str(r.get("TestType", "")).strip().lower()
+        test_type_raw = proper_case(str(r.get("TestType", "")).strip())
         initial_retest_vector = test_type_raw if test_type_raw in ("Initial", "Retest", "Vector") else None
 
         # Result values: APC = numeric, others = enum
         result_enum = None
         result_numeric = None
-        if lab_test_id == "apc":
+        if lab_test_id == "APC":
             result_numeric = safe_numeric(r.get("NumericResults"))
         else:
             pos_raw = str(r.get("PositiveResults", "")).strip()
@@ -462,8 +455,8 @@ def migrate_water(supabase, wb, water_site_map, sampled_by_lookup):
     print(f"\n  Reading fsafe_log_water: {len(data)} rows")
 
     # Build lab lookup: name (lowered) -> fsafe_lab.id
-    labs = paginate_select(supabase, "fsafe_lab", "id, name", eq_filters={"org_id": ORG_ID})
-    lab_by_name = {l["name"].lower(): l["id"] for l in labs}
+    labs = paginate_select(supabase, "fsafe_lab", "id", eq_filters={"org_id": ORG_ID})
+    lab_by_name = {l["id"].lower(): l["id"] for l in labs}
 
     rows = []
     for r in data:
@@ -471,7 +464,7 @@ def migrate_water(supabase, wb, water_site_map, sampled_by_lookup):
         building = str(r.get("Building", "")).strip().lower()
         sitename = str(r.get("SiteName", "")).strip()
         site_id = water_site_map.get((farm, building, sitename))
-        farm_id = farm if farm in ("cuke", "lettuce") else None
+        farm_id = {"cuke": "Cuke", "lettuce": "Lettuce"}.get(farm)
 
         # Lab from "Lab" column
         lab_raw = str(r.get("Lab", "")).strip().lower()
@@ -496,7 +489,7 @@ def migrate_water(supabase, wb, water_site_map, sampled_by_lookup):
         tc_val = str(r.get("TotalColiform", "")).strip()
         if tc_val:
             row = dict(base)
-            row["fsafe_lab_test_id"] = "tc"
+            row["fsafe_lab_test_id"] = "TC"
             row["result_numeric"] = safe_numeric(tc_val)
             row["result_pass"] = True
             rows.append(row)
@@ -506,7 +499,7 @@ def migrate_water(supabase, wb, water_site_map, sampled_by_lookup):
         if ecoli_val:
             numeric = safe_numeric(ecoli_val, default=0)
             row = dict(base)
-            row["fsafe_lab_test_id"] = "e_coli"
+            row["fsafe_lab_test_id"] = "E. Coli"
             row["result_numeric"] = numeric
             row["result_enum"] = "Positive" if numeric > 0 else "Negative"
             row["result_pass"] = numeric <= 126
@@ -517,7 +510,7 @@ def migrate_water(supabase, wb, water_site_map, sampled_by_lookup):
         if sal_val:
             is_pos = parse_bool_result(sal_val)
             row = dict(base)
-            row["fsafe_lab_test_id"] = "salmonella"
+            row["fsafe_lab_test_id"] = "Salmonella"
             row["result_enum"] = "Positive" if is_pos else "Negative"
             row["result_pass"] = not is_pos
             rows.append(row)
@@ -527,7 +520,7 @@ def migrate_water(supabase, wb, water_site_map, sampled_by_lookup):
         if lis_val:
             is_pos = parse_bool_result(lis_val)
             row = dict(base)
-            row["fsafe_lab_test_id"] = "listeria"
+            row["fsafe_lab_test_id"] = "Listeria"
             row["result_enum"] = "Positive" if is_pos else "Negative"
             row["result_pass"] = not is_pos
             rows.append(row)
@@ -556,15 +549,15 @@ def migrate_test_hold(supabase, wb, sampled_by_lookup):
     lot_by_number = {l["lot_number"]: l for l in lots}
 
     # Build lab lookup
-    labs = paginate_select(supabase, "fsafe_lab", "id, name", eq_filters={"org_id": ORG_ID})
-    lab_by_name = {l["name"].lower(): l["id"] for l in labs}
+    labs = paginate_select(supabase, "fsafe_lab", "id", eq_filters={"org_id": ORG_ID})
+    lab_by_name = {l["id"].lower(): l["id"] for l in labs}
 
     # Build Costco customer group lookup
     groups = paginate_select(
-        supabase, "sales_customer_group", "id, name",
+        supabase, "sales_customer_group", "id",
         eq_filters={"org_id": ORG_ID},
     )
-    group_by_name = {g["name"].lower(): g["id"] for g in groups}
+    group_by_name = {g["id"].lower(): g["id"] for g in groups}
     costco_group_id = group_by_name.get("costco")
 
     hold_rows = []

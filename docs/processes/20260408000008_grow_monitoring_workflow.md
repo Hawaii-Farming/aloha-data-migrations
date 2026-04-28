@@ -24,16 +24,18 @@ This document describes the environmental monitoring activity flow using `ops_ta
 
 Before monitoring can begin, an admin creates `grow_monitoring_metric` records scoped to farm + site category:
 
+UOM values are `sys_uom.id` — Proper Case display names like `Milliliter`, `Percent`, `PPM`, `pH`, `Inch`, `Millisiemens`, `Celsius`, `Fahrenheit`.
+
 ### Example: Cuke Farm — Greenhouse
 
 | Point | Type | UOM | Min | Max |
 |-------|------|-----|-----|-----|
-| Drip mL | direct | mL | — | — |
-| Drain mL | direct | mL | — | — |
-| Drippers | direct | count | — | — |
-| Drain % | calculated | % | 20 | 40 |
-| Drip EC | direct | ppm | 2.0 | 3.5 |
-| Drain EC | direct | ppm | — | — |
+| Drip mL | direct | Milliliter | — | — |
+| Drain mL | direct | Milliliter | — | — |
+| Drippers | direct | Count | — | — |
+| Drain % | calculated | Percent | 20 | 40 |
+| Drip EC | direct | Millisiemens | 2.0 | 3.5 |
+| Drain EC | direct | Millisiemens | — | — |
 | Drip pH | direct | pH | 5.5 | 6.5 |
 | Drain pH | direct | pH | — | — |
 
@@ -41,24 +43,24 @@ Before monitoring can begin, an admin creates `grow_monitoring_metric` records s
 
 | Point | Type | UOM | Min | Max |
 |-------|------|-----|-----|-----|
-| High EC | direct | ppm | — | — |
-| Low EC | direct | ppm | — | — |
+| High EC | direct | Millisiemens | — | — |
+| Low EC | direct | Millisiemens | — | — |
 | High pH | direct | pH | — | — |
 | Low pH | direct | pH | — | — |
-| Water EC | direct | ppm | — | — |
+| Water EC | direct | Millisiemens | — | — |
 | Water pH | direct | pH | — | — |
-| Crop Height | direct | inch | — | — |
+| Crop Height | direct | Inch | — | — |
 | Substrate | direct | — | — | — |
 
 ### Example: Lettuce Farm — Pond
 
 | Point | Type | UOM | Min | Max |
 |-------|------|-----|-----|-----|
-| Pond EC | direct | ppm | 1.0 | 2.5 |
+| Pond EC | direct | Millisiemens | 1.0 | 2.5 |
 | Pond pH | direct | pH | 5.8 | 6.2 |
-| Dissolved Oxygen | direct | ppm | 5.0 | — |
-| Temperature | direct | °C | 18 | 28 |
-| Water Level Gap | direct | inch | — | 2.0 |
+| Dissolved Oxygen | direct | PPM | 5.0 | — |
+| Temperature | direct | Fahrenheit | 65 | 75 |
+| Water Level Gap | direct | Centimeter | — | 5.0 |
 
 ### Calculated Points
 

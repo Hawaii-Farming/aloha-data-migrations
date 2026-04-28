@@ -130,6 +130,8 @@ ACRONYMS = {
     "OD", "ID", "OZ", "LB", "QT", "GAL", "ML", "KG", "MM", "CM", "FT",
     # Equipment / electrical
     "VDC", "VAC", "DC", "RPM", "PSI", "GPM", "GPH", "BTU", "LED",
+    # Measurement abbreviations
+    "PPM",
 }
 
 # Stop words that stay lowercase when they appear in the middle of a phrase

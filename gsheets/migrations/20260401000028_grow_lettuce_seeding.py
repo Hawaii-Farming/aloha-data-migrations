@@ -53,8 +53,8 @@ from gsheets.migrations._config import (
 from gsheets.migrations._pg import get_pg_conn, paginate_select, pg_bulk_insert
 
 GROW_SHEET_ID = SHEET_IDS.get("grow") or "1VtEecYn-W1pbnIU1hRHfxIpkH2DtK7hj0CpcpiLoziM"
-FARM_ID = "lettuce"
-CONTAINER_ID = "board"
+FARM_ID = "Lettuce"
+CONTAINER_ID = "Board"
 NOTES_MARKER = "Legacy lettuce migration"
 
 # Variety letter -> grow_variety.code (sheet uses uppercase 2-letter codes)
@@ -68,12 +68,12 @@ VARIETY_MAP = {
 }
 
 STATUS_MAP = {
-    "harvested": "harvested",
-    "harvesting": "harvesting",
-    "pre-harvesting": "transplanted",
-    "transplanted": "transplanted",
-    "seeded": "seeded",
-    "planned": "planned",
+    "harvested": "Harvested",
+    "harvesting": "Harvesting",
+    "pre-harvesting": "Transplanted",
+    "transplanted": "Transplanted",
+    "seeded": "Seeded",
+    "planned": "Planned",
 }
 
 
@@ -150,10 +150,9 @@ def ensure_container(supabase):
         "id": CONTAINER_ID,
         "org_id": ORG_ID,
         "farm_id": FARM_ID,
-        "name": "Board",
         "grow_variety_id": None,
         "grow_grade_id": None,
-        "weight_uom": "pound",
+        "weight_uom": "Pound",
         "tare_weight": 0,
         "is_tare_calculated": False,
         "tare_formula": None,
@@ -179,13 +178,12 @@ def ensure_trial_types(supabase, records):
     rows = []
     name_to_id = {}
     for name in sorted(names):
-        tid = f"lettuce_{to_id(name)}"
+        tid = name
         name_to_id[name] = tid
         rows.append({
             "id": tid,
             "org_id": ORG_ID,
             "farm_id": FARM_ID,
-            "name": name,
             "description": None,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
@@ -208,13 +206,12 @@ def ensure_cycle_patterns(supabase, records):
     rows = []
     name_to_id = {}
     for name in sorted(names):
-        pid = to_id(name)
+        pid = name
         name_to_id[name] = pid
         rows.append({
             "id": pid,
             "org_id": ORG_ID,
             "farm_id": FARM_ID,
-            "name": name,
             "description": None,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
@@ -233,7 +230,7 @@ def ensure_items(supabase, records, mix_names_lower):
     """
     # Load existing lettuce seed items (paginated — 186 rows today, near cap)
     existing = paginate_select(
-        supabase, "invnt_item", "id,name,grow_variety_id",
+        supabase, "invnt_item", "id,grow_variety_id",
         eq_filters={"farm_id": FARM_ID, "invnt_category_id": "seeds"},
     )
     by_name_lower = {it["id"].lower(): it["id"] for it in existing}
@@ -260,18 +257,17 @@ def ensure_items(supabase, records, mix_names_lower):
     if to_create:
         rows = []
         for sn, spec in to_create.items():
-            item_id = to_id(sn)
+            item_id = sn
             rows.append({
                 "id": item_id,
                 "org_id": ORG_ID,
                 "farm_id": FARM_ID,
                 "invnt_category_id": "seeds",
-                "name": spec["name"],
                 "qb_account": "1. Growing:Seeding",
                 "description": None,
-                "burn_uom": "seed",
-                "onhand_uom": "seed",
-                "order_uom": "pack",
+                "burn_uom": "Seed",
+                "onhand_uom": "Seed",
+                "order_uom": "Pack",
                 "burn_per_onhand": 1,
                 "burn_per_order": 1000.0,
                 "is_palletized": False,
@@ -370,10 +366,10 @@ def ensure_lots(supabase, records, item_by_name_lower, mix_names_lower):
 def build_mix_lookup(supabase):
     """Build seedname_lower -> grow_lettuce_seed_mix.id lookup for lettuce mixes."""
     mixes = paginate_select(
-        supabase, "grow_lettuce_seed_mix", "id,name",
+        supabase, "grow_lettuce_seed_mix", "id",
         eq_filters={"farm_id": FARM_ID},
     )
-    return {m["name"].lower(): m["id"] for m in mixes}
+    return {m["id"].lower(): m["id"] for m in mixes}
 
 
 # ---------------------------------------------------------------------------
@@ -485,7 +481,7 @@ def build_rows(
         "grow_lettuce_seed_mix_id": grow_lettuce_seed_mix_id,
         "invnt_item_id": invnt_item_id,
         "invnt_lot_id": invnt_lot_id,
-        "seeding_uom": "board",
+        "seeding_uom": "Board",
         "number_of_units": parse_int(sheet_row.get("boardsperpond"), default=-1),
         "seeds_per_unit": parse_int(sheet_row.get("seedsperboard"), default=-1),
         "number_of_rows": parse_int(sheet_row.get("rowspercycle"), default=-1),
@@ -516,7 +512,7 @@ def build_rows(
             "harvest_date": harvest_date.isoformat(),
             "grow_harvest_container_id": CONTAINER_ID,
             "number_of_containers": 1,
-            "weight_uom": "pound",
+            "weight_uom": "Pound",
             "gross_weight": net_weight,
             "net_weight": net_weight,
             "created_by": created_by,

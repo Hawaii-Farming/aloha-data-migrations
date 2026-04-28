@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS grow_fertigation (
     farm_id             TEXT NOT NULL REFERENCES org_farm(id),
     ops_task_tracker_id         UUID NOT NULL REFERENCES ops_task_tracker(id),
     grow_fertigation_recipe_id  TEXT NOT NULL REFERENCES grow_fertigation_recipe(id),
-    equipment_id                TEXT NOT NULL REFERENCES org_equipment(id),
+    equipment_id                TEXT REFERENCES org_equipment(id),
     volume_uom          TEXT NOT NULL REFERENCES sys_uom(id),
     volume_applied      NUMERIC NOT NULL,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),

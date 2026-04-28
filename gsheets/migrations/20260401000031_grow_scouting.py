@@ -64,35 +64,36 @@ from gsheets.migrations._pg import get_pg_conn, paginate_select, pg_bulk_insert
 
 GROW_SHEET_ID = SHEET_IDS.get("grow") or "1VtEecYn-W1pbnIU1hRHfxIpkH2DtK7hj0CpcpiLoziM"
 NOTES_MARKER = "Legacy scouting migration"
-OPS_TASK_ID = "scouting"
+OPS_TASK_ID = "Scouting"
 
 # Pest type (sheet lowercase) -> (kind, grow_pest/disease id)
 PEST_TYPE_MAP = {
-    "leaf miner adult": ("pest", "leafminer"),
-    "thrip":            ("pest", "thrips"),
-    "mildew":           ("disease", "powdery_mildew"),
-    "shore fly":        ("pest", "shore_fly"),
-    "fungus gnats":     ("pest", "fungus_gnat"),
-    "whitefly":         ("pest", "whitefly"),
-    "moth":             ("pest", "moth"),
-    "roots":            ("disease", "root_rot"),
-    "aphid":            ("pest", "aphid"),
-    "drosophila sp.":   ("pest", "drosophila"),
+    "leaf miner adult": ("Pest",    "Leafminer"),
+    "leaf miner larva": ("Pest",    "Leafminer"),
+    "thrip":            ("Pest",    "Thrips"),
+    "mildew":           ("Disease", "Powdery Mildew"),
+    "shore fly":        ("Pest",    "Shore Fly"),
+    "fungus gnats":     ("Pest",    "Fungus Gnat"),
+    "whitefly":         ("Pest",    "Whitefly"),
+    "moth":             ("Pest",    "Moth"),
+    "roots":            ("Disease", "Root Rot"),
+    "aphid":            ("Pest",    "Aphid"),
+    "drosophila sp.":   ("Pest",    "Drosophila"),
 }
 
 # These pest/disease IDs are auto-created if missing
 AUTO_CREATE_PESTS = [
-    ("moth", "Moth"),
-    ("drosophila", "Drosophila"),
+    ("Moth",       "Moth"),
+    ("Drosophila", "Drosophila"),
 ]
 
 SEVERITY_MAP = {
-    "low": "low",
-    "medium": "moderate",
-    "moderate": "moderate",
-    "high": "high",
-    "critical": "severe",
-    "severe": "severe",
+    "low":      "Low",
+    "medium":   "Moderate",
+    "moderate": "Moderate",
+    "high":     "High",
+    "critical": "Severe",
+    "severe":   "Severe",
 }
 
 
@@ -152,7 +153,7 @@ def normalize_site(farm: str, site: str) -> str:
 
 def resolve_farm(raw: str) -> str | None:
     s = str(raw).strip().lower()
-    return s if s in ("cuke", "lettuce") else None
+    return {"cuke": "Cuke", "lettuce": "Lettuce"}.get(s)
 
 
 def resolve_user(raw: str) -> str:
@@ -173,21 +174,19 @@ def ensure_pests_and_diseases(supabase):
     pest_rows = []
     disease_rows = []
     for kind, target_id in PEST_TYPE_MAP.values():
-        if kind == "pest" and target_id not in existing_pests:
+        if kind == "Pest" and target_id not in existing_pests:
             # Look up auto-create spec
             for pid, pname in AUTO_CREATE_PESTS:
                 if pid == target_id:
                     pest_rows.append({
                         "id": pid,
-                        "id": pname,
                         "description": None,
                         "created_by": AUDIT_USER,
                         "updated_by": AUDIT_USER,
                     })
                     existing_pests.add(pid)
                     break
-        elif kind == "disease" and target_id not in existing_diseases:
-            # No auto-create specs for diseases currently — log
+        elif kind == "Disease" and target_id not in existing_diseases:
             print(f"  WARNING: disease '{target_id}' not in grow_disease and no auto-create spec")
 
     if pest_rows:
@@ -355,10 +354,10 @@ def build_results_and_photos(observation_records, trackers_by_id, existing_pest_
             unknown_pests.add(pest_type_raw)
             continue
         kind, target_id = mapped
-        if kind == "pest" and target_id not in existing_pest_ids:
+        if kind == "Pest" and target_id not in existing_pest_ids:
             skip_counts["missing_pest_row"] = skip_counts.get("missing_pest_row", 0) + 1
             continue
-        if kind == "disease" and target_id not in existing_disease_ids:
+        if kind == "Disease" and target_id not in existing_disease_ids:
             skip_counts["missing_disease_row"] = skip_counts.get("missing_disease_row", 0) + 1
             continue
 
@@ -392,8 +391,8 @@ def build_results_and_photos(observation_records, trackers_by_id, existing_pest_
             "ops_task_tracker_id": tracker["id"],
             "site_id": None,  # row-level sites not modeled; greenhouse on tracker
             "observation_type": kind,
-            "grow_pest_id": target_id if kind == "pest" else None,
-            "grow_disease_id": target_id if kind == "disease" else None,
+            "grow_pest_id": target_id if kind == "Pest" else None,
+            "grow_disease_id": target_id if kind == "Disease" else None,
             # disease_infection_stage not in source data; leave NULL (allowed)
             "disease_infection_stage": None,
             "severity_level": severity,
@@ -443,7 +442,7 @@ def main():
     sites = paginate_select(supabase, "org_site", "id,farm_id,org_site_subcategory_id")
     known_sites = {
         s["id"] for s in sites
-        if s.get("farm_id") in ("cuke", "lettuce")
+        if s.get("farm_id") in ("Cuke", "Lettuce")
         and s.get("org_site_subcategory_id") in ("greenhouse", "pond", None)
     }
     print(f"\n  Known cuke/lettuce sites: {len(known_sites)}")

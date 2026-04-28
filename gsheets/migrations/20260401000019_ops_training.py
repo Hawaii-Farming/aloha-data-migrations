@@ -32,6 +32,7 @@ from gsheets.migrations._config import (
     ORG_ID,
     SHEET_IDS,
     SUPABASE_URL,
+    proper_case,
     require_supabase_key,
 )
 
@@ -40,11 +41,6 @@ FSAFE_SHEET_ID = SHEET_IDS["ops_training"]
 
 def to_id(name: str) -> str:
     return re.sub(r"[^a-z0-9_]+", "_", name.lower()).strip("_") if name else ""
-
-def proper_case(val):
-    if not val or not str(val).strip():
-        return val
-    return str(val).strip().title()
 
 def audit(row: dict) -> dict:
     row["created_by"] = AUDIT_USER
@@ -138,7 +134,7 @@ def migrate_training(supabase, gc):
     # --- Training types ---
     types = sorted(set(str(r.get("TrainingType", "")).strip() for r in training_data
                        if str(r.get("TrainingType", "")).strip()))
-    type_rows = [audit({"id": to_id(t), "org_id": ORG_ID, "id": proper_case(t)}) for t in types]
+    type_rows = [audit({"id": proper_case(t), "org_id": ORG_ID}) for t in types]
     insert_rows(supabase, "ops_training_type", type_rows)
 
     # --- Training sessions ---
@@ -151,7 +147,7 @@ def migrate_training(supabase, gc):
             continue
 
         training_type = str(r.get("TrainingType", "")).strip()
-        type_id = to_id(training_type) if training_type else None
+        type_id = proper_case(training_type) if training_type else None
         training_date = parse_date(r.get("TrainingDateTime"))
 
         topics_raw = str(r.get("TopicsCovered", "")).strip()

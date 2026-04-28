@@ -40,7 +40,8 @@ from gsheets.migrations._config import (
 from gsheets.migrations._pg import paginate_select
 
 FSAFE_SHEET_ID = SHEET_IDS["fsafe"]
-TASK_ID = "food_safety_log"
+TASK_ID = "Food Safety Log"
+MODULE_ID = "Food Safety"
 
 # ---------------------------------------------------------------------------
 # Templates
@@ -49,29 +50,28 @@ TASK_ID = "food_safety_log"
 # fills in the legacy sheet.
 
 CUKE_GLASS_QUESTIONS = [
-    ("Forklift mirrors, head and back up lights",       "boolean", {"boolean_pass_value": True}),
-    ("PH Windows",                                       "boolean", {"boolean_pass_value": True}),
-    ("PH Emergency Exit Lights - East and North doors",  "boolean", {"boolean_pass_value": True}),
-    ("PH Restroom - Soap & Towel Dispensers",            "boolean", {"boolean_pass_value": True}),
-    ("PH Restrooms - Glass Mirrors",                     "boolean", {"boolean_pass_value": True}),
+    ("Forklift mirrors, head and back up lights",       "Boolean", {"boolean_pass_value": True}),
+    ("PH Windows",                                       "Boolean", {"boolean_pass_value": True}),
+    ("PH Emergency Exit Lights - East and North doors",  "Boolean", {"boolean_pass_value": True}),
+    ("PH Restroom - Soap & Towel Dispensers",            "Boolean", {"boolean_pass_value": True}),
+    ("PH Restrooms - Glass Mirrors",                     "Boolean", {"boolean_pass_value": True}),
 ]
 
 LETTUCE_GLASS_QUESTIONS = [
-    ("GH Emergency Exit Lights - NW, NE and SW doors",      "boolean", {"boolean_pass_value": True}),
-    ("GH Emergency Exit Light Fixtures - East and West",    "boolean", {"boolean_pass_value": True}),
-    ("Forklift mirrors, head and back up lights",            "boolean", {"boolean_pass_value": True}),
-    ("PH Windows",                                            "boolean", {"boolean_pass_value": True}),
-    ("PH Emergency Exit Lights - East and North doors",       "boolean", {"boolean_pass_value": True}),
-    ("PH Hand Wash - Soap & Towel Dispensers",                "boolean", {"boolean_pass_value": True}),
-    ("PH Restroom - Soap & Towel Dispensers",                 "boolean", {"boolean_pass_value": True}),
+    ("GH Emergency Exit Lights - NW, NE and SW doors",      "Boolean", {"boolean_pass_value": True}),
+    ("GH Emergency Exit Light Fixtures - East and West",    "Boolean", {"boolean_pass_value": True}),
+    ("Forklift mirrors, head and back up lights",            "Boolean", {"boolean_pass_value": True}),
+    ("PH Windows",                                            "Boolean", {"boolean_pass_value": True}),
+    ("PH Emergency Exit Lights - East and North doors",       "Boolean", {"boolean_pass_value": True}),
+    ("PH Hand Wash - Soap & Towel Dispensers",                "Boolean", {"boolean_pass_value": True}),
+    ("PH Restroom - Soap & Towel Dispensers",                 "Boolean", {"boolean_pass_value": True}),
     # Only 3 of 24 lettuce rows have this filled — not required
-    ("PH Restrooms - Glass Mirrors",                          "boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("PH Restrooms - Glass Mirrors",                          "Boolean", {"boolean_pass_value": True, "is_required": False}),
 ]
 
 TEMPLATES = [
     {
-        "id": "cuke_glass",
-        "name": "Glass Inspection",
+        "id": "Cuke Glass Inspection",
         "farm_id": "Cuke",
         "site_id": "bip_ph",
         "sheet_farm": "Cuke",
@@ -79,8 +79,7 @@ TEMPLATES = [
         "description": "Cuke monthly glass and brittle plastic inspection (migrated from legacy fsafe sheet)",
     },
     {
-        "id": "lettuce_glass",
-        "name": "Glass Inspection",
+        "id": "Lettuce Glass Inspection",
         "farm_id": "Lettuce",
         "site_id": "lettuce_ph",
         "sheet_farm": "Lettuce",
@@ -242,8 +241,7 @@ def upsert_templates(supabase):
             "id": t["id"],
             "org_id": ORG_ID,
             "farm_id": t["farm_id"],
-            "id": t["name"],
-            "org_module_id": "food_safety",
+            "org_module_id": MODULE_ID,
             "description": t["description"],
             "display_order": next_order,
         }))

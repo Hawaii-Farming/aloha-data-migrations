@@ -74,14 +74,14 @@ CUKE_PRODUCT_COLS = {
     "OECases": "OE",
 }
 
-# UOM mapping from sheet values → sys_uom codes
+# UOM mapping from sheet values → sys_uom IDs (Proper Case)
 UOM_MAP = {
-    "pound": "pound", "pounds": "pound", "us pounds": "pound", "lb": "pound",
-    "ounce": "ounce", "oz": "ounce",
-    "count": "count", "each": "each",
-    "bag": "bag", "pack": "pack", "tray": "tray", "case": "case",
-    "inch": "inch", "inches": "inch", "in": "inch",
-    "fahrenheit": "fahrenheit", "f": "fahrenheit",
+    "pound": "Pound", "pounds": "Pound", "us pounds": "Pound", "lb": "Pound",
+    "ounce": "Ounce", "oz": "Ounce",
+    "count": "Count", "each": "Each",
+    "bag": "Bag", "pack": "Pack", "tray": "Tray", "case": "Case",
+    "inch": "Inch", "inches": "Inch", "in": "Inch",
+    "fahrenheit": "Fahrenheit", "f": "Fahrenheit",
 }
 
 
@@ -288,7 +288,7 @@ def migrate_sales_product(supabase, gc):
             "item_per_pack": safe_numeric(meas.get("product_item_per_pack_unit"), default=None),
             "pack_per_case": safe_numeric(meas.get("pack_per_sale_unit"), default=None),
             "maximum_case_per_pallet": safe_int(base.get("MaxCasesForFullPallets")),
-            "weight_uom": map_uom(sysco.get("weight_unit_of_measure")) or "pound",
+            "weight_uom": map_uom(sysco.get("weight_unit_of_measure")) or "Pound",
             "pack_net_weight": safe_numeric(meas.get("pack_unit_gross_weight"), default=None),
             "case_net_weight": case_net_weight,
             "pallet_net_weight": pallet_net_weight,
@@ -932,12 +932,12 @@ def migrate_pack_dryer_result(supabase, gc):
             "site_id": site_id,
             "invnt_item_id": invnt_item_id,
             "check_at": check_at,
-            "temperature_uom": "fahrenheit",
+            "temperature_uom": "Fahrenheit",
             "dryer_temperature": safe_numeric(r.get("dryer_temperature"), default=None),
             "greenhouse_temperature": safe_numeric(r.get("greenhouse_temperature"), default=None),
             "packhouse_temperature": safe_numeric(r.get("packhouse_temperature"), default=None),
             "pre_packing_leaf_temperature": safe_numeric(r.get("pre_packing_leaf_temperature"), default=None),
-            "moisture_uom": "percent",
+            "moisture_uom": "Percent",
             "moisture_before_dryer": safe_numeric(moisture_before, default=None),
             "moisture_after_dryer": safe_numeric(moisture_after, default=None),
             "belt_speed": safe_numeric(r.get("belt_speed"), default=None),

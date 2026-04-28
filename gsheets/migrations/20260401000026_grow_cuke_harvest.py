@@ -40,7 +40,7 @@ Container mapping (variety + grade -> grow_harvest_container.id):
 Weight columns:
   - PalletWeight         -> gross_weight (-1 sentinel when empty)
   - GreenhouseNetWeight  -> net_weight
-  - weight_uom           hardcoded to 'pound'
+  - weight_uom           hardcoded to 'Pound'
   - number_of_containers hardcoded to 1
 
 Also upserts 6 grow_harvest_container rows (one pallet per
@@ -49,7 +49,7 @@ variety+grade) with tare regression formulas from the legacy sheet.
 Usage:
     python migrations/20260401000026_grow_cuke_harvest.py
 
-Rerunnable: deletes all grow_harvest_weight rows for farm_id='cuke',
+Rerunnable: deletes all grow_harvest_weight rows for farm_id='Cuke',
 then reinserts.
 """
 
@@ -73,7 +73,7 @@ from gsheets.migrations._config import (
 from gsheets.migrations._pg import get_pg_conn, paginate_select, pg_bulk_insert, pg_select_all
 
 GROW_SHEET_ID = SHEET_IDS.get("grow") or "1VtEecYn-W1pbnIU1hRHfxIpkH2DtK7hj0CpcpiLoziM"
-FARM_ID = "cuke"
+FARM_ID = "Cuke"
 
 GRADE_MAP = {
     "1": "1",
@@ -90,43 +90,37 @@ VARIETY_MAP = {
 # e.g. Variety=K, Grade=1 -> pallet_k1
 CONTAINERS = [
     {
-        "id": "pallet_k1",
-        "name": "Pallet K1",
+        "id": "Pallet K1",
         "grow_variety_id": "K",
         "grow_grade_id": "1",
         "tare_formula": "ROUND(0.0316203631692461 * gross_weight + -0.835015982812408) * 3 + 48",
     },
     {
-        "id": "pallet_k2",
-        "name": "Pallet K2",
+        "id": "Pallet K2",
         "grow_variety_id": "K",
         "grow_grade_id": "2",
         "tare_formula": "ROUND(0.0285084470508113 * gross_weight + 0.38656882092243) * 3",
     },
     {
-        "id": "pallet_e1",
-        "name": "Pallet E1",
+        "id": "Pallet E1",
         "grow_variety_id": "E",
         "grow_grade_id": "1",
         "tare_formula": "ROUND(0.0376641999102221 * gross_weight + -1.33687101211549) * 3 + 48",
     },
     {
-        "id": "pallet_e2",
-        "name": "Pallet E2",
+        "id": "Pallet E2",
         "grow_variety_id": "E",
         "grow_grade_id": "2",
         "tare_formula": "ROUND(0.0318958967501081 * gross_weight + 0.50064774427244) * 3",
     },
     {
-        "id": "pallet_j1",
-        "name": "Pallet J1",
+        "id": "Pallet J1",
         "grow_variety_id": "J",
         "grow_grade_id": "1",
         "tare_formula": "ROUND(0.0376641999102221 * gross_weight + -1.33687101211549) * 3 + 48",
     },
     {
-        "id": "pallet_j2",
-        "name": "Pallet J2",
+        "id": "Pallet J2",
         "grow_variety_id": "J",
         "grow_grade_id": "2",
         "tare_formula": "ROUND(0.0318958967501081 * gross_weight + 0.50064774427244) * 3",
@@ -225,10 +219,9 @@ def ensure_containers(supabase):
             "id": spec["id"],
             "org_id": ORG_ID,
             "farm_id": FARM_ID,
-            "name": spec["name"],
             "grow_variety_id": spec["grow_variety_id"],
             "grow_grade_id": spec["grow_grade_id"],
-            "weight_uom": "pound",
+            "weight_uom": "Pound",
             "tare_weight": None,
             "is_tare_calculated": True,
             "tare_formula": spec["tare_formula"],
@@ -311,14 +304,12 @@ def ensure_grades(supabase):
             "id": "1",
             "org_id": ORG_ID,
             "farm_id": FARM_ID,
-            "code": "1",
             "name": "On Grade",
         }),
         audit({
             "id": "2",
             "org_id": ORG_ID,
             "farm_id": FARM_ID,
-            "code": "2",
             "name": "Off Grade",
         }),
     ]
@@ -364,6 +355,10 @@ def build_harvest_row(sheet_row, batch_lookup, known_sites):
     # Don't append variety — the sheet already carries it in the cycle string.
     lookup_code = cycle.upper()
     candidates = batch_lookup.get((lookup_code, is_trial), [])
+    # Fall back: harvest 'S-' prefix is a label; the underlying seed batch
+    # is keyed without it. Try the stripped form before giving up.
+    if not candidates and lookup_code.startswith("S-"):
+        candidates = batch_lookup.get((lookup_code[2:], is_trial), [])
     if not candidates:
         return {"_skip": "unmatched_batch", "_detail": f"{lookup_code} (trial={is_trial})"}
     # Multiple UUIDs can share a key. Pick the first — deterministic given
@@ -372,7 +367,7 @@ def build_harvest_row(sheet_row, batch_lookup, known_sites):
 
     gross_weight = parse_numeric(sheet_row.get("PalletWeight"), default=-1)
 
-    container_id = f"pallet_{variety.lower()}{grade}"
+    container_id = f"Pallet {variety.upper()}{grade}"
     grade_id = GRADE_MAP[grade]
 
     reported_by_raw = str(sheet_row.get("ReportedBy", "")).strip().lower()
@@ -388,7 +383,7 @@ def build_harvest_row(sheet_row, batch_lookup, known_sites):
         "harvest_date": harvest_date.isoformat(),
         "grow_harvest_container_id": container_id,
         "number_of_containers": 1,
-        "weight_uom": "pound",
+        "weight_uom": "Pound",
         "gross_weight": gross_weight,
         "net_weight": net_weight,
         "created_by": reported_by,

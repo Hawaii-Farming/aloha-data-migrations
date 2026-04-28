@@ -290,29 +290,29 @@ def migrate_invnt_item(supabase, gc):
         "Trial Seeds": "trial",
     }
 
-    # UOM mapping: legacy names -> sys_uom codes
+    # UOM mapping: legacy names -> sys_uom IDs (Proper Case)
     UOM_MAP = {
-        "seeds": "seed", "pieces": "piece", "bags": "bag", "boxes": "box",
-        "pounds": "pound", "rolls": "roll", "bottles": "bottle",
-        "gallons": "gallon", "trays": "tray", "packs": "pack",
-        "labels": "label", "cases": "case", "drums": "drum",
-        "clips": "clip", "kits": "kit", "pallets": "pallet",
-        "units": "unit", "dozen": "dozen", "lids": "lid",
-        "quarts": "quart", "ounces": "ounce", "grams": "gram",
-        "feet": "feet", "meters": "meter", "impressions": "impression",
-        "blades": "blade", "reactions": "reactions",
-        "fluid ounces": "fluid_ounce", "fluid_ounces": "fluid_ounce",
-        "ml": "milliliter", "milliliters": "milliliter",
+        "seeds": "Seed", "pieces": "Piece", "bags": "Bag", "boxes": "Box",
+        "pounds": "Pound", "rolls": "Roll", "bottles": "Bottle",
+        "gallons": "Gallon", "trays": "Tray", "packs": "Pack",
+        "labels": "Label", "cases": "Case", "drums": "Drum",
+        "clips": "Clip", "kits": "Kit", "pallets": "Pallet",
+        "units": "Unit", "dozen": "Dozen", "lids": "Lid",
+        "quarts": "Quart", "ounces": "Ounce", "grams": "Gram",
+        "feet": "Feet", "meters": "Meter", "impressions": "Impression",
+        "blades": "Blade", "reactions": "Reactions",
+        "fluid ounces": "Fluid Ounce", "fluid_ounces": "Fluid Ounce",
+        "ml": "Milliliter", "milliliters": "Milliliter",
         # Singular forms
-        "seed": "seed", "piece": "piece", "bag": "bag", "box": "box",
-        "pound": "pound", "roll": "roll", "bottle": "bottle",
-        "gallon": "gallon", "tray": "tray", "pack": "pack",
-        "label": "label", "case": "case", "drum": "drum",
-        "clip": "clip", "kit": "kit", "pallet": "pallet",
-        "unit": "unit", "lid": "lid", "quart": "quart",
-        "ounce": "ounce", "gram": "gram", "blade": "blade",
-        "impression": "impression", "count": "count",
-        "cubes": "cubes",
+        "seed": "Seed", "piece": "Piece", "bag": "Bag", "box": "Box",
+        "pound": "Pound", "roll": "Roll", "bottle": "Bottle",
+        "gallon": "Gallon", "tray": "Tray", "pack": "Pack",
+        "label": "Label", "case": "Case", "drum": "Drum",
+        "clip": "Clip", "kit": "Kit", "pallet": "Pallet",
+        "unit": "Unit", "lid": "Lid", "quart": "Quart",
+        "ounce": "Ounce", "gram": "Gram", "blade": "Blade",
+        "impression": "Impression", "count": "Count",
+        "cubes": "Cubes",
     }
 
     def map_uom(val):
@@ -472,27 +472,27 @@ def migrate_invnt_po(supabase, gc):
     vendors = paginate_select(supabase, "invnt_vendor", "id")
     vendor_by_name = {v["id"].lower(): v["id"] for v in vendors}
 
-    # UOM mapping
+    # UOM mapping (Proper Case sys_uom IDs)
     UOM_MAP = {
-        "seeds": "seed", "pieces": "piece", "bags": "bag", "boxes": "box",
-        "pounds": "pound", "rolls": "roll", "bottles": "bottle",
-        "gallons": "gallon", "trays": "tray", "packs": "pack",
-        "labels": "label", "cases": "case", "drums": "drum",
-        "clips": "clip", "kits": "kit", "pallets": "pallet",
-        "units": "unit", "dozen": "dozen", "lids": "lid",
-        "quarts": "quart", "ounces": "ounce", "grams": "gram",
-        "feet": "feet", "meters": "meter", "impressions": "impression",
-        "blades": "blade", "reactions": "reactions", "cubes": "cubes",
-        "fluid ounces": "fluid_ounce", "fluid_ounces": "fluid_ounce",
-        "ml": "milliliter", "milliliters": "milliliter",
-        "seed": "seed", "piece": "piece", "bag": "bag", "box": "box",
-        "pound": "pound", "roll": "roll", "bottle": "bottle",
-        "gallon": "gallon", "tray": "tray", "pack": "pack",
-        "label": "label", "case": "case", "drum": "drum",
-        "clip": "clip", "kit": "kit", "pallet": "pallet",
-        "unit": "unit", "lid": "lid", "quart": "quart",
-        "ounce": "ounce", "gram": "gram", "blade": "blade",
-        "impression": "impression", "count": "count",
+        "seeds": "Seed", "pieces": "Piece", "bags": "Bag", "boxes": "Box",
+        "pounds": "Pound", "rolls": "Roll", "bottles": "Bottle",
+        "gallons": "Gallon", "trays": "Tray", "packs": "Pack",
+        "labels": "Label", "cases": "Case", "drums": "Drum",
+        "clips": "Clip", "kits": "Kit", "pallets": "Pallet",
+        "units": "Unit", "dozen": "Dozen", "lids": "Lid",
+        "quarts": "Quart", "ounces": "Ounce", "grams": "Gram",
+        "feet": "Feet", "meters": "Meter", "impressions": "Impression",
+        "blades": "Blade", "reactions": "Reactions", "cubes": "Cubes",
+        "fluid ounces": "Fluid Ounce", "fluid_ounces": "Fluid Ounce",
+        "ml": "Milliliter", "milliliters": "Milliliter",
+        "seed": "Seed", "piece": "Piece", "bag": "Bag", "box": "Box",
+        "pound": "Pound", "roll": "Roll", "bottle": "Bottle",
+        "gallon": "Gallon", "tray": "Tray", "pack": "Pack",
+        "label": "Label", "case": "Case", "drum": "Drum",
+        "clip": "Clip", "kit": "Kit", "pallet": "Pallet",
+        "unit": "Unit", "lid": "Lid", "quart": "Quart",
+        "ounce": "Ounce", "gram": "Gram", "blade": "Blade",
+        "impression": "Impression", "count": "Count",
     }
 
     def map_uom(val):
@@ -555,8 +555,8 @@ def migrate_invnt_po(supabase, gc):
             "invnt_category_id": item.get("invnt_category_id") or "packing",
             "invnt_item_id": item_id,
             "item_name": item_name,
-            "burn_uom": burn_uom or item.get("burn_uom") or order_uom or "unit",
-            "order_uom": order_uom or item.get("order_uom") or burn_uom or "unit",
+            "burn_uom": burn_uom or item.get("burn_uom") or order_uom or "Unit",
+            "order_uom": order_uom or item.get("order_uom") or burn_uom or "Unit",
             "order_quantity": safe_numeric(r.get("OrderedQuantity", "")),
             "burn_per_order": safe_numeric(r.get("BurnPerReceivedUnits", "")) or item.get("burn_per_order", 0),
             "total_cost": safe_numeric(r.get("TotalCost", "")) or None,
@@ -688,14 +688,14 @@ def migrate_invnt_po(supabase, gc):
                 p = p.replace("images/invnt/", "images/invnt_po/")
                 photos.append(p)
 
-        # UOMs: non-inventory items use "each", inventory items use item UOMs
+        # UOMs: non-inventory items use "Each", inventory items use item UOMs
         if mapped_type == "non_inventory_item":
-            po_burn_uom = "each"
-            po_order_uom = "each"
+            po_burn_uom = "Each"
+            po_order_uom = "Each"
             po_burn_per_order = 1
         else:
-            po_burn_uom = item.get("burn_uom") or "unit"
-            po_order_uom = item.get("order_uom") or "unit"
+            po_burn_uom = item.get("burn_uom") or "Unit"
+            po_order_uom = item.get("order_uom") or "Unit"
             po_burn_per_order = item.get("burn_per_order", 0)
 
         # For completed orders: updated_by is the orderer/reviewer, created_by is the receiver
@@ -773,29 +773,29 @@ def migrate_invnt_onhand(supabase, gc):
     for lot in lots:
         lot_by_number[lot["lot_number"].lower()] = lot["id"]
 
-    # UOM mapping
+    # UOM mapping (Proper Case sys_uom IDs)
     UOM_MAP = {
-        "seeds": "seed", "pieces": "piece", "bags": "bag", "boxes": "box",
-        "pounds": "pound", "rolls": "roll", "bottles": "bottle",
-        "gallons": "gallon", "trays": "tray", "packs": "pack",
-        "labels": "label", "cases": "case", "drums": "drum",
-        "clips": "clip", "kits": "kit", "pallets": "pallet",
-        "units": "unit", "dozen": "dozen", "lids": "lid",
-        "quarts": "quart", "ounces": "ounce", "grams": "gram",
-        "feet": "feet", "meters": "meter", "impressions": "impression",
-        "blades": "blade", "reactions": "reactions", "cubes": "cubes",
-        "fluid ounces": "fluid_ounce", "fluid_ounces": "fluid_ounce",
-        "ml": "milliliter", "milliliters": "milliliter",
-        "seed": "seed", "piece": "piece", "bag": "bag", "box": "box",
-        "pound": "pound", "roll": "roll", "bottle": "bottle",
-        "gallon": "gallon", "tray": "tray", "pack": "pack",
-        "label": "label", "case": "case", "drum": "drum",
-        "clip": "clip", "kit": "kit", "pallet": "pallet",
-        "unit": "unit", "lid": "lid", "quart": "quart",
-        "ounce": "ounce", "gram": "gram", "blade": "blade",
-        "impression": "impression", "count": "count", "each": "each",
-        "lb": "pound", "oz": "ounce", "g": "gram", "kg": "kilogram",
-        "ft": "feet", "fl oz": "fluid_ounce",
+        "seeds": "Seed", "pieces": "Piece", "bags": "Bag", "boxes": "Box",
+        "pounds": "Pound", "rolls": "Roll", "bottles": "Bottle",
+        "gallons": "Gallon", "trays": "Tray", "packs": "Pack",
+        "labels": "Label", "cases": "Case", "drums": "Drum",
+        "clips": "Clip", "kits": "Kit", "pallets": "Pallet",
+        "units": "Unit", "dozen": "Dozen", "lids": "Lid",
+        "quarts": "Quart", "ounces": "Ounce", "grams": "Gram",
+        "feet": "Feet", "meters": "Meter", "impressions": "Impression",
+        "blades": "Blade", "reactions": "Reactions", "cubes": "Cubes",
+        "fluid ounces": "Fluid Ounce", "fluid_ounces": "Fluid Ounce",
+        "ml": "Milliliter", "milliliters": "Milliliter",
+        "seed": "Seed", "piece": "Piece", "bag": "Bag", "box": "Box",
+        "pound": "Pound", "roll": "Roll", "bottle": "Bottle",
+        "gallon": "Gallon", "tray": "Tray", "pack": "Pack",
+        "label": "Label", "case": "Case", "drum": "Drum",
+        "clip": "Clip", "kit": "Kit", "pallet": "Pallet",
+        "unit": "Unit", "lid": "Lid", "quart": "Quart",
+        "ounce": "Ounce", "gram": "Gram", "blade": "Blade",
+        "impression": "Impression", "count": "Count", "each": "Each",
+        "lb": "Pound", "oz": "Ounce", "g": "Gram", "kg": "Kilogram",
+        "ft": "Feet", "fl oz": "Fluid Ounce",
     }
 
     def map_uom(val):
@@ -886,17 +886,17 @@ def migrate_grow_spray_compliance(supabase, gc):
         "cucumber": "Cuke",
     }
 
-    # UOM mapping
+    # UOM mapping (Proper Case sys_uom IDs)
     UOM_MAP = {
-        "fluid_ounces": "fluid_ounce", "fluid ounces": "fluid_ounce",
-        "ounces": "ounce", "oz": "ounce", "ounce": "ounce",
-        "pounds": "pound", "lb": "pound", "pound": "pound",
-        "grams": "gram", "g": "gram", "gram": "gram",
-        "gallons": "gallon", "gallon": "gallon",
-        "quarts": "quart", "quart": "quart",
-        "ml": "milliliter", "milliliters": "milliliter",
-        "pints": "quart", "pint": "quart",
-        "liters": "liter", "liter": "liter",
+        "fluid_ounces": "Fluid Ounce", "fluid ounces": "Fluid Ounce",
+        "ounces": "Ounce", "oz": "Ounce", "ounce": "Ounce",
+        "pounds": "Pound", "lb": "Pound", "pound": "Pound",
+        "grams": "Gram", "g": "Gram", "gram": "Gram",
+        "gallons": "Gallon", "gallon": "Gallon",
+        "quarts": "Quart", "quart": "Quart",
+        "ml": "Milliliter", "milliliters": "Milliliter",
+        "pints": "Quart", "pint": "Quart",
+        "liters": "Liter", "liter": "Liter",
     }
 
     def map_uom(val):

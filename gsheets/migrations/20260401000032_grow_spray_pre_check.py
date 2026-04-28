@@ -15,12 +15,12 @@ Sheet columns:
   Notes, CheckedBy, ReportedDateTime, EntryID
 
 Setup (upserted):
-  - ops_template: cuke_spray_pre_check (farm_id=cuke)
+  - ops_template: Cuke Spray Pre-Check (farm_id=Cuke)
   - 6 ops_template_question rows (deterministic UUIDs via uuid5)
   - ops_task_template: link spray_pre_check template to the spraying task
 
 Per sheet row:
-  - 1 ops_task_tracker (ops_task_id=spraying, farm_id=cuke, site_id=NULL,
+  - 1 ops_task_tracker (ops_task_id=Spraying, farm_id=Cuke, site_id=NULL,
     notes carries Notes + marker, created_by from CheckedBy)
   - N * 6 ops_template_result rows where N = tanks in SiteName:
     - Split SiteName on '+' (e.g. "Tank 3+Tank 1" -> 2 tanks)
@@ -62,9 +62,9 @@ from gsheets.migrations._pg import get_pg_conn, pg_bulk_insert
 
 GROW_SHEET_ID = SHEET_IDS.get("grow") or "1VtEecYn-W1pbnIU1hRHfxIpkH2DtK7hj0CpcpiLoziM"
 NOTES_MARKER = "Legacy spray pre-check migration"
-OPS_TASK_ID = "spraying"
-TEMPLATE_ID = "cuke_spray_pre_check"
-FARM_ID = "cuke"
+OPS_TASK_ID = "Spraying"
+TEMPLATE_ID = "Cuke Spray Pre-Check"
+FARM_ID = "Cuke"
 
 # Deterministic UUID namespace for the pre-check questions so re-runs
 # reference the same question rows rather than creating duplicates.
@@ -72,22 +72,22 @@ QUESTION_NAMESPACE = uuid.UUID("c5e8c5a2-5a5e-5a5e-5a5e-5a5e5a5e5a5e")
 
 # (sheet_column, question_text, response_type, pass_value, display_order)
 QUESTIONS = [
-    ("Oil",                "Oil checked",                  "boolean", True,  1),
-    ("Valves",             "Valves checked",               "boolean", True,  2),
-    ("LinesAndFittings",   "Lines and fittings checked",   "boolean", True,  3),
-    ("Calibration",        "Calibration checked",          "boolean", True,  4),
-    ("GallonsPerMinute",   "Gallons per minute",           "numeric", None,  5),
-    ("MaintenanceRequired","Maintenance required",         "boolean", False, 6),
+    ("Oil",                "Oil checked",                  "Boolean", True,  1),
+    ("Valves",             "Valves checked",               "Boolean", True,  2),
+    ("LinesAndFittings",   "Lines and fittings checked",   "Boolean", True,  3),
+    ("Calibration",        "Calibration checked",          "Boolean", True,  4),
+    ("GallonsPerMinute",   "Gallons per minute",           "Numeric", None,  5),
+    ("MaintenanceRequired","Maintenance required",         "Boolean", False, 6),
 ]
 
 SPRAYER_NAME_MAP = {
-    "tank 1": "cuke_spray_tank_1",
-    "tank 2": "cuke_spray_tank_2",
-    "tank 3": "cuke_spray_tank_3",
-    "fogger": "cuke_fogger",
-    "fogger 1": "cuke_fogger_1",
-    "fogger 2": "cuke_fogger_2",
-    "backpack sprayer": "cuke_backpack_sprayer",
+    "tank 1":            "Cuke Spray Tank 1",
+    "tank 2":            "Cuke Spray Tank 2",
+    "tank 3":            "Cuke Spray Tank 3",
+    "fogger":            "Cuke Fogger",
+    "fogger 1":          "Cuke Fogger 1",
+    "fogger 2":          "Cuke Fogger 2",
+    "backpack sprayer":  "Cuke Backpack Sprayer",
 }
 
 
@@ -178,7 +178,6 @@ def ensure_template(supabase):
         "id": TEMPLATE_ID,
         "org_id": ORG_ID,
         "farm_id": FARM_ID,
-        "id": "Spray Pre-Check",
         "description": "Per-tank equipment inspection run before a spraying event. Migrated from the legacy grow_spray_pre_check sheet.",
         "created_by": AUDIT_USER,
         "updated_by": AUDIT_USER,
@@ -201,7 +200,7 @@ def ensure_template(supabase):
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
         }
-        if rtype == "boolean":
+        if rtype == "Boolean":
             row["boolean_pass_value"] = pass_val
         question_rows.append(row)
     supabase.table("ops_template_question").upsert(question_rows).execute()
@@ -313,9 +312,9 @@ def build_rows(sheet_row):
                 "updated_by": reporter,
             }
             raw = sheet_row.get(sheet_col)
-            if rtype == "boolean":
+            if rtype == "Boolean":
                 result["response_boolean"] = parse_bool(raw)
-            elif rtype == "numeric":
+            elif rtype == "Numeric":
                 result["response_numeric"] = parse_numeric(raw)
             results.append(result)
 

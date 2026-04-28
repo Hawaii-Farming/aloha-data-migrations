@@ -46,16 +46,15 @@ SALES_SHEET_ID = "1lSWWLxyD0l83HfuiNI_iud6F9hopY4hoL0F_4P9nATc"
 # STANDARD HELPERS
 # ─────────────────────────────────────────────────────────────
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
+from gsheets.migrations._config import proper_case  # noqa: E402
+
+
 def to_id(name: str) -> str:
     """Convert a display name to a TEXT PK."""
     return re.sub(r"[^a-z0-9_]+", "_", name.lower()).strip("_") if name else ""
-
-
-def proper_case(val):
-    """Normalize a string to title case, stripping extra whitespace."""
-    if not val or not str(val).strip():
-        return val
-    return str(val).strip().title()
 
 
 def audit(row: dict) -> dict:
@@ -129,9 +128,8 @@ def ensure_missing_customers(supabase, data):
     rows = []
     for name in sorted(missing):
         rows.append(audit({
-            "id": to_id(name),
-            "org_id": ORG_ID,
             "id": proper_case(name),
+            "org_id": ORG_ID,
             "is_active": False,
             "cc_emails": [],
         }))
@@ -161,7 +159,7 @@ def ensure_missing_products(supabase, data):
     for code, farm in sorted(missing):
         rows.append(audit({
             "org_id": ORG_ID,
-            "farm_id": to_id(farm),
+            "farm_id": proper_case(farm),
             "id": code,
             "name": proper_case(code),
             "is_active": False,
@@ -245,11 +243,11 @@ def migrate_sales_po(supabase, gc):
         avg = sum(intervals) / len(intervals)
 
         if 5 <= avg <= 9:
-            freq = "weekly"
+            freq = "Weekly"
         elif 12 <= avg <= 16:
-            freq = "biweekly"
+            freq = "Biweekly"
         elif 25 <= avg <= 35:
-            freq = "monthly"
+            freq = "Monthly"
         else:
             continue  # irregular, don't set recurring
 
@@ -390,8 +388,7 @@ def migrate_sales_po(supabase, gc):
             if not product_code:
                 continue
 
-            farm_id = str(r.get("Farm", "")).strip()
-            farm_id = to_id(farm_id)
+            farm_id = proper_case(str(r.get("Farm", "")).strip())
             order_qty = safe_numeric(r.get("PurchaseOrderQuantity"))
             price = safe_numeric(r.get("PricePerCase"))
             reported_by = str(r.get("RecordedBy", "")).strip().lower() or AUDIT_USER

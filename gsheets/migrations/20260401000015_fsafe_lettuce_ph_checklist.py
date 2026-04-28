@@ -62,12 +62,13 @@ from gsheets.migrations._config import (
 from gsheets.migrations._pg import paginate_select
 
 FSAFE_SHEET_ID = SHEET_IDS["fsafe"]
-TASK_ID = "food_safety_log"
-FARM_ID = "lettuce"
+TASK_ID = "Food Safety Log"
+FARM_ID = "Lettuce"
 SITE_ID = "lettuce_ph"
-ATP_LAB_ID = "hf"
-ATP_TEST_ID = "atp_rlu"
-FM_TEMPLATE_ID = "foreign_material_event"
+MODULE_ID = "Food Safety"
+ATP_LAB_ID = "HF"
+ATP_TEST_ID = "ATP RLU"
+FM_TEMPLATE_ID = "Foreign Material Event"
 FM_ENUM_OPTIONS = [
     "Glass", "Metal", "Wood", "Plastic", "Hair",
     "Insect", "Rubber", "Paper", "Excessive Soil", "Other",
@@ -79,105 +80,103 @@ FM_ENUM_OPTIONS = [
 
 PH_PRE_QUESTIONS = [
     # Pack date gate (kept as boolean, not required since meaning is conditional)
-    ("Is Pack Date",                                "boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Is Pack Date",                                "Boolean", {"boolean_pass_value": True, "is_required": False}),
 
     # Restroom block (slight column drift in 2024 — not required)
-    ("Toilet Works",                                "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Toilet Clean",                                "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Toilet Paper Stocked",                        "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Paper Towels Restocked",                      "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Soap Dispensers Refilled",                    "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Trash Bin Emptied",                           "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Floor Drain Cleared",                         "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Sink Cleaned",                                "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Floor Swept and Mopped",                      "boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Toilet Works",                                "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Toilet Clean",                                "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Toilet Paper Stocked",                        "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Paper Towels Restocked",                      "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Soap Dispensers Refilled",                    "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Trash Bin Emptied",                           "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Floor Drain Cleared",                         "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Sink Cleaned",                                "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Floor Swept and Mopped",                      "Boolean", {"boolean_pass_value": True, "is_required": False}),
 
     # Core packhouse cleanliness block (always filled)
-    ("Dryer and Bin Fill Tables Clean",             "boolean", {"boolean_pass_value": True}),
-    ("Blending Tables Clean",                       "boolean", {"boolean_pass_value": True}),
-    ("Packing Tables Clean",                        "boolean", {"boolean_pass_value": True}),
-    ("Pro Seal Feed Conveyor Clean",                "boolean", {"boolean_pass_value": True}),
-    ("Pro Seal Machine Clean",                      "boolean", {"boolean_pass_value": True}),
-    ("Metal Detector Clean",                        "boolean", {"boolean_pass_value": True}),
-    ("Accumulation Table Clean",                    "boolean", {"boolean_pass_value": True}),
-    ("Case-Up Table Clean",                         "boolean", {"boolean_pass_value": True}),
-    ("Packing Room Clean",                          "boolean", {"boolean_pass_value": True}),
-    ("Cooler Clean",                                "boolean", {"boolean_pass_value": True}),
-    ("Box Assembly Area Clean",                     "boolean", {"boolean_pass_value": True}),
-    ("Dry Storage Room Clean",                      "boolean", {"boolean_pass_value": True}),
-    ("Changing and Break Areas Clean",              "boolean", {"boolean_pass_value": True}),
-    ("Restrooms Clean and Stocked",                 "boolean", {"boolean_pass_value": True}),
-    ("Handwash Sinks Clean and Stocked",            "boolean", {"boolean_pass_value": True}),
-    ("Boot Room Clean",                             "boolean", {"boolean_pass_value": True}),
-    ("Packaging and Totes Stored Off the Floor",    "boolean", {"boolean_pass_value": True}),
-    ("Hand Sanitizers Stocked",                     "boolean", {"boolean_pass_value": True}),
+    ("Dryer and Bin Fill Tables Clean",             "Boolean", {"boolean_pass_value": True}),
+    ("Blending Tables Clean",                       "Boolean", {"boolean_pass_value": True}),
+    ("Packing Tables Clean",                        "Boolean", {"boolean_pass_value": True}),
+    ("Pro Seal Feed Conveyor Clean",                "Boolean", {"boolean_pass_value": True}),
+    ("Pro Seal Machine Clean",                      "Boolean", {"boolean_pass_value": True}),
+    ("Metal Detector Clean",                        "Boolean", {"boolean_pass_value": True}),
+    ("Accumulation Table Clean",                    "Boolean", {"boolean_pass_value": True}),
+    ("Case-Up Table Clean",                         "Boolean", {"boolean_pass_value": True}),
+    ("Packing Room Clean",                          "Boolean", {"boolean_pass_value": True}),
+    ("Cooler Clean",                                "Boolean", {"boolean_pass_value": True}),
+    ("Box Assembly Area Clean",                     "Boolean", {"boolean_pass_value": True}),
+    ("Dry Storage Room Clean",                      "Boolean", {"boolean_pass_value": True}),
+    ("Changing and Break Areas Clean",              "Boolean", {"boolean_pass_value": True}),
+    ("Restrooms Clean and Stocked",                 "Boolean", {"boolean_pass_value": True}),
+    ("Handwash Sinks Clean and Stocked",            "Boolean", {"boolean_pass_value": True}),
+    ("Boot Room Clean",                             "Boolean", {"boolean_pass_value": True}),
+    ("Packaging and Totes Stored Off the Floor",    "Boolean", {"boolean_pass_value": True}),
+    ("Hand Sanitizers Stocked",                     "Boolean", {"boolean_pass_value": True}),
 
     # Worker hygiene mini-block (slight 2024 drift — not required)
-    ("No Jewelry, Personal Items, Food or Drinks in Processing Area", "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Protective Clothing and Dedicated Footwear Worn", "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Washing Hands in Compliance",                 "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("No Visible Wounds, Sores or Illnesses",       "boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("No Jewelry, Personal Items, Food or Drinks in Processing Area", "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Protective Clothing and Dedicated Footwear Worn", "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Washing Hands in Compliance",                 "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("No Visible Wounds, Sores or Illnesses",       "Boolean", {"boolean_pass_value": True, "is_required": False}),
 
-    ("Doors Closed and Sealed",                     "boolean", {"boolean_pass_value": True}),
+    ("Doors Closed and Sealed",                     "Boolean", {"boolean_pass_value": True}),
 
     # Retired booleans — workflow consolidated this year, kept for history
-    ("Boot Room Foot Dip Checked",                  "boolean", {"boolean_pass_value": True, "is_required": False, "is_deleted": True}),
-    ("Packing Room Foot Dip Checked",               "boolean", {"boolean_pass_value": True, "is_required": False, "is_deleted": True}),
-    ("South Side Foot Dip Checked",                 "boolean", {"boolean_pass_value": True, "is_required": False, "is_deleted": True}),
+    ("Boot Room Foot Dip Checked",                  "Boolean", {"boolean_pass_value": True, "is_required": False, "is_deleted": True}),
+    ("Packing Room Foot Dip Checked",               "Boolean", {"boolean_pass_value": True, "is_required": False, "is_deleted": True}),
+    ("South Side Foot Dip Checked",                 "Boolean", {"boolean_pass_value": True, "is_required": False, "is_deleted": True}),
 
     # Numeric measurements
-    ("Boot Room Foot Dip Concentration",            "numeric", {"minimum_value": 800, "maximum_value": 1000}),
-    ("Packing Room Foot Dip Concentration",         "numeric", {"minimum_value": 800, "maximum_value": 1000}),
-    ("South Side Foot Dip Concentration",           "numeric", {"minimum_value": 800, "maximum_value": 1000}),
-    ("Floor Foamer Concentration",                  "numeric", {"is_required": False}),
-    ("Packing Room Temperature",                    "numeric", {"minimum_value": 40, "maximum_value": 50}),
-    ("Packing Room Humidity",                       "numeric", {"is_required": False}),
-    ("Cooler Temperature",                          "numeric", {"minimum_value": 32, "maximum_value": 40}),
+    ("Boot Room Foot Dip Concentration",            "Numeric", {"minimum_value": 800, "maximum_value": 1000}),
+    ("Packing Room Foot Dip Concentration",         "Numeric", {"minimum_value": 800, "maximum_value": 1000}),
+    ("South Side Foot Dip Concentration",           "Numeric", {"minimum_value": 800, "maximum_value": 1000}),
+    ("Floor Foamer Concentration",                  "Numeric", {"is_required": False}),
+    ("Packing Room Temperature",                    "Numeric", {"minimum_value": 40, "maximum_value": 50}),
+    ("Packing Room Humidity",                       "Numeric", {"is_required": False}),
+    ("Cooler Temperature",                          "Numeric", {"minimum_value": 32, "maximum_value": 40}),
     # Retired — no recent fills
-    ("Cooler Humidity",                             "numeric", {"is_required": False, "is_deleted": True}),
+    ("Cooler Humidity",                             "Numeric", {"is_required": False, "is_deleted": True}),
 ]
 
 PH_POST_QUESTIONS = [
-    ("Dryer and Bin Fill Tables Clean",             "boolean", {"boolean_pass_value": True}),
-    ("Blending Bins Clean",                         "boolean", {"boolean_pass_value": True}),
-    ("Blending Tables Clean",                       "boolean", {"boolean_pass_value": True}),
-    ("Packing Tables Clean",                        "boolean", {"boolean_pass_value": True}),
-    ("Pro Seal Feed Conveyor Clean",                "boolean", {"boolean_pass_value": True}),
-    ("Pro Seal Machine Clean",                      "boolean", {"boolean_pass_value": True}),
-    ("Metal Detector Clean",                        "boolean", {"boolean_pass_value": True}),
-    ("Accumulation Table Clean",                    "boolean", {"boolean_pass_value": True}),
-    ("Case-Up Table Clean",                         "boolean", {"boolean_pass_value": True}),
-    ("Packing Room Clean",                          "boolean", {"boolean_pass_value": True}),
-    ("Cooler Clean",                                "boolean", {"boolean_pass_value": True}),
-    ("Box Assembly Area Clean",                     "boolean", {"boolean_pass_value": True}),
-    ("Dry Storage Room Clean",                      "boolean", {"boolean_pass_value": True}),
-    ("Changing and Break Areas Clean",              "boolean", {"boolean_pass_value": True}),
-    ("Restrooms Clean and Stocked",                 "boolean", {"boolean_pass_value": True}),
-    ("Handwash Sinks Clean and Stocked",            "boolean", {"boolean_pass_value": True}),
-    ("Drain Clean",                                 "boolean", {"boolean_pass_value": True}),
-    ("Test Strip Is Not Expired",                   "boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Dryer and Bin Fill Tables Clean",             "Boolean", {"boolean_pass_value": True}),
+    ("Blending Bins Clean",                         "Boolean", {"boolean_pass_value": True}),
+    ("Blending Tables Clean",                       "Boolean", {"boolean_pass_value": True}),
+    ("Packing Tables Clean",                        "Boolean", {"boolean_pass_value": True}),
+    ("Pro Seal Feed Conveyor Clean",                "Boolean", {"boolean_pass_value": True}),
+    ("Pro Seal Machine Clean",                      "Boolean", {"boolean_pass_value": True}),
+    ("Metal Detector Clean",                        "Boolean", {"boolean_pass_value": True}),
+    ("Accumulation Table Clean",                    "Boolean", {"boolean_pass_value": True}),
+    ("Case-Up Table Clean",                         "Boolean", {"boolean_pass_value": True}),
+    ("Packing Room Clean",                          "Boolean", {"boolean_pass_value": True}),
+    ("Cooler Clean",                                "Boolean", {"boolean_pass_value": True}),
+    ("Box Assembly Area Clean",                     "Boolean", {"boolean_pass_value": True}),
+    ("Dry Storage Room Clean",                      "Boolean", {"boolean_pass_value": True}),
+    ("Changing and Break Areas Clean",              "Boolean", {"boolean_pass_value": True}),
+    ("Restrooms Clean and Stocked",                 "Boolean", {"boolean_pass_value": True}),
+    ("Handwash Sinks Clean and Stocked",            "Boolean", {"boolean_pass_value": True}),
+    ("Drain Clean",                                 "Boolean", {"boolean_pass_value": True}),
+    ("Test Strip Is Not Expired",                   "Boolean", {"boolean_pass_value": True, "is_required": False}),
 
     # Numerics with ranges from fsafe_test_name
-    ("Cleaner Dilution Concentration",              "numeric", {"minimum_value":   4, "maximum_value":    8}),
-    ("Boot Room Foot Dip Concentration",            "numeric", {"minimum_value": 800, "maximum_value": 1000}),
-    ("Packing Room Foot Dip Concentration",         "numeric", {"minimum_value": 800, "maximum_value": 1000}),
-    ("South Side Foot Dip Concentration",           "numeric", {"minimum_value": 800, "maximum_value": 1000}),
-    ("Equipment Sanitizer Concentration",           "numeric", {"minimum_value": 200, "maximum_value":  400}),
-    ("Cooler Temperature",                          "numeric", {"minimum_value":  32, "maximum_value":   40}),
-    ("Packing Room Temperature",                    "numeric", {"minimum_value":  40, "maximum_value":   50, "is_required": False}),
+    ("Cleaner Dilution Concentration",              "Numeric", {"minimum_value":   4, "maximum_value":    8}),
+    ("Boot Room Foot Dip Concentration",            "Numeric", {"minimum_value": 800, "maximum_value": 1000}),
+    ("Packing Room Foot Dip Concentration",         "Numeric", {"minimum_value": 800, "maximum_value": 1000}),
+    ("South Side Foot Dip Concentration",           "Numeric", {"minimum_value": 800, "maximum_value": 1000}),
+    ("Equipment Sanitizer Concentration",           "Numeric", {"minimum_value": 200, "maximum_value":  400}),
+    ("Cooler Temperature",                          "Numeric", {"minimum_value":  32, "maximum_value":   40}),
+    ("Packing Room Temperature",                    "Numeric", {"minimum_value":  40, "maximum_value":   50, "is_required": False}),
 ]
 
 TEMPLATES = [
     {
-        "id": "lettuce_ph_pre_ops",
-        "name": "PH Pre Ops",
+        "id": "Lettuce PH Pre Ops",
         "tab": "fsafe_log_L_ph_pre",
         "questions": PH_PRE_QUESTIONS,
         "description": "Lettuce packhouse pre-operations checklist (migrated from legacy fsafe sheet)",
     },
     {
-        "id": "lettuce_ph_post_ops",
-        "name": "PH Post Ops",
+        "id": "Lettuce PH Post Ops",
         "tab": "fsafe_log_L_ph_post",
         "questions": PH_POST_QUESTIONS,
         "description": "Lettuce packhouse post-operations cleanup checklist (migrated from legacy fsafe sheet)",
@@ -424,8 +423,7 @@ def upsert_templates(supabase):
             "id": t["id"],
             "org_id": ORG_ID,
             "farm_id": FARM_ID,
-            "id": t["name"],
-            "org_module_id": "food_safety",
+            "org_module_id": MODULE_ID,
             "description": t["description"],
             "display_order": next_order,
         }))

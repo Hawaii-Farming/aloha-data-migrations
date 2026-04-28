@@ -60,20 +60,20 @@ from gsheets.migrations._pg import get_pg_conn, paginate_select, pg_bulk_insert
 GROW_SHEET_ID = SHEET_IDS.get("grow") or "1VtEecYn-W1pbnIU1hRHfxIpkH2DtK7hj0CpcpiLoziM"
 NOTES_MARKER = "Legacy fertigation migration"
 
-OPS_TASK_ID = "fertigation"
+OPS_TASK_ID = "Fertigation"
 FERTILIZER_CATEGORY_ID = "fertilizers"
 
-# Sheet Units -> sys_uom.code
+# Sheet Units -> sys_uom IDs (Proper Case)
 UOM_MAP = {
-    "gram": "gram", "grams": "gram", "g": "gram",
-    "ounce": "ounce", "ounces": "ounce", "oz": "ounce",
-    "pound": "pound", "pounds": "pound", "lb": "pound", "lbs": "pound",
-    "gallon": "gallon", "gallons": "gallon", "gal": "gallon",
-    "liter": "liter", "liters": "liter", "l": "liter",
-    "milliliter": "milliliter", "milliliters": "milliliter", "ml": "milliliter",
-    "kilogram": "kilogram", "kilograms": "kilogram", "kg": "kilogram",
-    "hour": "hour", "hours": "hour", "hr": "hour", "hrs": "hour",
-    "fluid_ounce": "fluid_ounce", "fl oz": "fluid_ounce",
+    "gram": "Gram", "grams": "Gram", "g": "Gram",
+    "ounce": "Ounce", "ounces": "Ounce", "oz": "Ounce",
+    "pound": "Pound", "pounds": "Pound", "lb": "Pound", "lbs": "Pound",
+    "gallon": "Gallon", "gallons": "Gallon", "gal": "Gallon",
+    "liter": "Liter", "liters": "Liter", "l": "Liter",
+    "milliliter": "Milliliter", "milliliters": "Milliliter", "ml": "Milliliter",
+    "kilogram": "Kilogram", "kilograms": "Kilogram", "kg": "Kilogram",
+    "hour": "Hour", "hours": "Hour", "hr": "Hour", "hrs": "Hour",
+    "fluid_ounce": "Fluid Ounce", "fl oz": "Fluid Ounce",
 }
 
 # Sheet RecipeName typos/normalizations
@@ -149,11 +149,9 @@ def normalize_recipe_name(raw: str) -> str:
 
 
 def resolve_farm(raw: str) -> str | None:
-    """'Lettuce' -> 'lettuce', 'Cuke' -> 'cuke'. Return None if unrecognized."""
+    """'Lettuce'/'lettuce' -> 'Lettuce'. Return None if unrecognized."""
     s = str(raw).strip().lower()
-    if s in ("lettuce", "cuke"):
-        return s
-    return None
+    return {"lettuce": "Lettuce", "cuke": "Cuke"}.get(s)
 
 
 def resolve_user(raw: str) -> str:
@@ -170,11 +168,11 @@ def split_sites(site_name: str) -> list[str]:
 
 
 def tank_equipment_id(farm: str, tank_letter: str) -> str | None:
-    """'lettuce' + 'A' -> 'lettuce_tank_a'. Returns None for blank tank."""
-    letter = str(tank_letter).strip().lower()
+    """'Lettuce' + 'A' -> 'Lettuce Tank A'. Returns None for blank tank."""
+    letter = str(tank_letter).strip().upper()
     if not letter:
         return None
-    return f"{farm}_tank_{letter}"
+    return f"{farm} Tank {letter}"
 
 
 # ---------------------------------------------------------------------------
@@ -185,13 +183,12 @@ def ensure_tanks(supabase):
     """Upsert 8 tank rows in org_equipment: lettuce_tank_{a,b,c,d} + cuke_tank_{a,b,c,d}."""
     print("\n--- org_equipment (tanks) ---")
     rows = []
-    for farm in ("lettuce", "cuke"):
-        for letter in ("a", "b", "c", "d"):
+    for farm in ("Lettuce", "Cuke"):
+        for letter in ("A", "B", "C", "D"):
             rows.append({
-                "id": f"{farm}_tank_{letter}",
+                "id": f"{farm} Tank {letter}",
                 "org_id": ORG_ID,
                 "farm_id": farm,
-                "name": f"{farm.title()} Tank {letter.upper()}",
                 "type": "Tank",
                 "created_by": AUDIT_USER,
                 "updated_by": AUDIT_USER,
@@ -207,7 +204,7 @@ def ensure_items(supabase, recipe_mix_records):
     """
     # Load ALL existing items (not just fertilizers — fertilizers may have been
     # categorized as chemicals_pesticides or other categories).
-    existing = paginate_select(supabase, "invnt_item", "id,name,farm_id,invnt_category_id")
+    existing = paginate_select(supabase, "invnt_item", "id,farm_id,invnt_category_id")
     by_name_lower = {}
     for it in existing:
         key = it["id"].lower()
@@ -228,7 +225,7 @@ def ensure_items(supabase, recipe_mix_records):
     to_create = {}
     for name in unique_names:
         if name.lower() not in by_name_lower:
-            to_create[name] = to_id(name)
+            to_create[name] = name
 
     # Resolve collisions in generated IDs (two names might slug to the same id)
     used_ids = set(by_name_lower.values())
@@ -248,12 +245,11 @@ def ensure_items(supabase, recipe_mix_records):
             "org_id": ORG_ID,
             "farm_id": "Lettuce",
             "invnt_category_id": FERTILIZER_CATEGORY_ID,
-            "name": name,
             "qb_account": "1. Growing:Fertilizers",
             "description": None,
-            "burn_uom": "pound",
-            "onhand_uom": "pound",
-            "order_uom": "pound",
+            "burn_uom": "Pound",
+            "onhand_uom": "Pound",
+            "order_uom": "Pound",
             "burn_per_onhand": 1,
             "burn_per_order": 1,
             "is_palletized": False,
@@ -307,10 +303,10 @@ def build_recipe_farm_map(sched_records, recipe_mix_names):
     for name, counts in recipe_farm_counts.items():
         recipe_farm[name] = counts.most_common(1)[0][0]
 
-    # Recipes in recipe_mix but never in sched -> default to lettuce
+    # Recipes in recipe_mix but never in sched -> default to Lettuce
     for name in recipe_mix_names:
         if name not in recipe_farm:
-            recipe_farm[name] = "lettuce"
+            recipe_farm[name] = "Lettuce"
 
     return recipe_farm
 
@@ -338,13 +334,12 @@ def ensure_recipes(supabase, recipe_mix_records, sched_records):
     used_ids = set()
     rows = []
     for name in sorted(recipe_names):
-        base_id = to_id(name)
-        if not base_id:
+        if not name:
             continue
-        final_id = base_id
+        final_id = name
         n = 2
         while final_id in used_ids:
-            final_id = f"{base_id}_{n}"
+            final_id = f"{name} ({n})"
             n += 1
         used_ids.add(final_id)
         recipe_id_by_name[name] = final_id
@@ -352,7 +347,6 @@ def ensure_recipes(supabase, recipe_mix_records, sched_records):
             "id": final_id,
             "org_id": ORG_ID,
             "farm_id": recipe_farm[name],
-            "name": name,
             "description": NOTES_MARKER,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
@@ -526,7 +520,7 @@ def build_events(sched_records, recipe_id_by_name, known_sites):
                     "ops_task_tracker_id": tracker_id,
                     "grow_fertigation_recipe_id": recipe_id,
                     "equipment_id": tank_equipment_id(farm, letter),
-                    "volume_uom": "gallon",
+                    "volume_uom": "Gallon",
                     "volume_applied": gallons,
                     "created_by": reporter,
                     "updated_by": reporter,
@@ -540,7 +534,7 @@ def build_events(sched_records, recipe_id_by_name, known_sites):
                     "ops_task_tracker_id": tracker_id,
                     "grow_fertigation_recipe_id": top_up_recipe_id,
                     "equipment_id": None,
-                    "volume_uom": "hour",
+                    "volume_uom": "Hour",
                     "volume_applied": top_up_hours,
                     "created_by": reporter,
                     "updated_by": reporter,
@@ -552,7 +546,7 @@ def build_events(sched_records, recipe_id_by_name, known_sites):
                     "ops_task_tracker_id": tracker_id,
                     "grow_fertigation_recipe_id": flush_recipe_id,
                     "equipment_id": None,
-                    "volume_uom": "gallon",
+                    "volume_uom": "Gallon",
                     "volume_applied": flush_gallons,
                     "created_by": reporter,
                     "updated_by": reporter,

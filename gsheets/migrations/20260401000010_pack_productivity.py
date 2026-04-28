@@ -42,32 +42,32 @@ ORG_ID = "hawaii_farming"
 
 PACK_SHEET_ID = "1XEwjbU_NKNmoUED4w5iuaGV_ilovCJg4f2AkA9lB2cg"
 
-# Product case columns → sales_product_id
+# Product case columns → sales_product_id (uppercase to match sales_product.id)
 PRODUCT_COLS = {
-    "LRCases": "lr",
-    "LFCases": "lf",
-    "LWCases": "lw",
-    "WRCases": "wr",
-    "wf_cases": "wf",
-    "ar_cases": "ar",
-    "af_cases": "af",
+    "LRCases": "LR",
+    "LFCases": "LF",
+    "LWCases": "LW",
+    "WRCases": "WR",
+    "wf_cases": "WF",
+    "ar_cases": "AR",
+    "af_cases": "AF",
 }
 
 # Leftover columns → sales_product_id
 LEFTOVER_COLS = {
     "LeftoverPounds": None,         # general leftover (assigned to first active product)
-    "wr_leftover_pounds": "wr",
-    "ar_leftover_pounds": "ar",
+    "wr_leftover_pounds": "WR",
+    "ar_leftover_pounds": "AR",
 }
 
-# Fail columns → fail category id
+# Fail columns → pack_productivity_fail_category.id (proper case)
 FAIL_COLS = {
-    "FilmFails": "film",
-    "TrayFails": "tray",
-    "PrinterFails": "printer",
-    "LeavesFails": "leaves",
-    "RidgesFails": "ridges",
-    "UnexplainedFails": "unexplained",
+    "FilmFails": "Film",
+    "TrayFails": "Tray",
+    "PrinterFails": "Printer",
+    "LeavesFails": "Leaves",
+    "RidgesFails": "Ridges",
+    "UnexplainedFails": "Unexplained",
 }
 
 # Hour parsing: "10:00 AM" → 10, "1:00 PM" → 13
@@ -119,7 +119,7 @@ def parse_product_times(notes, pack_date):
         hour = m.group(2) or m.group(5)
         minute = m.group(3) or m.group(6)
         if code in PRODUCT_CODES and hour and minute:
-            pid = code.lower()
+            pid = code  # already uppercased above; matches sales_product.id
             times.setdefault(pid, {})
             times[pid]["start"] = _to_timestamp(pack_date, hour, minute)
 
@@ -128,7 +128,7 @@ def parse_product_times(notes, pack_date):
         hour = m.group(2) or m.group(5)
         minute = m.group(3) or m.group(6)
         if code in PRODUCT_CODES and hour and minute:
-            pid = code.lower()
+            pid = code  # already uppercased above; matches sales_product.id
             times.setdefault(pid, {})
             times[pid]["finish"] = _to_timestamp(pack_date, hour, minute)
 
@@ -239,25 +239,24 @@ def migrate_fail_categories(supabase):
     supabase.table("pack_productivity_fail_category").delete().neq("id", "__none__").execute()
 
     categories = [
-        ("film", "Film", 1, False),
-        ("tray", "Tray", 2, False),
-        ("printer", "Printer", 3, False),
-        ("leaves", "Leaves", 4, False),
-        ("ridges", "Ridges", 5, False),
-        ("unexplained", "Unexplained", 6, False),
-        ("total", "Total", 7, True),
+        ("Film", 1, False),
+        ("Tray", 2, False),
+        ("Printer", 3, False),
+        ("Leaves", 4, False),
+        ("Ridges", 5, False),
+        ("Unexplained", 6, False),
+        ("Total", 7, True),
     ]
 
     rows = [
         audit({
-            "id": cat_id,
+            "id": name,
             "org_id": ORG_ID,
             "farm_id": "Lettuce",
-            "id": name,
             "display_order": order,
             "is_active": active,
         })
-        for cat_id, name, order, active in categories
+        for name, order, active in categories
     ]
 
     insert_rows(supabase, "pack_productivity_fail_category", rows)
@@ -304,7 +303,7 @@ def migrate_pack_productivity(supabase, gc):
     supabase.table("pack_productivity_hour").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
     # Clear only packing task trackers created by this migration (loop until empty)
     while True:
-        batch = supabase.table("ops_task_tracker").select("id").eq("ops_task_id", "packing").eq("farm_id", "lettuce").limit(100).execute()
+        batch = supabase.table("ops_task_tracker").select("id").eq("ops_task_id", "Packing").eq("farm_id", "Lettuce").limit(100).execute()
         if not batch.data:
             break
         supabase.table("ops_task_tracker").delete().in_("id", [t["id"] for t in batch.data]).execute()
@@ -490,7 +489,7 @@ def migrate_pack_productivity(supabase, gc):
             if not has_individual:
                 total_fails = safe_int(r.get("TotalFails"))
                 if total_fails and total_fails > 0:
-                    fail_counts["total"] = total_fails
+                    fail_counts["Total"] = total_fails
 
             # Create one pack_productivity_hour per product with delta > 0
             first_product_this_hour = True

@@ -56,7 +56,8 @@ from gsheets.migrations._config import (
 from gsheets.migrations._pg import paginate_select
 
 FSAFE_SHEET_ID = SHEET_IDS["fsafe"]
-TASK_ID = "food_safety_log"
+TASK_ID = "Food Safety Log"
+MODULE_ID = "Food Safety"
 
 # ---------------------------------------------------------------------------
 # Per-farm config
@@ -64,23 +65,23 @@ TASK_ID = "food_safety_log"
 # (template_id, farm_id, host_site_id, sheet_farm_value)
 FARMS = [
     {"farm_id": "Cuke",    "host_site_id": "bip_ph",     "sheet_farm": "Cuke",
-     "template_id": "cuke_calibration",    "template_name": "Calibration"},
+     "template_id": "Cuke Calibration"},
     {"farm_id": "Lettuce", "host_site_id": "lettuce_ph", "sheet_farm": "Lettuce",
-     "template_id": "lettuce_calibration", "template_name": "Calibration"},
+     "template_id": "Lettuce Calibration"},
 ]
 
 # Equipment definitions per farm. id is farm-prefixed; name is unprefixed
 # since farm_id already scopes the row.
 def equipment_for(farm_id, host_site_id):
     rows = []
-    rows.append({"id": f"{farm_id}_cooler_1_thermometer", "name": "Cooler 1 Thermometer"})
-    rows.append({"id": f"{farm_id}_cooler_2_thermometer", "name": "Cooler 2 Thermometer"})
-    rows.append({"id": f"{farm_id}_pack_room_thermometer", "name": "Pack Room Thermometer"})
+    rows.append({"id": f"{farm_id} Cooler 1 Thermometer"})
+    rows.append({"id": f"{farm_id} Cooler 2 Thermometer"})
+    rows.append({"id": f"{farm_id} Pack Room Thermometer"})
     for n in range(1, 10):
-        rows.append({"id": f"{farm_id}_scale_{n}", "name": f"Scale {n}"})
-    rows.append({"id": f"{farm_id}_luminometer", "name": "Luminometer"})
+        rows.append({"id": f"{farm_id} Scale {n}"})
+    rows.append({"id": f"{farm_id} Luminometer"})
     return [
-        {**r, "farm_id": farm_id, "site_id": host_site_id, "type": "Tool"}
+        {**r, "farm_id": farm_id, "type": "Tool"}
         for r in rows
     ]
 
@@ -90,52 +91,52 @@ def equipment_for(farm_id, host_site_id):
 # equipment_id_suffix is the part after the farm prefix (e.g. 'cooler_1_thermometer').
 QUESTION_DEFS = [
     # Cooler 1 Thermometer
-    ("Cooler 1 Thermometer - Observed Reading",      "numeric", {"is_required": False},
-     "cooler_1_thermometer", "Cooler 1 Temperature (obs)",  "numeric"),
-    ("Cooler 1 Thermometer - NIST Reference Reading","numeric", {"is_required": False},
-     "cooler_1_thermometer", "Cooler 1 Temperature (NIST)", "numeric"),
+    ("Cooler 1 Thermometer - Observed Reading",      "Numeric", {"is_required": False},
+     "Cooler 1 Thermometer", "Cooler 1 Temperature (obs)",  "numeric"),
+    ("Cooler 1 Thermometer - NIST Reference Reading","Numeric", {"is_required": False},
+     "Cooler 1 Thermometer", "Cooler 1 Temperature (NIST)", "numeric"),
 
     # Cooler 2 Thermometer
-    ("Cooler 2 Thermometer - Observed Reading",      "numeric", {"is_required": False},
-     "cooler_2_thermometer", "Cooler 2 Temperature (obs)",  "numeric"),
-    ("Cooler 2 Thermometer - NIST Reference Reading","numeric", {"is_required": False},
-     "cooler_2_thermometer", "Cooler 2 Temperature (NIST)", "numeric"),
+    ("Cooler 2 Thermometer - Observed Reading",      "Numeric", {"is_required": False},
+     "Cooler 2 Thermometer", "Cooler 2 Temperature (obs)",  "numeric"),
+    ("Cooler 2 Thermometer - NIST Reference Reading","Numeric", {"is_required": False},
+     "Cooler 2 Thermometer", "Cooler 2 Temperature (NIST)", "numeric"),
 
     # Pack Room Thermometer
-    ("Pack Room Thermometer - Observed Reading",      "numeric", {"is_required": False},
-     "pack_room_thermometer", "Pack Room Temperature (obs)",  "numeric"),
-    ("Pack Room Thermometer - NIST Reference Reading","numeric", {"is_required": False},
-     "pack_room_thermometer", "Pack Room Temperature (NIST)", "numeric"),
+    ("Pack Room Thermometer - Observed Reading",      "Numeric", {"is_required": False},
+     "Pack Room Thermometer", "Pack Room Temperature (obs)",  "numeric"),
+    ("Pack Room Thermometer - NIST Reference Reading","Numeric", {"is_required": False},
+     "Pack Room Thermometer", "Pack Room Temperature (NIST)", "numeric"),
 
     # Scales 1-9 (range from fsafe_test_name.Scale Calibariton: 498-502)
-    ("Scale 1 - Calibration Reading", "numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
-     "scale_1", "Scale 1", "numeric"),
-    ("Scale 2 - Calibration Reading", "numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
-     "scale_2", "Scale 2", "numeric"),
-    ("Scale 3 - Calibration Reading", "numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
-     "scale_3", "Scale 3", "numeric"),
-    ("Scale 4 - Calibration Reading", "numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
-     "scale_4", "Scale 4", "numeric"),
-    ("Scale 5 - Calibration Reading", "numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
-     "scale_5", "Scale 5", "numeric"),
-    ("Scale 6 - Calibration Reading", "numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
-     "scale_6", "Scale 6", "numeric"),
-    ("Scale 7 - Calibration Reading", "numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
-     "scale_7", "Scale 7", "numeric"),
-    ("Scale 8 - Calibration Reading", "numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
-     "scale_8", "Scale 8", "numeric"),
-    ("Scale 9 - Calibration Reading", "numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
-     "scale_9", "Scale 9", "numeric"),
+    ("Scale 1 - Calibration Reading", "Numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
+     "Scale 1", "Scale 1", "numeric"),
+    ("Scale 2 - Calibration Reading", "Numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
+     "Scale 2", "Scale 2", "numeric"),
+    ("Scale 3 - Calibration Reading", "Numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
+     "Scale 3", "Scale 3", "numeric"),
+    ("Scale 4 - Calibration Reading", "Numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
+     "Scale 4", "Scale 4", "numeric"),
+    ("Scale 5 - Calibration Reading", "Numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
+     "Scale 5", "Scale 5", "numeric"),
+    ("Scale 6 - Calibration Reading", "Numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
+     "Scale 6", "Scale 6", "numeric"),
+    ("Scale 7 - Calibration Reading", "Numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
+     "Scale 7", "Scale 7", "numeric"),
+    ("Scale 8 - Calibration Reading", "Numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
+     "Scale 8", "Scale 8", "numeric"),
+    ("Scale 9 - Calibration Reading", "Numeric", {"minimum_value": 498, "maximum_value": 502, "is_required": False},
+     "Scale 9", "Scale 9", "numeric"),
 
     # Luminometer (3 boolean tests, all on the same equipment).
     # Note: sheet column 'Luminometers Internal LED ' has a trailing space — preserved
     # in the lookup, but the question text is cleaned.
-    ("Luminometer - Negative Control Test", "boolean", {"boolean_pass_value": True},
-     "luminometer", "Luminometers Negative", "boolean"),
-    ("Luminometer - Internal LED Test",     "boolean", {"boolean_pass_value": True},
-     "luminometer", "Luminometers Internal LED ", "boolean"),
-    ("Luminometer - Positive Control Test", "boolean", {"boolean_pass_value": True},
-     "luminometer", "Luminometers Positive", "boolean"),
+    ("Luminometer - Negative Control Test", "Boolean", {"boolean_pass_value": True},
+     "Luminometer", "Luminometers Negative", "boolean"),
+    ("Luminometer - Internal LED Test",     "Boolean", {"boolean_pass_value": True},
+     "Luminometer", "Luminometers Internal LED ", "boolean"),
+    ("Luminometer - Positive Control Test", "Boolean", {"boolean_pass_value": True},
+     "Luminometer", "Luminometers Positive", "boolean"),
 ]
 
 
@@ -303,9 +304,7 @@ def upsert_equipment(supabase):
                 "id": eq["id"],
                 "org_id": ORG_ID,
                 "farm_id": eq["farm_id"],
-                "site_id": eq["site_id"],
                 "type": eq["type"],
-                "id": eq["id"],
             }))
     insert_rows(supabase, "org_equipment", rows, upsert=True)
 
@@ -318,8 +317,7 @@ def upsert_templates(supabase):
             "id": farm["template_id"],
             "org_id": ORG_ID,
             "farm_id": farm["farm_id"],
-            "id": farm["template_name"],
-            "org_module_id": "food_safety",
+            "org_module_id": MODULE_ID,
             "description": (
                 f"{farm['sheet_farm']} monthly equipment calibration: thermometers (obs vs NIST), "
                 f"packing scales (498-502 g), and luminometer controls. "
@@ -470,7 +468,7 @@ def migrate_farm(supabase, farm, all_records, q_map, email_map, stub_cache):
             q_id = q_map.get((template_id, q_text))
             if not q_id:
                 continue
-            equipment_id = f"{farm_id}_{eq_suffix}"
+            equipment_id = f"{farm_id} {eq_suffix}"
             pending.append((tracker_idx, q_id, equipment_id, value_kind, r.get(sheet_col)))
 
     print(f"  Building {len(trackers)} trackers")

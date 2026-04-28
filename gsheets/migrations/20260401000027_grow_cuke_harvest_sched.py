@@ -28,7 +28,7 @@ Columns NOT stored (derivable via view):
 
 Linking strategy (earliest wins):
   Sort trackers by start_time ASC. For each, UPDATE grow_harvest_weight
-  SET ops_task_tracker_id = :id WHERE farm_id = 'cuke' AND
+  SET ops_task_tracker_id = :id WHERE farm_id = 'Cuke' AND
   harvest_date = :date AND site_id = :site AND ops_task_tracker_id IS NULL.
   The IS NULL guard means only the first tracker per (date, site) wins.
 
@@ -68,8 +68,8 @@ def get_pg_conn():
     return psycopg2.connect(db_url)
 
 GROW_SHEET_ID = SHEET_IDS.get("grow") or "1VtEecYn-W1pbnIU1hRHfxIpkH2DtK7hj0CpcpiLoziM"
-FARM_ID = "cuke"
-OPS_TASK_ID = "harvesting"
+FARM_ID = "Cuke"
+OPS_TASK_ID = "Harvesting"
 TRACKER_NOTE_MARKER = "Legacy harvest schedule migration"
 
 # ---------------------------------------------------------------------------

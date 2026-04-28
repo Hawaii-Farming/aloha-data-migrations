@@ -65,8 +65,8 @@ from _pg import get_pg_conn, pg_bulk_insert, pg_select_all
 
 
 PLANT_MAP_SHEET_ID = "1ewWyvaXGkRCvZxjUxBOHGY4PKdMHwKeTA5jTIod48LE"
-PLANT_MAP_TAB = "Plant-Map"
-FARM_ID = "cuke"
+PLANT_MAP_TAB = "Sheet1"
+FARM_ID = "Cuke"
 
 
 # ---------------------------------------------------------------------------
@@ -95,19 +95,19 @@ KOHALA_ROW_OFFSET = 100
 GH_CONFIG = {
     # name: (vert, sidewalk, farm_section, blocks_vertical, align_top, merge,
     #        side_order, layout_row, layout_col, layout_stack_pos)
-    "GH1":     (True,  "middle", "JTL", False, False, False, None,                          1, 2, None),
-    "GH2":     (True,  "middle", "JTL", False, False, False, None,                          1, 1, None),
-    "GH3":     (True,  "middle", "JTL", False, False, False, None,                          1, 0, None),
-    "GH4":     (False, "middle", "JTL", False, False, False, ["East", "West"],              0, 0, None),
-    "GH5":     (True,  "middle", "JTL", False, False, False, ["North", "Middle", "South"],  2, 0, None),
-    "GH6":     (True,  "middle", "JTL", False, False, False, ["North", "Middle", "South"],  2, 1, None),
-    "GH7":     (True,  "bottom", "JTL", False, False, True,  None,                          2, 2, 0),
-    "GH8":     (True,  "top",    "JTL", False, True,  True,  None,                          2, 2, 1),
-    "Kona":    (True,  "middle", "BIP", False, False, False, None,                          0, 0, None),
-    "Kohala":  (False, "left",   "BIP", False, False, False, None,                          0, 1, None),
-    "Hamakua": (True,  "top",    "BIP", False, True,  False, None,                          1, 0, None),
-    "Waimea":  (False, "left",   "BIP", True,  False, False, None,                          1, 1, None),
-    "Hilo":    (False, "left",   "BIP", False, False, False, None,                          2, 1, None),
+    "GH1":     (True,  "Middle", "JTL", False, False, False, None,                          1, 2, None),
+    "GH2":     (True,  "Middle", "JTL", False, False, False, None,                          1, 1, None),
+    "GH3":     (True,  "Middle", "JTL", False, False, False, None,                          1, 0, None),
+    "GH4":     (False, "Middle", "JTL", False, False, False, ["East", "West"],              0, 0, None),
+    "GH5":     (True,  "Middle", "JTL", False, False, False, ["North", "Middle", "South"],  2, 0, None),
+    "GH6":     (True,  "Middle", "JTL", False, False, False, ["North", "Middle", "South"],  2, 1, None),
+    "GH7":     (True,  "Bottom", "JTL", False, False, True,  None,                          2, 2, 0),
+    "GH8":     (True,  "Top",    "JTL", False, True,  True,  None,                          2, 2, 1),
+    "Kona":    (True,  "Middle", "BIP", False, False, False, None,                          0, 0, None),
+    "Kohala":  (False, "Left",   "BIP", False, False, False, None,                          0, 1, None),
+    "Hamakua": (True,  "Top",    "BIP", False, True,  False, None,                          1, 0, None),
+    "Waimea":  (False, "Left",   "BIP", True,  False, False, None,                          1, 1, None),
+    "Hilo":    (False, "Left",   "BIP", False, False, False, None,                          2, 1, None),
 }
 
 
@@ -476,7 +476,7 @@ def migrate_cuke_seed_batches(supabase):
       id, org_id, site_id, ops_task_tracker_id, grow_trial_type_id,
       invnt_item_id, invnt_lot_id, seeding_date, transplant_date,
       status, notes, created_at/by, updated_at/by, is_deleted -> copied verbatim
-      farm_id                 -> forced to 'cuke' (guard)
+      farm_id                 -> forced to 'Cuke' (guard)
       seeds                   -> number_of_units * seeds_per_unit
       rows_4_per_bag          -> -1 (historical sentinel)
       rows_5_per_bag          -> -1 (historical sentinel)
@@ -484,7 +484,7 @@ def migrate_cuke_seed_batches(supabase):
       batch_code              -> dropped (not kept in the new table)
       grow_cycle_pattern_id   -> dropped (always null for cuke)
       grow_lettuce_seed_mix_id -> dropped (cuke never uses seed mixes)
-      seeding_uom             -> dropped (always 'bag' for cuke)
+      seeding_uom             -> dropped (always 'Bag' for cuke)
       number_of_units         -> dropped (rolled into seeds)
       seeds_per_unit          -> dropped (rolled into seeds)
       number_of_rows          -> dropped (always -1 sentinel today)
@@ -501,7 +501,7 @@ def migrate_cuke_seed_batches(supabase):
                    status, notes,
                    created_at, created_by, updated_at, updated_by, is_deleted
             FROM grow_lettuce_seed_batch
-            WHERE farm_id = 'cuke' AND is_deleted = false
+            WHERE farm_id = 'Cuke' AND is_deleted = false
             """,
         )
 

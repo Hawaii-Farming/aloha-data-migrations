@@ -9,12 +9,12 @@ database but no longer carries any schema of its own.
 | Folder | Purpose |
 |---|---|
 | `supabase/migrations/` | **Authoritative DDL.** Tables, RLS policies, functions, triggers, views, seeds — every change to the database goes through here. CI auto-applies on merge to `main` (`.github/workflows/deploy-schema.yml`). |
-| `supabase/config.toml`, `supabase/seed/`, `supabase/templates/` | Supabase CLI config, local-dev seeds, and auth email templates. |
-| `migrations/` | Python ETL scripts that pull data from Google Sheets into Supabase nightly. See `_run_nightly.py`. |
-| `processes/` | Ongoing operational workflows (e.g. payroll). Run on a schedule or on-demand. |
-| `python/` | Older one-off process scripts. Kept for reference. |
-| `sql/` | One-shot SQL deploys (view contracts, test data seeding) run ad-hoc via Supabase SQL Editor. Not part of the migration history. |
-| `MIGRATION_CONVENTIONS.md` | The rules every Python data-migration script must follow. |
+| `supabase/config.toml` | Supabase CLI config. |
+| `gsheets/migrations/` | Python ETL scripts that pull data from Google Sheets into Supabase nightly. See `_run_nightly.py`. |
+| `docs/modules/` | Module-level frontend data-source briefs (e.g. `hr.md`). |
+| `docs/processes/` | Workflow / process documentation. |
+| `scripts/` | Helper shell scripts (e.g. `gen-types.sh`). |
+| `generated/` | Generated artifacts (TypeScript types from the schema). |
 
 ## Setup
 
@@ -33,11 +33,14 @@ The service key can be found in the Supabase Dashboard → Settings → API.
 
 ```bash
 # From the repo root:
-python migrations/20260401000008_fsafe.py
+python gsheets/migrations/20260401000008_fsafe.py
+
+# Or run the full nightly batch:
+python gsheets/migrations/_run_nightly.py
 ```
 
 Each script is **idempotent** (clear-and-reinsert) and **logs partial-failure
-recovery info** if a batch fails. See `MIGRATION_CONVENTIONS.md` for the rules.
+recovery info** if a batch fails.
 
 ## Safety
 

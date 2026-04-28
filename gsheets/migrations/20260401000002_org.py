@@ -139,8 +139,8 @@ def migrate_org_farm(supabase, gc):
     values = ws.col_values(1)[1:]  # skip header
 
     farm_defaults = {
-        "cuke": {"weighing_uom": "pound", "growing_uom": "bag", "volume_uom": "gallon"},
-        "lettuce": {"weighing_uom": "pound", "growing_uom": "board", "volume_uom": "gallon"},
+        "cuke": {"weighing_uom": "Pound", "growing_uom": "Bag", "volume_uom": "Gallon"},
+        "lettuce": {"weighing_uom": "Pound", "growing_uom": "Board", "volume_uom": "Gallon"},
     }
 
     rows = []

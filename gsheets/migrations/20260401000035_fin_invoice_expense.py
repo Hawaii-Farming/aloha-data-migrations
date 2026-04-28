@@ -46,7 +46,7 @@ SHEET_ID = "124y8JdWXmbf_hb1vfimHmGaKLVXrRHybw02w_ozCExE"
 INVOICE_TABS = ["invoices_23-25", "invoices_2025"]
 EXPENSE_TABS = ["expenses_2019-25", "expense_2026"]
 
-FARM_MAP = {"cuke": "cuke", "lettuce": "lettuce"}
+FARM_MAP = {"cuke": "Cuke", "lettuce": "Lettuce"}
 
 
 # ---------------------------------------------------------------------------

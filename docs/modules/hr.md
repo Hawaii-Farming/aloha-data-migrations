@@ -26,18 +26,18 @@
 - **Embed:** `hr_employee` via named FKs `fk_hr_time_off_request_employee`, `fk_hr_time_off_request_requested_by`, `fk_hr_time_off_request_reviewed_by`
 
 ### 4. Payroll Comp (`payroll_comp`)
-- **Data sits in:** `hr_payroll` + `ops_task_schedule` + `ops_task`
-- **Read from:** `hr_payroll_schedule_comparison` — one row per `(check_date, employee, qb_account)`; payroll hours/pay pre-split by each bucket's share of scheduled hours
+- **Data sits in:** `hr_payroll` + `ops_task_schedule` + `ops_task` (allocated through `hr_payroll_by_task`)
+- **Read from:** `hr_payroll_employee_comparison` — one row per `(employee, task)` for the most recent `is_standard=TRUE` HRB `check_date`, with deltas vs the prior `is_standard=TRUE` check_date. Off-cycle / adjustment runs (`is_standard=FALSE`) do not advance the period. Previous-period values are inferable as `current − delta`; previous date is fixed by the pay cadence
 - **Write to:** read-only (derived). To influence output, mutate `hr_payroll` (payroll imports), `ops_task_schedule` (schedule edits), or `ops_task.qb_account` (account mapping)
 - **Visibility rules (enforce in the loader / server route):**
 
   | Access level | Rows visible | Columns visible |
   |---|---|---|
-  | `employee`, `team_lead` | all employees in the org | hours columns only (`scheduled_hours`, `total_hours`, `regular_hours`, `discretionary_overtime_hours`) — **redact the dollar columns** (`total_cost`, `regular_pay`, `discretionary_overtime_pay`) |
-  | `manager` | only rows where the employee's `compensation_manager_name` resolves to this user's `hr_employee.name` | hours **and** dollars |
+  | `employee`, `team_lead` | all employees in the org | hours and delta-hours columns only (`scheduled_hours`, `total_hours`, `discretionary_overtime_hours`, `hours_delta`) — **redact the dollar columns** (`total_cost`, `regular_pay`, `discretionary_overtime_pay`, `total_cost_delta`, `regular_pay_delta`, `discretionary_overtime_pay_delta`, `other_pay_delta`) |
+  | `manager` | only rows where `compensation_manager_id` equals this user's `hr_employee.id` | hours **and** dollars |
   | `admin`, `owner` | all rows | hours and dollars |
 
-  The view itself does not apply these filters — it returns everything. The module loader (server-side) must (a) resolve the current user's access level and employee id, (b) add the `compensation_manager_name` filter for managers, and (c) project away the dollar columns for employees and team leads before the payload reaches the client.
+  The view itself does not apply these filters — it returns everything. The module loader (server-side) must (a) resolve the current user's access level and employee id, (b) add the `compensation_manager_id` filter for managers, and (c) project away the dollar columns for employees and team leads before the payload reaches the client.
 
 ### 5. Payroll Data (`payroll_data`)
 - **Data sits in:** `hr_payroll`
@@ -65,5 +65,5 @@
 - **Soft deletes everywhere:** filter `is_deleted = false` on every HR table.
 - **Named FKs matter:** `hr_time_off_request` and `hr_employee_review` each have multiple FKs to `hr_employee`. Embeds must use the FK alias (`!fk_…_…`) or PostgREST returns a 400.
 - **Writes are server-only:** no INSERT/UPDATE/DELETE RLS on most HR tables. Mutations go through a server route using the service_role key; `can_edit` / `can_delete` / `can_verify` from `hr_module_access` are enforced in application code.
-- **Lunch break convention:** both `ops_task_weekly_schedule` and `hr_payroll_schedule_comparison` subtract 0.5 hr when a shift crosses noon (start `<` 12:00 AND stop `>` 12:00). Do not re-apply client-side.
+- **Lunch break convention:** `ops_task_weekly_schedule` and the schedule allocation feeding `hr_payroll_by_task` (and therefore `hr_payroll_employee_comparison`) subtract 0.5 hr when a shift crosses noon (start `<` 12:00 AND stop `>` 12:00). Do not re-apply client-side.
 - **RBAC current state:** 6 of 7 enabled HR sub-modules require `manager` or `admin`. The exception is **Payroll Comp**, which needs to be opened up to `employee` and `team_lead` with column-level redaction (see section 4). Without that change, employees and team leads still see an empty sidebar.

@@ -34,6 +34,7 @@ from gsheets.migrations._config import (
     ORG_ID,
     SHEET_IDS,
     SUPABASE_URL,
+    proper_case,
     require_supabase_key,
 )
 
@@ -47,7 +48,7 @@ BUILDING_SITE_MAP = {
 }
 
 ZONE_MAP = {
-    "1": "zone_1", "2": "zone_2", "3": "zone_3", "4": "zone_4", "water": "water",
+    "1": "Zone 1", "2": "Zone 2", "3": "Zone 3", "4": "Zone 4", "water": "Water",
 }
 
 PEST_SITE_MAP = {
@@ -60,11 +61,6 @@ PEST_SITE_MAP = {
 
 def to_id(name: str) -> str:
     return re.sub(r"[^a-z0-9_]+", "_", name.lower()).strip("_") if name else ""
-
-def proper_case(val):
-    if not val or not str(val).strip():
-        return val
-    return str(val).strip().title()
 
 def audit(row: dict) -> dict:
     row["created_by"] = AUDIT_USER

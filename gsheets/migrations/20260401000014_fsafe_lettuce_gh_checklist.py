@@ -45,63 +45,62 @@ from gsheets.migrations._config import (
 from gsheets.migrations._pg import paginate_select
 
 FSAFE_SHEET_ID = SHEET_IDS["fsafe"]
-TASK_ID = "food_safety_log"
-FARM_ID = "lettuce"
+TASK_ID = "Food Safety Log"
+FARM_ID = "Lettuce"
 SITE_ID = "gh"  # Lettuce GH parent site
-ATP_LAB_ID = "hf"
-ATP_TEST_ID = "atp_rlu"
+ATP_LAB_ID = "HF"
+ATP_TEST_ID = "ATP RLU"
+MODULE_ID = "Food Safety"
 
 # ---------------------------------------------------------------------------
 # Question definitions
 # ---------------------------------------------------------------------------
 
 GH_PRE_QUESTIONS = [
-    ("No Animal Intrusion",                "boolean", {"boolean_pass_value": True}),
-    ("Greenhouse Structure Intact",        "boolean", {"boolean_pass_value": True}),
-    ("Harvest Conveyor Clean",             "boolean", {"boolean_pass_value": True}),
-    ("Radius Conveyor Clean",              "boolean", {"boolean_pass_value": True}),
-    ("Post Harvest Conveyor Clean",        "boolean", {"boolean_pass_value": True}),
-    ("Harvester Clean",                    "boolean", {"boolean_pass_value": True}),
-    ("Harvest Carts Clean",                "boolean", {"boolean_pass_value": True}),
-    ("Bins Clean and Intact",              "boolean", {"boolean_pass_value": True}),
-    ("Raft Washer Clean",                  "boolean", {"boolean_pass_value": True}),
-    ("Rafts Stored Properly",              "boolean", {"boolean_pass_value": True}),
-    ("Sink Clean",                         "boolean", {"boolean_pass_value": True}),
-    ("Drain Clean",                        "boolean", {"boolean_pass_value": True}),
-    ("Hairnets Worn",                      "boolean", {"boolean_pass_value": True}),
-    ("No Jewelry and FS PPEs Worn",        "boolean", {"boolean_pass_value": True}),
-    ("General Housekeeping Acceptable",    "boolean", {"boolean_pass_value": True}),
-    ("PHI Satisfied",                      "boolean", {"boolean_pass_value": True}),
-    ("Doors Closed",                       "boolean", {"boolean_pass_value": True}),
-    ("Approved to Harvest",                "boolean", {"boolean_pass_value": True}),
-    ("Foot Dip Concentration",             "numeric", {"minimum_value": 800, "maximum_value": 1000}),
+    ("No Animal Intrusion",                "Boolean", {"boolean_pass_value": True}),
+    ("Greenhouse Structure Intact",        "Boolean", {"boolean_pass_value": True}),
+    ("Harvest Conveyor Clean",             "Boolean", {"boolean_pass_value": True}),
+    ("Radius Conveyor Clean",              "Boolean", {"boolean_pass_value": True}),
+    ("Post Harvest Conveyor Clean",        "Boolean", {"boolean_pass_value": True}),
+    ("Harvester Clean",                    "Boolean", {"boolean_pass_value": True}),
+    ("Harvest Carts Clean",                "Boolean", {"boolean_pass_value": True}),
+    ("Bins Clean and Intact",              "Boolean", {"boolean_pass_value": True}),
+    ("Raft Washer Clean",                  "Boolean", {"boolean_pass_value": True}),
+    ("Rafts Stored Properly",              "Boolean", {"boolean_pass_value": True}),
+    ("Sink Clean",                         "Boolean", {"boolean_pass_value": True}),
+    ("Drain Clean",                        "Boolean", {"boolean_pass_value": True}),
+    ("Hairnets Worn",                      "Boolean", {"boolean_pass_value": True}),
+    ("No Jewelry and FS PPEs Worn",        "Boolean", {"boolean_pass_value": True}),
+    ("General Housekeeping Acceptable",    "Boolean", {"boolean_pass_value": True}),
+    ("PHI Satisfied",                      "Boolean", {"boolean_pass_value": True}),
+    ("Doors Closed",                       "Boolean", {"boolean_pass_value": True}),
+    ("Approved to Harvest",                "Boolean", {"boolean_pass_value": True}),
+    ("Foot Dip Concentration",             "Numeric", {"minimum_value": 800, "maximum_value": 1000}),
 ]
 
 GH_POST_QUESTIONS = [
-    ("Harvest Conveyor Clean",             "boolean", {"boolean_pass_value": True}),
-    ("Radius Conveyor Clean",              "boolean", {"boolean_pass_value": True}),
-    ("Post Harvest Conveyor Clean",        "boolean", {"boolean_pass_value": True}),
-    ("Harvester Clean",                    "boolean", {"boolean_pass_value": True}),
-    ("Harvest Carts Clean",                "boolean", {"boolean_pass_value": True}),
-    ("Raft Washer Clean",                  "boolean", {"boolean_pass_value": True}),
-    ("Sink Clean",                         "boolean", {"boolean_pass_value": True}),
-    ("Drain Clean",                        "boolean", {"boolean_pass_value": True}),
-    ("Floor Cleaned",                      "boolean", {"boolean_pass_value": True}),
-    ("Foot Dip Concentration",             "numeric", {"minimum_value": 800, "maximum_value": 1000}),
-    ("Equipment Sanitizer Concentration",  "numeric", {"minimum_value": 200, "maximum_value": 400}),
+    ("Harvest Conveyor Clean",             "Boolean", {"boolean_pass_value": True}),
+    ("Radius Conveyor Clean",              "Boolean", {"boolean_pass_value": True}),
+    ("Post Harvest Conveyor Clean",        "Boolean", {"boolean_pass_value": True}),
+    ("Harvester Clean",                    "Boolean", {"boolean_pass_value": True}),
+    ("Harvest Carts Clean",                "Boolean", {"boolean_pass_value": True}),
+    ("Raft Washer Clean",                  "Boolean", {"boolean_pass_value": True}),
+    ("Sink Clean",                         "Boolean", {"boolean_pass_value": True}),
+    ("Drain Clean",                        "Boolean", {"boolean_pass_value": True}),
+    ("Floor Cleaned",                      "Boolean", {"boolean_pass_value": True}),
+    ("Foot Dip Concentration",             "Numeric", {"minimum_value": 800, "maximum_value": 1000}),
+    ("Equipment Sanitizer Concentration",  "Numeric", {"minimum_value": 200, "maximum_value": 400}),
 ]
 
 TEMPLATES = [
     {
-        "id": "lettuce_gh_pre_ops",
-        "name": "GH Pre Ops",
+        "id": "Lettuce GH Pre Ops",
         "tab": "fsafe_log_L_gh_pre",
         "questions": GH_PRE_QUESTIONS,
         "description": "Lettuce greenhouse pre-operations checklist (migrated from legacy fsafe sheet)",
     },
     {
-        "id": "lettuce_gh_post_ops",
-        "name": "GH Post Ops",
+        "id": "Lettuce GH Post Ops",
         "tab": "fsafe_log_L_gh_post",
         "questions": GH_POST_QUESTIONS,
         "description": "Lettuce greenhouse post-operations cleanup checklist (migrated from legacy fsafe sheet)",
@@ -348,8 +347,7 @@ def upsert_templates(supabase):
             "id": t["id"],
             "org_id": ORG_ID,
             "farm_id": FARM_ID,
-            "id": t["name"],
-            "org_module_id": "food_safety",
+            "org_module_id": MODULE_ID,
             "description": t["description"],
             "display_order": next_order,
         }))

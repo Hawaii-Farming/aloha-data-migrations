@@ -28,8 +28,8 @@ CREATE TABLE IF NOT EXISTS grow_harvest_weight (
 COMMENT ON TABLE grow_harvest_weight IS 'Individual weigh-in for a harvest. One row per container type weighed. Links directly to the seeding batch for traceability. Tare is calculated on the fly from grow_harvest_container.tare_weight × number_of_containers.';
 
 COMMENT ON COLUMN grow_harvest_weight.site_id IS 'Growing site being harvested; pre-filled from the seed batch.site_id';
-COMMENT ON COLUMN grow_harvest_weight.grow_lettuce_seed_batch_id IS 'The lettuce seeding batch being harvested. Populated when farm_id = lettuce; null for cuke';
-COMMENT ON COLUMN grow_harvest_weight.grow_cuke_seed_batch_id IS 'The cuke seeding batch being harvested. Populated when farm_id = cuke; null for lettuce';
+COMMENT ON COLUMN grow_harvest_weight.grow_lettuce_seed_batch_id IS 'The lettuce seeding batch being harvested. Populated when farm_id = Lettuce; null for Cuke';
+COMMENT ON COLUMN grow_harvest_weight.grow_cuke_seed_batch_id IS 'The cuke seeding batch being harvested. Populated when farm_id = Cuke; null for Lettuce';
 COMMENT ON COLUMN grow_harvest_weight.grow_grade_id IS 'Grade assigned to this harvest (e.g. Grade A, Grade B)';
 COMMENT ON COLUMN grow_harvest_weight.grow_harvest_container_id IS 'Container type used for this weigh-in; drives tare weight calculation';
 COMMENT ON COLUMN grow_harvest_weight.weight_uom IS 'Pre-filled from grow_harvest_container.weight_uom; editable';

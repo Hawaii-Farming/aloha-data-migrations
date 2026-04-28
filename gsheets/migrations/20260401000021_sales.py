@@ -43,16 +43,15 @@ SALES_SHEET_ID = "1lSWWLxyD0l83HfuiNI_iud6F9hopY4hoL0F_4P9nATc"
 # STANDARD HELPERS
 # ─────────────────────────────────────────────────────────────
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
+from gsheets.migrations._config import proper_case  # noqa: E402
+
+
 def to_id(name: str) -> str:
     """Convert a display name to a TEXT PK."""
     return re.sub(r"[^a-z0-9_]+", "_", name.lower()).strip("_") if name else ""
-
-
-def proper_case(val):
-    """Normalize a string to title case, stripping extra whitespace."""
-    if not val or not str(val).strip():
-        return val
-    return str(val).strip().title()
 
 
 def safe_numeric(val, default=0):
@@ -108,9 +107,8 @@ def migrate_sales_fob(supabase, gc):
         if not name:
             continue
         rows.append(audit({
-            "id": to_id(name),
-            "org_id": ORG_ID,
             "id": proper_case(name),
+            "org_id": ORG_ID,
         }))
 
     insert_rows(supabase, "sales_fob", rows)
@@ -136,9 +134,8 @@ def migrate_sales_customer(supabase, gc):
 
     group_rows = [
         audit({
-            "id": to_id(g),
-            "org_id": ORG_ID,
             "id": proper_case(g),
+            "org_id": ORG_ID,
         })
         for g in groups
     ]
@@ -156,7 +153,7 @@ def migrate_sales_customer(supabase, gc):
         if not name:
             continue
 
-        cust_id = to_id(name)
+        cust_id = proper_case(name)
         if cust_id in seen:
             continue
         seen.add(cust_id)
@@ -167,7 +164,7 @@ def migrate_sales_customer(supabase, gc):
 
         # Customer group
         group_name = str(r.get("CustomerGroup", "")).strip()
-        group_id = to_id(group_name) if group_name else None
+        group_id = proper_case(group_name) if group_name else None
 
         # QB account from CustomerID
         qb_account = str(r.get("CustomerID", "")).strip() or None
@@ -192,7 +189,6 @@ def migrate_sales_customer(supabase, gc):
             "sales_customer_group_id": group_id,
             "sales_fob_id": fob_id,
             "qb_account": qb_account,
-            "id": proper_case(name),
             "email": email,
             "cc_emails": cc_emails,
         }))
@@ -219,9 +215,8 @@ def migrate_sales_container_type(supabase, gc):
             continue
 
         rows.append(audit({
-            "id": to_id(name),
-            "org_id": ORG_ID,
             "id": proper_case(name),
+            "org_id": ORG_ID,
             "maximum_spaces": spaces,
         }))
 
@@ -268,8 +263,7 @@ def migrate_sales_product_price(supabase, gc):
             skipped += 1
             continue
 
-        farm_id = str(r.get("Farm", "")).strip()
-        farm_id = to_id(farm_id)
+        farm_id = proper_case(str(r.get("Farm", "")).strip())
         sales_product_id = product_code
 
         # FOB

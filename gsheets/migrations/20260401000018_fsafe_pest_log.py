@@ -52,7 +52,7 @@ from gsheets.migrations._config import (
 from gsheets.migrations._pg import get_pg_conn, paginate_select, pg_bulk_insert
 
 FSAFE_SHEET_ID = SHEET_IDS["fsafe"]
-TASK_ID = "pest_trap_inspection"
+TASK_ID = "Pest Trap Inspection"
 
 
 # ---------------------------------------------------------------------------
@@ -326,7 +326,9 @@ def migrate(supabase, gc, email_map, stub_cache):
         if len(station_codes) > 1:
             fanned_out += 1
 
-        farm_id = farm_raw.lower()  # 'cuke' / 'lettuce'
+        farm_id = {"cuke": "Cuke", "lettuce": "Lettuce"}.get(farm_raw.lower())
+        if not farm_id:
+            continue
 
         for station in station_codes:
             trap_id = build_trap_id(farm_raw, site_raw, station)
@@ -337,7 +339,7 @@ def migrate(supabase, gc, email_map, stub_cache):
             parent_site = trap.get("site_id_parent")
             if not parent_site:
                 # Trap has no parent — fall back to the farm parent (gh/bip)
-                parent_site = "gh" if farm_id == "lettuce" else "bip"
+                parent_site = "gh" if farm_id == "Lettuce" else "bip"
 
             # Pre-generate tracker UUID so we can assign it to the
             # pest_result row without a DB roundtrip.

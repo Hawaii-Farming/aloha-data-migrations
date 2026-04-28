@@ -59,30 +59,30 @@ from gsheets.migrations._pg import get_pg_conn, paginate_select, pg_bulk_insert
 GROW_SHEET_ID = SHEET_IDS.get("grow") or "1VtEecYn-W1pbnIU1hRHfxIpkH2DtK7hj0CpcpiLoziM"
 NOTES_MARKER = "Legacy spraying migration"
 
-OPS_TASK_ID = "spraying"
+OPS_TASK_ID = "Spraying"
 PESTICIDE_CATEGORY_ID = "chemicals_pesticides"
 
-# Sheet Units -> sys_uom.code
+# Sheet Units -> sys_uom IDs (Proper Case)
 UOM_MAP = {
-    "gallon": "gallon", "gallons": "gallon",
-    "fluid_ounce": "fluid_ounce", "fluid ounce": "fluid_ounce", "fl oz": "fluid_ounce",
-    "ounce": "ounce", "ounces": "ounce", "oz": "ounce",
-    "pound": "pound", "pounds": "pound", "lb": "pound",
-    "gram": "gram", "grams": "gram", "g": "gram",
-    "kilogram": "kilogram", "kilograms": "kilogram", "kg": "kilogram",
-    "liter": "liter", "liters": "liter", "l": "liter",
-    "milliliter": "milliliter", "milliliters": "milliliter", "ml": "milliliter",
+    "gallon": "Gallon", "gallons": "Gallon",
+    "fluid_ounce": "Fluid Ounce", "fluid ounce": "Fluid Ounce", "fl oz": "Fluid Ounce",
+    "ounce": "Ounce", "ounces": "Ounce", "oz": "Ounce",
+    "pound": "Pound", "pounds": "Pound", "lb": "Pound",
+    "gram": "Gram", "grams": "Gram", "g": "Gram",
+    "kilogram": "Kilogram", "kilograms": "Kilogram", "kg": "Kilogram",
+    "liter": "Liter", "liters": "Liter", "l": "Liter",
+    "milliliter": "Milliliter", "milliliters": "Milliliter", "ml": "Milliliter",
 }
 
 # Sprayer name (lowercase) -> (equipment_id suffix, org_equipment.type)
 SPRAYER_MAP = {
-    "fogger": ("fogger", "fogger"),
-    "fogger 1": ("fogger_1", "fogger"),
-    "fogger 2": ("fogger_2", "fogger"),
-    "tank 1": ("spray_tank_1", "bag_pack_sprayer"),
-    "tank 2": ("spray_tank_2", "bag_pack_sprayer"),
-    "tank 3": ("spray_tank_3", "bag_pack_sprayer"),
-    "backpack sprayer": ("backpack_sprayer", "bag_pack_sprayer"),
+    "fogger":            ("Fogger",          "Fogger"),
+    "fogger 1":          ("Fogger 1",        "Fogger"),
+    "fogger 2":          ("Fogger 2",        "Fogger"),
+    "tank 1":            ("Spray Tank 1",    "Bag Pack Sprayer"),
+    "tank 2":            ("Spray Tank 2",    "Bag Pack Sprayer"),
+    "tank 3":            ("Spray Tank 3",    "Bag Pack Sprayer"),
+    "backpack sprayer":  ("Backpack Sprayer","Bag Pack Sprayer"),
 }
 
 
@@ -182,7 +182,7 @@ def normalize_site(raw: str) -> str:
 
 def resolve_farm(raw: str) -> str | None:
     s = str(raw).strip().lower()
-    return s if s in ("cuke", "lettuce") else None
+    return {"cuke": "Cuke", "lettuce": "Lettuce"}.get(s)
 
 
 def split_targets(raw: str) -> list[str]:
@@ -204,7 +204,7 @@ def sprayer_equipment_id(farm: str, sprayer_name: str) -> tuple[str | None, str 
     key = sprayer_name.strip().lower()
     if key in SPRAYER_MAP:
         suffix, eq_type = SPRAYER_MAP[key]
-        return f"{farm}_{suffix}", eq_type
+        return f"{farm} {suffix}", eq_type
     # Unknown sprayer — return None to skip equipment creation
     return None, None
 
@@ -215,7 +215,7 @@ def sprayer_equipment_id(farm: str, sprayer_name: str) -> tuple[str | None, str 
 
 def build_item_lookup(supabase, sheet_records):
     """Return dict (farm, name_lower) -> invnt_item.id. Auto-creates missing."""
-    existing = paginate_select(supabase, "invnt_item", "id,name,farm_id,invnt_category_id")
+    existing = paginate_select(supabase, "invnt_item", "id,farm_id,invnt_category_id")
     by_farm_name = {}
     for it in existing:
         by_farm_name[(it["farm_id"], it["id"].lower())] = it["id"]
@@ -251,11 +251,11 @@ def build_item_lookup(supabase, sheet_records):
     used_ids = set(by_farm_name.values())
     rows = []
     for (farm, _), spec in needed.items():
-        base_id = to_id(spec["name"])
+        base_id = spec["name"]
         final_id = base_id
         n = 2
         while final_id in used_ids:
-            final_id = f"{base_id}_{n}"
+            final_id = f"{base_id} ({n})"
             n += 1
         used_ids.add(final_id)
         by_farm_name[(farm, spec["name"].lower())] = final_id
@@ -264,12 +264,11 @@ def build_item_lookup(supabase, sheet_records):
             "org_id": ORG_ID,
             "farm_id": farm,
             "invnt_category_id": PESTICIDE_CATEGORY_ID,
-            "name": spec["name"],
             "qb_account": "1. Growing:Chemicals/Pesticides",
             "description": None,
-            "burn_uom": "fluid_ounce",
-            "onhand_uom": "fluid_ounce",
-            "order_uom": "fluid_ounce",
+            "burn_uom": "Fluid Ounce",
+            "onhand_uom": "Fluid Ounce",
+            "order_uom": "Fluid Ounce",
             "burn_per_onhand": 1,
             "burn_per_order": 1,
             "is_palletized": False,
@@ -329,7 +328,6 @@ def ensure_sprayer_equipment(supabase, sheet_records):
             "id": eid,
             "org_id": ORG_ID,
             "farm_id": spec["farm"],
-            "name": spec["name"],
             "type": spec["type"],
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,
@@ -370,7 +368,7 @@ def ensure_compliance_records(supabase, sheet_records, item_lookup):
             phi = parse_int(r.get("PHIDays"), default=0) or 0
             rei = parse_int(r.get("REIlHours"), default=0) or 0
             targets = split_targets(r.get(f"Product0{i}Target"))
-            uom = normalize_uom(r.get(f"Product0{i}Units")) or "fluid_ounce"
+            uom = normalize_uom(r.get(f"Product0{i}Units")) or "Fluid Ounce"
             qty_per_acre = parse_numeric(r.get(f"Product0{i}Quantity"), default=-1) or -1
 
             needed[(farm, item_id)] = {
@@ -546,7 +544,7 @@ def build_event_rows(
         if not compliance_id:
             input_skip_reasons.append(f"no_compliance:{name}")
             continue
-        uom = normalize_uom(sheet_row.get(f"Product0{i}Units")) or "fluid_ounce"
+        uom = normalize_uom(sheet_row.get(f"Product0{i}Units")) or "Fluid Ounce"
         qty = parse_numeric(sheet_row.get(f"Product0{i}Quantity"), default=0) or 0
         targets = split_targets(sheet_row.get(f"Product0{i}Target"))
 
@@ -582,7 +580,7 @@ def build_event_rows(
                     "farm_id": farm,
                     "ops_task_tracker_id": tracker_id,
                     "equipment_id": None,
-                    "water_uom": "gallon",
+                    "water_uom": "Gallon",
                     "water_quantity": water_per,
                     "created_by": created_by,
                     "updated_by": created_by,
@@ -593,7 +591,7 @@ def build_event_rows(
                     "farm_id": farm,
                     "ops_task_tracker_id": tracker_id,
                     "equipment_id": eid,
-                    "water_uom": "gallon",
+                    "water_uom": "Gallon",
                     "water_quantity": water_per,
                     "created_by": created_by,
                     "updated_by": created_by,
@@ -605,7 +603,7 @@ def build_event_rows(
             "farm_id": farm,
             "ops_task_tracker_id": tracker_id,
             "equipment_id": None,
-            "water_uom": "gallon",
+            "water_uom": "Gallon",
             "water_quantity": water_total,
             "created_by": created_by,
             "updated_by": created_by,
@@ -637,7 +635,7 @@ def main():
     sites = paginate_select(supabase, "org_site", "id,farm_id,org_site_subcategory_id")
     known_sites = {
         s["id"] for s in sites
-        if s.get("farm_id") in ("cuke", "lettuce")
+        if s.get("farm_id") in ("Cuke", "Lettuce")
         and s.get("org_site_subcategory_id") in ("greenhouse", "pond", None)
     }
     print(f"\n  Known cuke/lettuce sites: {len(known_sites)}")

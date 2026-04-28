@@ -53,11 +53,12 @@ from gsheets.migrations._config import (
 from gsheets.migrations._pg import paginate_select
 
 FSAFE_SHEET_ID = SHEET_IDS["fsafe"]
-TASK_ID = "food_safety_log"
-FARM_ID = "cuke"
+TASK_ID = "Food Safety Log"
+FARM_ID = "Cuke"
 SITE_ID = "bip_ph"  # Cuke packhouse parent site
-ATP_LAB_ID = "hf"   # Existing Hawaii Farming internal lab
-ATP_TEST_ID = "atp_rlu"
+ATP_LAB_ID = "HF"   # Existing Hawaii Farming internal lab
+ATP_TEST_ID = "ATP RLU"
+MODULE_ID = "Food Safety"
 
 # ---------------------------------------------------------------------------
 # Question definitions
@@ -69,82 +70,80 @@ ATP_TEST_ID = "atp_rlu"
 
 PH_PRE_QUESTIONS = [
     # Restroom block (drops off mid-history -> not required)
-    ("Toilets Works",                       "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Toilets Clean",                       "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Toilet Papers Stocked",               "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Paper Towels Restocked",              "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Soap Dispensers Refilled",            "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Trash Bins Emptied",                  "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Floor Drains Cleared",                "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Sinks Cleaned",                       "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Floors Swept and Mopped",             "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Mirrors Cleaned",                     "boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Toilets Works",                       "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Toilets Clean",                       "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Toilet Papers Stocked",               "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Paper Towels Restocked",              "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Soap Dispensers Refilled",            "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Trash Bins Emptied",                  "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Floor Drains Cleared",                "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Sinks Cleaned",                       "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Floors Swept and Mopped",             "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Mirrors Cleaned",                     "Boolean", {"boolean_pass_value": True, "is_required": False}),
     # Core packhouse block (always filled)
-    ("No Evidence of Pests",                "boolean", {"boolean_pass_value": True}),
-    ("No Structural Issues",                "boolean", {"boolean_pass_value": True}),
-    ("Doors Closed and Sealed",             "boolean", {"boolean_pass_value": True}),
-    ("Packing Scales Working",              "boolean", {"boolean_pass_value": True}),
-    ("Packing Tables Clean",                "boolean", {"boolean_pass_value": True}),
-    ("Packing Room Clean",                  "boolean", {"boolean_pass_value": True}),
-    ("Coolers Clean",                       "boolean", {"boolean_pass_value": True}),
-    ("Boxes Clean and Stored on Pallets",   "boolean", {"boolean_pass_value": True}),
-    ("Changing and Break Areas Clean",      "boolean", {"boolean_pass_value": True}),
-    ("No Hygiene Issues",                   "boolean", {"boolean_pass_value": True}),
-    ("No Worker Health Issues",             "boolean", {"boolean_pass_value": True}),
-    ("PPE Worn and No Jewelry",             "boolean", {"boolean_pass_value": True}),
-    ("Staff Washing Hands",                 "boolean", {"boolean_pass_value": True}),
+    ("No Evidence of Pests",                "Boolean", {"boolean_pass_value": True}),
+    ("No Structural Issues",                "Boolean", {"boolean_pass_value": True}),
+    ("Doors Closed and Sealed",             "Boolean", {"boolean_pass_value": True}),
+    ("Packing Scales Working",              "Boolean", {"boolean_pass_value": True}),
+    ("Packing Tables Clean",                "Boolean", {"boolean_pass_value": True}),
+    ("Packing Room Clean",                  "Boolean", {"boolean_pass_value": True}),
+    ("Coolers Clean",                       "Boolean", {"boolean_pass_value": True}),
+    ("Boxes Clean and Stored on Pallets",   "Boolean", {"boolean_pass_value": True}),
+    ("Changing and Break Areas Clean",      "Boolean", {"boolean_pass_value": True}),
+    ("No Hygiene Issues",                   "Boolean", {"boolean_pass_value": True}),
+    ("No Worker Health Issues",             "Boolean", {"boolean_pass_value": True}),
+    ("PPE Worn and No Jewelry",             "Boolean", {"boolean_pass_value": True}),
+    ("Staff Washing Hands",                 "Boolean", {"boolean_pass_value": True}),
     # Block added later (~70% fill, not required)
-    ("Harvest Totes Clean and off the Ground", "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Proper Use of Non-Food Totes",        "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Packhouse Sinks Clean",               "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("PackHouse Drain Clean",               "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Tote Sanitizing Stations Clean",      "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Chemical Storage Area Clean",         "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Packing Storage Clean",               "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Truck Bed Clean and Pest Free",       "boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Harvest Totes Clean and off the Ground", "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Proper Use of Non-Food Totes",        "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Packhouse Sinks Clean",               "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("PackHouse Drain Clean",               "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Tote Sanitizing Stations Clean",      "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Chemical Storage Area Clean",         "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Packing Storage Clean",               "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Truck Bed Clean and Pest Free",       "Boolean", {"boolean_pass_value": True, "is_required": False}),
     # Numeric measurements
-    ("Truck Temperature",                   "numeric", {"is_required": False}),
-    ("Cooler 1 Temperature",                "numeric", {"minimum_value": 45, "maximum_value": 60}),
-    ("Cooler 2 Temperature",                "numeric", {"minimum_value": 45, "maximum_value": 60}),
+    ("Truck Temperature",                   "Numeric", {"is_required": False}),
+    ("Cooler 1 Temperature",                "Numeric", {"minimum_value": 45, "maximum_value": 60}),
+    ("Cooler 2 Temperature",                "Numeric", {"minimum_value": 45, "maximum_value": 60}),
 ]
 
 PH_POST_QUESTIONS = [
-    ("Used Totes Cleaned",                          "boolean", {"boolean_pass_value": True}),
-    ("Packing Tables Cleaned",                      "boolean", {"boolean_pass_value": True}),
-    ("Coolers Cleaned",                             "boolean", {"boolean_pass_value": True}),
-    ("Packing Floor Cleaned",                       "boolean", {"boolean_pass_value": True}),
-    ("Finished Product On Pallets and Refrigerated","boolean", {"boolean_pass_value": True}),
-    ("Packing Scales Cleaned",                      "boolean", {"boolean_pass_value": True}),
-    ("Packaging On Pallets and Stored",             "boolean", {"boolean_pass_value": True}),
-    ("Hand Wash Sink Cleaned",                      "boolean", {"boolean_pass_value": True}),
-    ("Restrooms Cleaned",                           "boolean", {"boolean_pass_value": True}),
-    ("Test Strip Is Not Expired",                   "boolean", {"boolean_pass_value": True, "is_required": False}),
-    ("Totes Washed",                                "boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Used Totes Cleaned",                          "Boolean", {"boolean_pass_value": True}),
+    ("Packing Tables Cleaned",                      "Boolean", {"boolean_pass_value": True}),
+    ("Coolers Cleaned",                             "Boolean", {"boolean_pass_value": True}),
+    ("Packing Floor Cleaned",                       "Boolean", {"boolean_pass_value": True}),
+    ("Finished Product On Pallets and Refrigerated","Boolean", {"boolean_pass_value": True}),
+    ("Packing Scales Cleaned",                      "Boolean", {"boolean_pass_value": True}),
+    ("Packaging On Pallets and Stored",             "Boolean", {"boolean_pass_value": True}),
+    ("Hand Wash Sink Cleaned",                      "Boolean", {"boolean_pass_value": True}),
+    ("Restrooms Cleaned",                           "Boolean", {"boolean_pass_value": True}),
+    ("Test Strip Is Not Expired",                   "Boolean", {"boolean_pass_value": True, "is_required": False}),
+    ("Totes Washed",                                "Boolean", {"boolean_pass_value": True, "is_required": False}),
     # Numeric measurements with ranges from fsafe_test_name
-    ("Tote Wash Chlorine Concentration",            "numeric", {"minimum_value": 50,  "maximum_value": 200}),
-    ("Cleaner Dilution Concentration",              "numeric", {"minimum_value": 4,   "maximum_value": 8}),
-    ("Equipment Sanitizer Concentration",           "numeric", {"minimum_value": 200, "maximum_value": 400}),
-    ("Cooler 1 Temperature",                        "numeric", {"minimum_value": 45,  "maximum_value": 60}),
-    ("Cooler 2 Temperature",                        "numeric", {"minimum_value": 45,  "maximum_value": 60}),
+    ("Tote Wash Chlorine Concentration",            "Numeric", {"minimum_value": 50,  "maximum_value": 200}),
+    ("Cleaner Dilution Concentration",              "Numeric", {"minimum_value": 4,   "maximum_value": 8}),
+    ("Equipment Sanitizer Concentration",           "Numeric", {"minimum_value": 200, "maximum_value": 400}),
+    ("Cooler 1 Temperature",                        "Numeric", {"minimum_value": 45,  "maximum_value": 60}),
+    ("Cooler 2 Temperature",                        "Numeric", {"minimum_value": 45,  "maximum_value": 60}),
     # Soft-deleted legacy question — preserves 688 historical TRUE/FALSE values
     # that existed before this column was changed to numeric.
-    ("Cleaner Dilution Concentration (legacy boolean)", "boolean", {
+    ("Cleaner Dilution Concentration (legacy boolean)", "Boolean", {
         "boolean_pass_value": True, "is_required": False, "is_deleted": True,
     }),
 ]
 
 TEMPLATES = [
     {
-        "id": "cuke_ph_pre_ops",
-        "name": "PH Pre Ops",
+        "id": "Cuke PH Pre Ops",
         "tab": "fsafe_log_C_ph_pre",
         "questions": PH_PRE_QUESTIONS,
         "farm_id": FARM_ID,
         "description": "Cuke packhouse pre-operations checklist (migrated from legacy fsafe sheet)",
     },
     {
-        "id": "cuke_ph_post_ops",
-        "name": "PH Post Ops",
+        "id": "Cuke PH Post Ops",
         "tab": "fsafe_log_C_ph_post",
         "questions": PH_POST_QUESTIONS,
         "farm_id": FARM_ID,
@@ -397,12 +396,11 @@ def auto_create_atp_site(supabase, raw_name, candidates):
 # ---------------------------------------------------------------------------
 
 def ensure_atp_lab_test(supabase):
-    print("\n--- fsafe_lab_test (atp_rlu) ---")
+    print("\n--- fsafe_lab_test (ATP RLU) ---")
     row = audit({
         "id": ATP_TEST_ID,
         "org_id": ORG_ID,
         "farm_id": None,
-        "test_name": "ATP RLU",
         "test_methods": [],
         "test_description": "ATP swab — Relative Light Units. Used to verify cleaning of food contact surfaces.",
         "result_type": "Numeric",
@@ -428,8 +426,7 @@ def upsert_templates(supabase):
             "id": t["id"],
             "org_id": ORG_ID,
             "farm_id": t["farm_id"],
-            "id": t["name"],
-            "org_module_id": "food_safety",
+            "org_module_id": MODULE_ID,
             "description": t["description"],
             "display_order": next_order,
         }))
@@ -589,7 +586,7 @@ def migrate_template(supabase, gc, template_def, q_map, email_map, stub_cache):
             # as the active numeric question
             if q_text.endswith("(legacy boolean)"):
                 source_col = q_text.replace(" (legacy boolean)", "")
-                pending_results.append((tracker_idx, q_id, "boolean", r.get(source_col)))
+                pending_results.append((tracker_idx, q_id, "Boolean", r.get(source_col)))
             else:
                 pending_results.append((tracker_idx, q_id, rtype, r.get(q_text)))
 
