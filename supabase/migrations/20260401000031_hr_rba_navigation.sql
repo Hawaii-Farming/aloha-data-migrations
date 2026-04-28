@@ -29,21 +29,12 @@
 CREATE OR REPLACE VIEW public.hr_rba_navigation AS
 SELECT
     om.org_id,
-    -- Module columns. Slugs are derived from the Proper Case display-name PKs
-    -- by lowercasing and collapsing any non-alphanumeric runs to underscores
-    -- (e.g. "Human Resources" -> "human_resources", "Time Off" -> "time_off",
-    -- "Lettuce P&H" -> "lettuce_p_h"). The frontend uses *_slug for URL
-    -- segments and CRUD-config registry lookups; *_display_name is what is
-    -- rendered to the user.
-    om.id                                                        AS module_id,
-    LOWER(REGEXP_REPLACE(sm.id,  '[^a-zA-Z0-9]+', '_', 'g'))     AS module_slug,
-    om.id                                                        AS module_display_name,
-    om.display_order                                             AS module_display_order,
-    -- Sub-module columns
-    osm.id                                                       AS sub_module_id,
-    LOWER(REGEXP_REPLACE(ssm.id, '[^a-zA-Z0-9]+', '_', 'g'))     AS sub_module_slug,
-    osm.id                                                       AS sub_module_display_name,
-    osm.display_order                                            AS sub_module_display_order,
+    -- The Proper Case PK IS the display name AND the URL segment AND the
+    -- registry/icon lookup key. There's no separate slug or display column.
+    om.id              AS module_id,
+    om.display_order   AS module_display_order,
+    osm.id             AS sub_module_id,
+    osm.display_order  AS sub_module_display_order,
     -- ABAC permissions (module-level)
     ma.can_edit,
     ma.can_delete,

@@ -3348,13 +3348,6 @@ export type Database = {
             columns: ["org_module_id"]
             isOneToOne: false
             referencedRelation: "hr_rba_navigation"
-            referencedColumns: ["module_display_name"]
-          },
-          {
-            foreignKeyName: "hr_module_access_org_module_id_fkey"
-            columns: ["org_module_id"]
-            isOneToOne: false
-            referencedRelation: "hr_rba_navigation"
             referencedColumns: ["module_id"]
           },
           {
@@ -5564,13 +5557,6 @@ export type Database = {
             columns: ["org_module_id"]
             isOneToOne: false
             referencedRelation: "hr_rba_navigation"
-            referencedColumns: ["module_display_name"]
-          },
-          {
-            foreignKeyName: "ops_template_org_module_id_fkey"
-            columns: ["org_module_id"]
-            isOneToOne: false
-            referencedRelation: "hr_rba_navigation"
             referencedColumns: ["module_id"]
           },
           {
@@ -6378,13 +6364,6 @@ export type Database = {
             foreignKeyName: "org_module_sys_module_id_fkey"
             columns: ["sys_module_id"]
             isOneToOne: false
-            referencedRelation: "hr_rba_navigation"
-            referencedColumns: ["module_slug"]
-          },
-          {
-            foreignKeyName: "org_module_sys_module_id_fkey"
-            columns: ["sys_module_id"]
-            isOneToOne: false
             referencedRelation: "sys_module"
             referencedColumns: ["id"]
           },
@@ -6918,22 +6897,8 @@ export type Database = {
             foreignKeyName: "org_sub_module_sys_module_id_fkey"
             columns: ["sys_module_id"]
             isOneToOne: false
-            referencedRelation: "hr_rba_navigation"
-            referencedColumns: ["module_slug"]
-          },
-          {
-            foreignKeyName: "org_sub_module_sys_module_id_fkey"
-            columns: ["sys_module_id"]
-            isOneToOne: false
             referencedRelation: "sys_module"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "org_sub_module_sys_sub_module_id_fkey"
-            columns: ["sys_sub_module_id"]
-            isOneToOne: false
-            referencedRelation: "hr_rba_navigation"
-            referencedColumns: ["sub_module_slug"]
           },
           {
             foreignKeyName: "org_sub_module_sys_sub_module_id_fkey"
@@ -9111,13 +9076,6 @@ export type Database = {
             foreignKeyName: "sys_sub_module_sys_module_id_fkey"
             columns: ["sys_module_id"]
             isOneToOne: false
-            referencedRelation: "hr_rba_navigation"
-            referencedColumns: ["module_slug"]
-          },
-          {
-            foreignKeyName: "sys_sub_module_sys_module_id_fkey"
-            columns: ["sys_module_id"]
-            isOneToOne: false
             referencedRelation: "sys_module"
             referencedColumns: ["id"]
           },
@@ -9422,15 +9380,11 @@ export type Database = {
           can_delete: boolean | null
           can_edit: boolean | null
           can_verify: boolean | null
-          module_display_name: string | null
           module_display_order: number | null
           module_id: string | null
-          module_slug: string | null
           org_id: string | null
-          sub_module_display_name: string | null
           sub_module_display_order: number | null
           sub_module_id: string | null
-          sub_module_slug: string | null
         }
         Relationships: [
           {
