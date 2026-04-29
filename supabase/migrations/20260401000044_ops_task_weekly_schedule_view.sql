@@ -1,4 +1,15 @@
-CREATE OR REPLACE VIEW ops_task_weekly_schedule
+-- ops_task_weekly_schedule
+-- ========================
+-- Weekly schedule grid: one row per (employee, task, week) with each
+-- day's shift formatted as "HH:MM - HH:MM", weekly totals, and the
+-- bi-weekly OT threshold halved + the over-threshold flag.
+--
+-- Joined employee display fields (full_name, profile_photo_url,
+-- department_name, work_authorization_name) are surfaced here so the
+-- ag-grid renderer can read them off the row directly without an
+-- additional embed.
+
+CREATE OR REPLACE VIEW public.ops_task_weekly_schedule
 WITH (security_invoker = true) AS
 WITH schedule_base AS (
     -- Planned schedule entries only (no tracker linked).
@@ -23,8 +34,13 @@ SELECT
     sb.org_id,
     sb.week_start_date,
     e.id                                                                    AS hr_employee_id,
+    COALESCE(NULLIF(e.preferred_name, ''),
+             TRIM(e.first_name || ' ' || e.last_name))                      AS full_name,
+    e.profile_photo_url,
     e.hr_department_id,
+    e.hr_department_id                                                      AS department_name,
     e.hr_work_authorization_id,
+    e.hr_work_authorization_id                                              AS work_authorization_name,
     t.id                                                                    AS task,
 
     -- Day columns — formatted as "HH:MM - HH:MM"; null when employee is not scheduled that day
@@ -101,11 +117,15 @@ GROUP BY
     sb.week_start_date,
     sb.org_id,
     sb.farm_id,
-    e.id,
+    e.id, e.preferred_name, e.first_name, e.last_name, e.profile_photo_url,
     e.hr_department_id,
     e.hr_work_authorization_id,
     e.overtime_threshold,
     t.id
 ORDER BY
     sb.week_start_date,
-    e.id;
+    full_name;
+
+GRANT SELECT ON public.ops_task_weekly_schedule TO authenticated;
+
+COMMENT ON VIEW public.ops_task_weekly_schedule IS 'Weekly schedule grid: one row per (employee, task, week) with day-by-day shift strings, weekly totals, and the OT threshold flag. Joined employee display fields (full_name, profile_photo_url, department_name, work_authorization_name) are pre-flattened for the ag-grid renderer.';
