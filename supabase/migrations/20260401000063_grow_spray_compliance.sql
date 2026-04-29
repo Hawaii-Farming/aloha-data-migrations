@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS grow_spray_compliance (
     label_date                  DATE,
     effective_date              DATE,
     expiration_date             DATE,
-    external_label_url          TEXT NOT NULL,
+    external_label_url          TEXT,
 
     -- CRUD
     created_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),

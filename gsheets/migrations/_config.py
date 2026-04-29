@@ -88,6 +88,11 @@ SHEET_IDS = {
     "weather": os.environ.get(
         "SHEET_WEATHER", "1dPUsCbXKg8pmlEa3lylnow5BJKYL0FL8vLyJz3bsfMY"
     ),
+    # Inventory workbook — invnt_item, invnt_item_details (chemical labels:
+    # PHI/REI/EPA registration/targets/methods), invnt_vendor, etc.
+    "invnt": os.environ.get(
+        "SHEET_INVNT", "15ppDoDWLR1TIXCO5Gy3LIvEQ9KpJmtSqNY1Cao3E1Po"
+    ),
 }
 
 

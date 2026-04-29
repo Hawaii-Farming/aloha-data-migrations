@@ -10,9 +10,12 @@ Source: https://docs.google.com/spreadsheets/d/1VtEecYn-W1pbnIU1hRHfxIpkH2DtK7hj
 
 Setup (idempotent):
   - Auto-create missing invnt_item rows (category=chemicals_pesticides)
-  - Auto-create missing grow_spray_compliance rows, taking PHI/REI from the
-    first sheet row that uses each (product, farm). Sentinel defaults for
-    other regulatory fields.
+  - Populate grow_spray_compliance from the invnt_item_details tab on the
+    inventory workbook (canonical PHI/REI/EPA registration/targets/methods/
+    label link). The spray sheet's per-row PHIDays/REIlHours columns are
+    user-typed and frequently disagree with the label, so they're no longer
+    used as input here. Products in the spray sheet not present in
+    invnt_item_details are logged as warnings and their events skipped.
   - Auto-create missing spray equipment rows:
       Fogger             -> {farm}_fogger          (type=fogger)
       Fogger 1 / Fogger 2 -> {farm}_fogger_1 / _2  (type=fogger)
@@ -57,6 +60,7 @@ from gsheets.migrations._config import (
 from gsheets.migrations._pg import get_pg_conn, paginate_select, pg_bulk_insert
 
 GROW_SHEET_ID = SHEET_IDS.get("grow") or "1VtEecYn-W1pbnIU1hRHfxIpkH2DtK7hj0CpcpiLoziM"
+INVNT_SHEET_ID = SHEET_IDS.get("invnt") or "15ppDoDWLR1TIXCO5Gy3LIvEQ9KpJmtSqNY1Cao3E1Po"
 NOTES_MARKER = "Legacy spraying migration"
 
 OPS_TASK_ID = "Spraying"
@@ -337,18 +341,119 @@ def ensure_sprayer_equipment(supabase, sheet_records):
     print(f"  Upserted {len(rows)} sprayer equipment rows")
 
 
-def ensure_compliance_records(supabase, sheet_records, item_lookup):
-    """Return dict (farm, item_id) -> compliance_id. Auto-creates missing.
+def populate_compliance_from_invnt_details(supabase, gc, sheet_records, item_lookup):
+    """Read invnt_item_details (the PHI/REI source of truth) and bulk-insert
+    grow_spray_compliance rows. Returns dict (farm, item_id) -> compliance_id.
 
-    For each (farm, product) referenced in sheet but not in grow_spray_compliance,
-    create a row using PHI/REI and target/UOM from the first sheet row where it
-    appears.
+    invnt_item_details lives in the inventory workbook and is curated by ops
+    with the canonical EPA label values (PHI days, REI hours, target list,
+    application methods, registration number, label link). The previous
+    implementation read PHI/REI from the spray sheet's per-row PHIDays/REIlHours
+    columns — those are user-typed and frequently disagree with the label, so
+    they are no longer trusted as input here.
+
+    Auto-creates invnt_item rows for any (farm, ItemName) in invnt_item_details
+    that wasn't picked up by build_item_lookup, and logs any product used in
+    the spray sheet that has no compliance entry.
     """
-    existing = paginate_select(supabase, "grow_spray_compliance", "id,farm_id,invnt_item_id")
-    by_pair = {(c["farm_id"], c["invnt_item_id"]): c["id"] for c in existing}
+    print("\nReading invnt_item_details (canonical PHI/REI/labels)...")
+    wb = gc.open_by_key(INVNT_SHEET_ID)
+    lookup_records = wb.worksheet("invnt_item_details").get_all_records()
+    print(f"  {len(lookup_records)} lookup rows")
 
-    # For each (farm, item_id) needed, grab PHI/REI/target/uom from first sheet row
-    needed = {}  # (farm, item_id) -> defaults
+    # 1) Auto-create invnt_item rows for products mentioned in the lookup
+    #    but not yet in invnt_item.
+    used_ids = set(item_lookup.values())
+    new_invnt_items = []
+    for r in lookup_records:
+        farm = (r.get("Farm") or "").strip()
+        name = (r.get("ItemName") or "").strip()
+        if not farm or not name:
+            continue
+        if (farm, name.lower()) in item_lookup:
+            continue
+        # Pick a unique id (Proper Case display name with disambiguation suffix)
+        final_id = name
+        n = 2
+        while final_id in used_ids:
+            final_id = f"{name} ({n})"
+            n += 1
+        used_ids.add(final_id)
+        item_lookup[(farm, name.lower())] = final_id
+        new_invnt_items.append({
+            "id": final_id,
+            "org_id": ORG_ID,
+            "farm_id": farm,
+            "invnt_category_id": PESTICIDE_CATEGORY_ID,
+            "qb_account": "1. Growing:Chemicals/Pesticides",
+            "description": None,
+            "burn_uom": "Fluid Ounce", "onhand_uom": "Fluid Ounce", "order_uom": "Fluid Ounce",
+            "burn_per_onhand": 1, "burn_per_order": 1,
+            "is_palletized": False, "order_per_pallet": 0, "pallet_per_truckload": 0,
+            "is_frequently_used": False, "burn_per_week": 0.0, "cushion_weeks": 0.0,
+            "is_auto_reorder": False, "reorder_point_in_burn": 0.0,
+            "reorder_quantity_in_burn": 0.0,
+            "requires_lot_tracking": False, "requires_expiry_date": False,
+            "manufacturer": None, "seed_is_pelleted": False, "photos": [],
+            "is_active": True,
+            "created_by": AUDIT_USER, "updated_by": AUDIT_USER,
+        })
+    if new_invnt_items:
+        print(f"\n--- invnt_item (auto-create from invnt_item_details) ---")
+        for i in range(0, len(new_invnt_items), 100):
+            supabase.table("invnt_item").upsert(new_invnt_items[i:i + 100]).execute()
+        print(f"  Upserted {len(new_invnt_items)} rows")
+
+    # 2) Build compliance rows from the lookup sheet
+    today = date.today().isoformat()
+    rows = []
+    by_pair = {}
+    skipped_lookup_rows = 0
+    for r in lookup_records:
+        farm = (r.get("Farm") or "").strip()
+        name = (r.get("ItemName") or "").strip()
+        if not farm or not name:
+            skipped_lookup_rows += 1
+            continue
+        item_id = item_lookup.get((farm, name.lower()))
+        if not item_id:
+            skipped_lookup_rows += 1
+            continue
+        if (farm, item_id) in by_pair:
+            continue   # dedupe — first row wins
+
+        new_id = str(uuid.uuid4())
+        by_pair[(farm, item_id)] = new_id
+        rows.append({
+            "id": new_id,
+            "org_id": ORG_ID,
+            "farm_id": farm,
+            "invnt_item_id": item_id,
+            "epa_registration": (r.get("RegistrationNumber") or "").strip() or "LEGACY_UNKNOWN",
+            "phi_days": parse_int(r.get("PHIDays"), default=0) or 0,
+            "rei_hours": parse_int(r.get("REIHours"), default=0) or 0,
+            "application_method": json.dumps(split_targets(r.get("ApplicationMethod"))),
+            "target_pest_disease": json.dumps(split_targets(r.get("Target"))),
+            "application_uom": normalize_uom(r.get("PerAcreUnits")) or "Fluid Ounce",
+            "maximum_quantity_per_acre": parse_numeric(r.get("QuantityPerAcre"), default=-1) or -1,
+            "burn_uom": normalize_uom(r.get("PerAcreUnits")) or "Fluid Ounce",
+            "application_per_burn": 1,
+            "label_date": parse_date(r.get("LabelDate")) or today,
+            "effective_date": parse_date(r.get("LabelDate")) or today,
+            "expiration_date": None,
+            "external_label_url": (r.get("LabelLink") or "").strip() or None,
+            "created_by": AUDIT_USER,
+            "updated_by": AUDIT_USER,
+        })
+
+    print(f"\n--- grow_spray_compliance (from invnt_item_details) ---")
+    with get_pg_conn() as conn:
+        pg_bulk_insert(conn, "grow_spray_compliance", rows)
+        conn.commit()
+    print(f"  Inserted {len(rows)} compliance rows ({skipped_lookup_rows} lookup rows skipped — missing farm/item)")
+
+    # 3) Validate spray sheet coverage
+    missing_in_compliance = set()
     for r in sheet_records:
         farm = resolve_farm(r.get("Farm", ""))
         if not farm:
@@ -358,62 +463,13 @@ def ensure_compliance_records(supabase, sheet_records, item_lookup):
             if not name:
                 continue
             item_id = item_lookup.get((farm, name.lower()))
-            if not item_id:
-                continue
-            if (farm, item_id) in by_pair:
-                continue
-            if (farm, item_id) in needed:
-                continue
-
-            phi = parse_int(r.get("PHIDays"), default=0) or 0
-            rei = parse_int(r.get("REIlHours"), default=0) or 0
-            targets = split_targets(r.get(f"Product0{i}Target"))
-            uom = normalize_uom(r.get(f"Product0{i}Units")) or "Fluid Ounce"
-            qty_per_acre = parse_numeric(r.get(f"Product0{i}Quantity"), default=-1) or -1
-
-            needed[(farm, item_id)] = {
-                "phi": phi,
-                "rei": rei,
-                "targets": targets,
-                "uom": uom,
-                "max_qty_per_acre": qty_per_acre,
-            }
-
-    if not needed:
-        return by_pair
-
-    rows = []
-    today = date.today().isoformat()
-    for (farm, item_id), d in needed.items():
-        new_id = str(uuid.uuid4())
-        by_pair[(farm, item_id)] = new_id
-        rows.append({
-            "id": new_id,
-            "org_id": ORG_ID,
-            "farm_id": farm,
-            "invnt_item_id": item_id,
-            "epa_registration": "LEGACY_UNKNOWN",
-            "phi_days": d["phi"],
-            "rei_hours": d["rei"],
-            "application_method": json.dumps([]),
-            "target_pest_disease": json.dumps(d["targets"]),
-            "application_uom": d["uom"],
-            "maximum_quantity_per_acre": d["max_qty_per_acre"],
-            "burn_uom": d["uom"],
-            "application_per_burn": 1,
-            "label_date": today,
-            "effective_date": today,
-            "expiration_date": None,
-            "external_label_url": "LEGACY_MIGRATION",
-            "created_by": AUDIT_USER,
-            "updated_by": AUDIT_USER,
-        })
-
-    print(f"\n--- grow_spray_compliance (auto-create missing) ---")
-    with get_pg_conn() as conn:
-        pg_bulk_insert(conn, "grow_spray_compliance", rows)
-        conn.commit()
-    print(f"  Inserted {len(rows)} compliance rows")
+            if not item_id or (farm, item_id) not in by_pair:
+                missing_in_compliance.add((farm, name))
+    if missing_in_compliance:
+        print(f"\n  WARNING: {len(missing_in_compliance)} (farm, product) combos used in spray sheet "
+              f"have no row in invnt_item_details — those events will be skipped:")
+        for fp in sorted(missing_in_compliance):
+            print(f"    {fp}")
 
     return by_pair
 
@@ -648,7 +704,9 @@ def main():
     # Setup: items, equipment, compliance
     item_lookup = build_item_lookup(supabase, records)
     ensure_sprayer_equipment(supabase, records)
-    compliance_lookup = ensure_compliance_records(supabase, records, item_lookup)
+    compliance_lookup = populate_compliance_from_invnt_details(
+        supabase, gc, records, item_lookup
+    )
 
     # Build event rows
     trackers = []
