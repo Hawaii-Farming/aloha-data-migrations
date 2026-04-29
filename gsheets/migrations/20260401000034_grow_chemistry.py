@@ -13,7 +13,7 @@ org-scoped rows and reinserts everything. No upsert/merge logic; if a
 row in the DB diverges from the sheet, the sheet wins on the next run.
 
 Usage:
-    python gsheets/migrations/20260401000036_grow_chemistry.py
+    python gsheets/migrations/20260401000034_grow_chemistry.py
 
 Rerunnable: clears org_id rows and reloads from the sheet.
 """

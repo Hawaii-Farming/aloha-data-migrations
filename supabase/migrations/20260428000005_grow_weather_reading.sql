@@ -6,7 +6,7 @@
 -- excluded; it's derived on the fly from PAR readings.
 --
 -- Source: weather spreadsheet `weather` tab, synced nightly via
--- gsheets/migrations/20260401000037_grow_weather.py.
+-- gsheets/migrations/20260401000035_grow_weather.py.
 -- The sheet is treated as the single source of truth: nightly job
 -- truncates org-scoped rows and reinserts.
 --

@@ -21,7 +21,7 @@ Sheet is treated as the single source of truth: every run wipes the
 org-scoped rows and reinserts. ~73k rows -> ~1-2 min insert time.
 
 Usage:
-    python gsheets/migrations/20260401000037_grow_weather.py
+    python gsheets/migrations/20260401000035_grow_weather.py
 """
 
 import csv

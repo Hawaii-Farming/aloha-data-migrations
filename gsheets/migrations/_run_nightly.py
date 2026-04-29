@@ -59,10 +59,10 @@ DEFAULT_SET = [
     "031",  # grow_scouting
     "032",  # grow_spray_pre_check
     "033",  # grow_monitoring
-    "034",  # business_rule
-    "035",  # fin_expense + sales_invoice (nightly QB sheet sync)
-    "036",  # grow_chemistry — external lab pond/water readings
-    "037",  # grow_weather — greenhouse weather-station readings
+    "034",  # grow_chemistry — external lab pond/water readings
+    "035",  # grow_weather — greenhouse weather-station readings
+    "036",  # business_rule
+    "037",  # fin_expense + sales_invoice (nightly QB sheet sync)
 ]
 
 RETIRED = set()

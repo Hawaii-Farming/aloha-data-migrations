@@ -5,7 +5,7 @@
 -- without a schema change.
 --
 -- Source: external lab spreadsheet, synced nightly via
--- gsheets/migrations/20260401000036_grow_chemistry.py.
+-- gsheets/migrations/20260401000034_grow_chemistry.py.
 -- The sheet is treated as the source of truth: nightly job
 -- truncates org-scoped rows and reinserts.
 --
