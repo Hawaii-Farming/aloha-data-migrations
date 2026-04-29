@@ -142,18 +142,18 @@ def clear_existing(supabase):
 
 def transform(r: dict) -> dict | None:
     sample_date = parse_date(r.get("sample_date"))
-    site_name   = clean(r.get("site_name"))
+    site_id     = clean(r.get("site_name"))  # sheet column is `site_name`; we store as site_id
     nutrient    = clean(r.get("nutrient"))
     result      = parse_number(r.get("result"))
 
-    if not sample_date or not site_name or not nutrient or result is None:
+    if not sample_date or not site_id or not nutrient or result is None:
         return None
 
     return audit({
         "org_id":      ORG_ID,
         "farm_id":     FARM_ID,
+        "site_id":     site_id,
         "sample_date": sample_date.isoformat(),
-        "site_name":   site_name,
         "nutrient":    nutrient,
         "result":      result,
     })
