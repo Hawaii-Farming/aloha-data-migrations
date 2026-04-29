@@ -84,6 +84,10 @@ SHEET_IDS = {
     "chemistry": os.environ.get(
         "SHEET_CHEMISTRY", "1XwavjRPi3xMJClslOjuC_4ONrbdl8l_qw0_JallE2c0"
     ),
+    # Lettuce greenhouse weather station
+    "weather": os.environ.get(
+        "SHEET_WEATHER", "1dPUsCbXKg8pmlEa3lylnow5BJKYL0FL8vLyJz3bsfMY"
+    ),
 }
 
 

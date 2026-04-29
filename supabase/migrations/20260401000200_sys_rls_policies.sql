@@ -1255,6 +1255,18 @@ CREATE POLICY "grow_chemistry_result_read" ON public.grow_chemistry_result
 GRANT SELECT ON public.grow_chemistry_result TO authenticated;
 
 -- ============================================================
+-- grow_weather_reading
+-- ============================================================
+
+ALTER TABLE public.grow_weather_reading ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "grow_weather_reading_read" ON public.grow_weather_reading
+  FOR SELECT TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT SELECT ON public.grow_weather_reading TO authenticated;
+
+-- ============================================================
 -- Views
 -- ============================================================
 -- Views don't carry their own RLS policies. Each view is created with

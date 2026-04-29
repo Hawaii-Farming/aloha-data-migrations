@@ -62,10 +62,11 @@ DEFAULT_SET = [
     "034",  # business_rule
     "035",  # fin_expense + sales_invoice (nightly QB sheet sync)
     "036",  # grow_chemistry — external lab pond/water readings
+    "037",  # grow_weather — greenhouse weather-station readings
 ]
 
 RETIRED = set()
-ALL_SET = [f"{i:03d}" for i in range(1, 37) if f"{i:03d}" not in RETIRED]
+ALL_SET = [f"{i:03d}" for i in range(1, 38) if f"{i:03d}" not in RETIRED]
 
 
 def discover_scripts():
