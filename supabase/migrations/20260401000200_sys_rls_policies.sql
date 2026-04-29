@@ -1293,6 +1293,7 @@ GRANT SELECT ON public.fin_expense_v                  TO authenticated;
 GRANT SELECT ON public.grow_cuke_harvest              TO authenticated;
 GRANT SELECT ON public.grow_lettuce_harvest           TO authenticated;
 GRANT SELECT ON public.grow_spray_restriction         TO authenticated;
+GRANT SELECT ON public.grow_weather_reading_dli       TO authenticated;
 GRANT SELECT ON public.hr_payroll_by_task             TO authenticated;
 GRANT SELECT ON public.hr_payroll_employee_comparison TO authenticated;
 GRANT SELECT ON public.hr_rba_navigation              TO authenticated;
