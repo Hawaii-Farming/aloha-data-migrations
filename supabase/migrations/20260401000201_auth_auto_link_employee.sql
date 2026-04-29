@@ -14,11 +14,6 @@
 -- signups, email_confirmed_at is set on confirmation (UPDATE), so a second
 -- trigger (on_auth_user_confirmed) handles that flow.
 --
--- Audit Log: auth_link_log
--- -------------------------
--- Every successful link event is recorded in public.auth_link_log for
--- auditing. This table is only accessible by service_role/postgres.
---
 -- Business Rule:
 --   Only employees with a company_email in hr_employee can sign in.
 --   On first login, auth.users.id is written to hr_employee.user_id.
@@ -32,21 +27,7 @@
 --   4. Guard: skips if email_confirmed_at IS NULL
 --   5. Matches auth.users.email -> hr_employee.company_email
 --   6. Sets hr_employee.user_id = NEW.id for ALL matching rows (multi-org)
---   7. Logs link events to auth_link_log
---   8. User now has org access via RLS policies that check auth.uid()
-
--- ============================================================
--- Audit table: auth_link_log
--- ============================================================
--- Internal audit table — no SELECT grant to authenticated.
--- Readable only by service_role/postgres.
-
-CREATE TABLE IF NOT EXISTS public.auth_link_log (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  auth_user_id UUID NOT NULL,
-  employee_id TEXT NOT NULL,
-  linked_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+--   7. User now has org access via RLS policies that check auth.uid()
 
 -- ============================================================
 -- Trigger function: handle_new_auth_user
@@ -64,16 +45,12 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  -- Link employee records and log each link event
-  WITH linked AS (
-    UPDATE public.hr_employee
-    SET user_id = NEW.id
-    WHERE company_email = NEW.email
-      AND user_id IS NULL
-    RETURNING id AS employee_id
-  )
-  INSERT INTO public.auth_link_log (auth_user_id, employee_id)
-  SELECT NEW.id, linked.employee_id FROM linked;
+  -- Link every hr_employee row whose company_email matches this auth user
+  -- and is not already linked. Covers multi-org employees in one statement.
+  UPDATE public.hr_employee
+  SET user_id = NEW.id
+  WHERE company_email = NEW.email
+    AND user_id IS NULL;
 
   RETURN NEW;
 END;
@@ -103,7 +80,6 @@ CREATE TRIGGER on_auth_user_confirmed
 -- ============================================================
 
 GRANT EXECUTE ON FUNCTION public.handle_new_auth_user() TO service_role;
-GRANT INSERT ON public.auth_link_log TO service_role;
 
 -- ============================================================
 -- Backfill (commented out — run manually if needed)
