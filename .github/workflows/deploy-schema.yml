@@ -1,11 +1,19 @@
 name: Deploy Supabase Schema
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'supabase/migrations/**'
-      - 'supabase/config.toml'
+  # Auto-deploy on push is disabled while the schema is in active
+  # development. The DB is being edited directly during experimentation
+  # (Dashboard SQL Editor / psycopg2), and `supabase db push` errors out
+  # whenever remote `schema_migrations` drifts from local files. Trigger
+  # the deploy manually via the Actions tab when the repo and remote
+  # are intentionally aligned. Re-enable the push trigger by uncommenting
+  # the block below once the schema stabilizes.
+  #
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - 'supabase/migrations/**'
+  #     - 'supabase/config.toml'
   workflow_dispatch:
 
 jobs:
