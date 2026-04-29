@@ -727,6 +727,18 @@ CREATE POLICY "grow_cuke_gh_row_planting_read" ON public.grow_cuke_gh_row_planti
 GRANT SELECT ON public.grow_cuke_gh_row_planting TO authenticated;
 
 -- ============================================================
+-- grow_cuke_rotation
+-- ============================================================
+
+ALTER TABLE public.grow_cuke_rotation ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "grow_cuke_rotation_read" ON public.grow_cuke_rotation
+  FOR SELECT TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT SELECT ON public.grow_cuke_rotation TO authenticated;
+
+-- ============================================================
 -- grow_fertigation_recipe
 -- ============================================================
 
