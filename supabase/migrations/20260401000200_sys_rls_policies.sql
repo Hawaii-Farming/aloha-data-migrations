@@ -1296,6 +1296,7 @@ GRANT SELECT ON public.grow_spray_restriction         TO authenticated;
 GRANT SELECT ON public.grow_weather_reading_dli       TO authenticated;
 GRANT SELECT ON public.hr_payroll_by_task             TO authenticated;
 GRANT SELECT ON public.hr_payroll_employee_comparison TO authenticated;
+GRANT SELECT ON public.hr_payroll_task_comparison     TO authenticated;
 GRANT SELECT ON public.hr_rba_navigation              TO authenticated;
 GRANT SELECT ON public.invnt_item_summary             TO authenticated;
 GRANT SELECT ON public.ops_task_weekly_schedule       TO authenticated;
