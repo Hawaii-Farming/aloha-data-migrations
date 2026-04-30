@@ -1279,6 +1279,114 @@ CREATE POLICY "grow_weather_reading_read" ON public.grow_weather_reading
 GRANT SELECT ON public.grow_weather_reading TO authenticated;
 
 -- ============================================================
+-- sales_trading_partner
+-- ============================================================
+
+ALTER TABLE public.sales_trading_partner ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "sales_trading_partner_read" ON public.sales_trading_partner
+  FOR SELECT TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT SELECT ON public.sales_trading_partner TO authenticated;
+
+-- ============================================================
+-- sales_product_buyer_part
+-- ============================================================
+
+ALTER TABLE public.sales_product_buyer_part ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "sales_product_buyer_part_read" ON public.sales_product_buyer_part
+  FOR SELECT TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT SELECT ON public.sales_product_buyer_part TO authenticated;
+
+-- ============================================================
+-- edi_inbound_message
+-- ============================================================
+
+ALTER TABLE public.edi_inbound_message ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "edi_inbound_message_read" ON public.edi_inbound_message
+  FOR SELECT TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT SELECT ON public.edi_inbound_message TO authenticated;
+
+-- ============================================================
+-- sales_shipment
+-- ============================================================
+
+ALTER TABLE public.sales_shipment ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "sales_shipment_read" ON public.sales_shipment
+  FOR SELECT TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT SELECT ON public.sales_shipment TO authenticated;
+
+-- ============================================================
+-- sales_shipment_container
+-- ============================================================
+
+ALTER TABLE public.sales_shipment_container ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "sales_shipment_container_read" ON public.sales_shipment_container
+  FOR SELECT TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT SELECT ON public.sales_shipment_container TO authenticated;
+
+-- ============================================================
+-- sales_pallet
+-- ============================================================
+
+ALTER TABLE public.sales_pallet ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "sales_pallet_read" ON public.sales_pallet
+  FOR SELECT TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT SELECT ON public.sales_pallet TO authenticated;
+
+-- ============================================================
+-- sales_pallet_allocation
+-- ============================================================
+
+ALTER TABLE public.sales_pallet_allocation ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "sales_pallet_allocation_read" ON public.sales_pallet_allocation
+  FOR SELECT TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT SELECT ON public.sales_pallet_allocation TO authenticated;
+
+-- ============================================================
+-- sales_po_asn
+-- ============================================================
+
+ALTER TABLE public.sales_po_asn ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "sales_po_asn_read" ON public.sales_po_asn
+  FOR SELECT TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT SELECT ON public.sales_po_asn TO authenticated;
+
+-- ============================================================
+-- sales_po_asn_carton
+-- ============================================================
+
+ALTER TABLE public.sales_po_asn_carton ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "sales_po_asn_carton_read" ON public.sales_po_asn_carton
+  FOR SELECT TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT SELECT ON public.sales_po_asn_carton TO authenticated;
+
+-- ============================================================
 -- Views
 -- ============================================================
 -- Views don't carry their own RLS policies. Each view is created with

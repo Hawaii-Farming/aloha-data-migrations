@@ -369,32 +369,93 @@ RULES = [
         33,
     ),
     rule(
-        "sales_palletization", "Workflow", "sales",
-        "Palletization: capacity-aware pallet expansion",
-        "Lines expanded into pallets using pallet_ti x pallet_hi (max = maximum_case_per_pallet). "
-        "Pallet types: Full, Stackable (Costco/Sam's partials), Shareable (other partials). "
-        "Off-island only (FOB != Farm/Local Delivery).",
-        None,
-        '["sales_po_line", "sales_product.pallet_ti", "sales_product.pallet_hi"]',
+        "sales_pallet_workflow", "Workflow", "sales",
+        "Pallet workflow: Palletize -> Stack -> Containerize -> Lock",
+        "Three-step user-driven shipping prep, scoped per (farm, target_invoice_date). "
+        "1. Palletize: app code expands fulfillment lines into sales_pallet rows, sets pallet_type "
+        "(Full / Shareable / Stackable) and capacity_utilization, assigns pallet_number "
+        "(CP/LP/BP prefix per container family). 2. Stack: app code assigns container_space_number "
+        "to non-Full pallets; user can drag stackable pallets between spaces in the UI. "
+        "3. Containerize: app code sets sales_shipment_container_id and marks is_spillover where "
+        "cucumber pallets overflow into the lettuce or box-truck container. After finalization the "
+        "operator bulk-locks (is_locked=true) so subsequent regenerations preserve manual edits. "
+        "Off-island only (FOB != Farm/Local Delivery). Bin-packing logic lives in app code; the DB "
+        "is a passive store.",
+        "Operators need to manually adjust pallet groupings between auto-generation steps "
+        "(combine shareables, restack partials, override spillover targets); locking after each "
+        "completed run lets new POs be palletized without disturbing settled assignments.",
+        '["sales_pallet", "sales_pallet_allocation", "sales_po_fulfillment"]',
         34,
     ),
     rule(
-        "sales_containerization", "Workflow", "sales",
-        "Container assignment with spillover",
-        "Pallets assigned to container spaces by type (org-level, selected by product farm). "
-        "Overflow spills into other container types. container_id, booking_id, pallet_number, "
-        "container_space bulk-written to sales_po_fulfillment filtered by invoice date.",
-        None,
-        '["sales_po_fulfillment", "sales_container_type"]',
+        "sales_pallet_capacity_expansion", "Calculation", "sales",
+        "Capacity-aware pallet expansion across pack dates",
+        "Group fulfillments by (customer_name, po_number, product_code) and walk pack dates oldest "
+        "first. Pack onto a pallet up to sales_product.maximum_case_per_pallet (max). Crossing the "
+        "sales_product full_pallet labeling threshold does NOT close the pallet — it stays open and "
+        "accepts top-offs from later pack dates until physically at max. At close time, label as "
+        "'Full' if running >= full_pallet, else 'Stackable' (Costco/Sam's customer groups) or "
+        "'Shareable_{customer_name}' (others). Capacity_utilization = take/max stored as 0..1 fraction.",
+        "Earlier wipe-and-split-on-full produced fragmented pallets (e.g. 55 cases on 4/25 + "
+        "5 cases on 4/26 became CP03 Full 83% and CP04 Stackable 7%); top-off across dates yields "
+        "one consolidated 60-case Full pallet instead.",
+        '["sales_pallet.capacity_utilization", "sales_pallet.pallet_type", '
+        '"sales_product.full_pallet", "sales_product.maximum_case_per_pallet"]',
         35,
+    ),
+    rule(
+        "sales_pallet_costco_smart_split", "Calculation", "sales",
+        "Costco KW/JW smart split for 84/78/72 case quantities",
+        "When a fresh pallet is being opened for Costco group with product_code in (KW, JW) and "
+        "remaining qty is exactly 84, 78, or 72, take 60 cases (or 54 for qty=72) on this pallet "
+        "and force-close so the next pallet starts fresh. Produces a balanced split (84 -> 60+24 "
+        "rather than 66+18) that matches Costco's preferred receiving layout. The force-close "
+        "prevents later top-offs from undoing the intentional split.",
+        "Costco's DC pickers prefer balanced partial pallets; the 60+24 split fits their cart "
+        "layout better than 66+18.",
+        '["sales_pallet.pallet_type", "sales_po_line.sales_product_id"]',
+        36,
+    ),
+    rule(
+        "sales_container_spillover", "Calculation", "sales",
+        "Cucumber -> lettuce -> box-truck spillover when over capacity",
+        "Each sales_container_type carries maximum_spaces (cucumber=18, lettuce=18, box=10). "
+        "Final container assignment runs Cucumber first, then Lettuce, then Box. If cucumber "
+        "spaces in use exceed cucumber.maximum_spaces, mark the highest-numbered cucumber spaces "
+        "as spillover and reassign their pallets to the lettuce container, taking lettuce's open "
+        "spaces. If lettuce overflows too, spill remaining pallets into the box-truck container. "
+        "Spillover pallets get is_spillover=true and a re-numbered container_space_number under "
+        "the destination container. ALL pallets sharing a pallet_number with a spillover row "
+        "follow it to the new container (atomic move).",
+        "Loading crew expects whole pallets to stay together physically; splitting a pallet's "
+        "rows across two containers would require the same product to be packed in two different "
+        "trucks/containers.",
+        '["sales_pallet.is_spillover", "sales_pallet.sales_shipment_container_id", '
+        '"sales_container_type.maximum_spaces"]',
+        37,
+    ),
+    rule(
+        "sales_pallet_locking", "Business Rule", "sales",
+        "Locked pallets are preserved across regeneration",
+        "When operators bulk-lock a finalized run (is_locked=true on every sales_pallet row in "
+        "scope), subsequent re-runs of Palletize/Stack/Containerize for the same "
+        "(farm, target_invoice_date) skip locked pallets and their allocations. Only unlocked "
+        "rows are wiped and rebuilt. New POs added after lock-in get folded into freshly created "
+        "pallets without disturbing the locked assignments. Operators can unlock individual "
+        "pallets if a manual edit is needed.",
+        "Pallet/space assignments accrete real-world meaning (printed pallet papers, ASN labels, "
+        "operator memory of which space holds what) once shared with the warehouse; regenerating "
+        "from scratch each time would invalidate downstream artifacts.",
+        '["sales_pallet.is_locked"]',
+        38,
     ),
     rule(
         "sales_print_documents", "Business Rule", "sales",
         "Pallet print documents: envelopes, pallet papers, ASN labels",
         "Sorted by container type (cuke -> box -> lettuce), then by space, spillover last.",
         None,
-        '["sales_po_line"]',
-        36,
+        '["sales_pallet", "sales_pallet_allocation"]',
+        39,
     ),
 
     # =====================================================================
