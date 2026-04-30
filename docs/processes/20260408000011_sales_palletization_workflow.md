@@ -2,7 +2,7 @@
 
 This document describes how PO fulfillments are physically arranged into pallets, stacked into container spaces, and loaded into shipping containers. It is a downstream-of-pack, upstream-of-shipment process that produces the physical layout the warehouse builds and the EDI 856 ASN describes.
 
-> **Prerequisite:** PO lines must be fulfilled (`sales_po_fulfillment` rows exist linking lots to lines). For SPS partners, the trading partner setup must be complete — see [20260429000001_sps_edi_integration.md](20260429000001_sps_edi_integration.md).
+> **Prerequisite:** PO lines must be fulfilled (`sales_po_fulfillment` rows exist linking lots to lines). For SPS partners, the trading partner setup must be complete — see [20260408000012_sps_edi_integration.md](20260408000012_sps_edi_integration.md).
 
 ---
 
@@ -121,7 +121,7 @@ After containerization, three print outputs are generated from `sales_pallet` + 
 
 - **Envelopes** — one per customer with their pallet manifest
 - **Pallet papers** — one per pallet showing contents (allocations) and destination
-- **ASN labels** — UCC-128 barcodes for SPS partners (see [SPS EDI doc](20260429000001_sps_edi_integration.md))
+- **ASN labels** — UCC-128 barcodes for SPS partners (see [SPS EDI doc](20260408000012_sps_edi_integration.md))
 
 Sort order for all three: container family (cuke → lettuce → box), then `container_space_number`, then non-spillover before spillover.
 
