@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS sales_product_price (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id         TEXT NOT NULL REFERENCES org(id),
-    farm_id        TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id        TEXT NOT NULL,
     sales_product_id     TEXT NOT NULL REFERENCES sales_product(id),
     sales_fob_id         TEXT NOT NULL REFERENCES sales_fob(id),
     sales_customer_group_id  TEXT REFERENCES sales_customer_group(id),
@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS sales_product_price (
     created_by     TEXT,
     updated_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by     TEXT,
-    is_deleted      BOOLEAN NOT NULL DEFAULT false
+    is_deleted      BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT sales_product_price_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE sales_product_price IS 'Manages product pricing with three tiers of specificity and date ranges to track price changes over time. When a price changes, the current row gets an effective_to date and a new row is created. Currency always uses the org default from org.currency.';

@@ -30,12 +30,12 @@ CREATE OR REPLACE VIEW public.hr_rba_navigation
 WITH (security_invoker = true) AS
 SELECT
     om.org_id,
-    -- The Proper Case PK IS the display name AND the URL segment AND the
-    -- registry/icon lookup key. There's no separate slug or display column.
-    om.id              AS module_id,
-    om.display_order   AS module_display_order,
-    osm.id             AS sub_module_id,
-    osm.display_order  AS sub_module_display_order,
+    -- The Proper Case sys_module_id IS the display name AND the URL segment
+    -- AND the registry/icon lookup key. There's no separate slug or display column.
+    om.sys_module_id     AS module_id,
+    om.display_order     AS module_display_order,
+    osm.sys_sub_module_id AS sub_module_id,
+    osm.display_order    AS sub_module_display_order,
     -- ABAC permissions (module-level)
     ma.can_edit,
     ma.can_delete,
@@ -49,7 +49,8 @@ JOIN public.sys_module sm            ON sm.id = osm.sys_module_id
 JOIN public.sys_sub_module ssm       ON ssm.id = osm.sys_sub_module_id
 JOIN public.sys_access_level req_al  ON req_al.id = osm.sys_access_level_id
 JOIN public.hr_module_access ma      ON ma.hr_employee_id = e.id
-                                    AND ma.org_module_id = om.id
+                                    AND ma.org_id = om.org_id
+                                    AND ma.sys_module_id = om.sys_module_id
 WHERE e.user_id = auth.uid()
   AND e.is_deleted = false
   AND om.is_enabled = true          -- Layer 1: parent module enabled

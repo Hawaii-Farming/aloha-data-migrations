@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS sales_po_line (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id              TEXT NOT NULL REFERENCES org(id),
-    farm_id             TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id             TEXT NOT NULL,
     sales_po_id         UUID NOT NULL REFERENCES sales_po(id),
     sales_product_id    TEXT NOT NULL REFERENCES sales_product(id),
 
@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS sales_po_line (
     updated_by          TEXT,
     is_deleted          BOOLEAN NOT NULL DEFAULT false,
 
-    CONSTRAINT uq_sales_po_line UNIQUE (sales_po_id, sales_product_id)
+    CONSTRAINT uq_sales_po_line UNIQUE (sales_po_id, sales_product_id),
+    CONSTRAINT sales_po_line_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE sales_po_line IS 'Individual products within an order. One row per product per order with snapshot pricing at time of order. Buyer-side identifiers (buyer_part_number, buyer_description, buyer_uom, buyer_line_sequence, gtin_case) are populated from inbound SPS 850 documents and echoed on outbound 856/810.';

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_cuke_seed_batch (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                  TEXT NOT NULL REFERENCES org(id),
-    farm_id                 TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id                 TEXT NOT NULL,
     site_id                 TEXT REFERENCES org_site_cuke_gh(id),
     -- ops_task_tracker_id and invnt_lot_id intentionally carry no FK: both
     -- parent tables are TRUNCATEd nightly and CASCADE would wipe this
@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS grow_cuke_seed_batch (
     created_by              TEXT,
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by              TEXT,
-    is_deleted              BOOLEAN NOT NULL DEFAULT false
+    is_deleted              BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT grow_cuke_seed_batch_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE grow_cuke_seed_batch IS 'Cuke seeding cycle record. One row per variety per greenhouse per seeding event. Holds historical and forward-planned cycles. Snapshot fields (rows_4_per_bag, rows_5_per_bag, seeds) are frozen at seeding time from the plant map and not recomputed.';

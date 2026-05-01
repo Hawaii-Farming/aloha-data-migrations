@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS ops_corrective_action_taken (
     id                                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                              TEXT        NOT NULL REFERENCES org(id),
-    farm_id                             TEXT        REFERENCES org_farm(id),
+    farm_id                             TEXT,
     ops_template_id                     TEXT        REFERENCES ops_template(id),
     ops_template_result_id                     UUID        REFERENCES ops_template_result(id),
     fsafe_result_id                 UUID        REFERENCES fsafe_result(id),
@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS ops_corrective_action_taken (
     CONSTRAINT fk_ops_corrective_action_taken_assigned_to
       FOREIGN KEY (assigned_to) REFERENCES hr_employee(id),
     CONSTRAINT fk_ops_corrective_action_taken_verified_by
-      FOREIGN KEY (verified_by) REFERENCES hr_employee(id)
+      FOREIGN KEY (verified_by) REFERENCES hr_employee(id),
+    CONSTRAINT ops_corrective_action_taken_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE ops_corrective_action_taken IS 'Corrective actions raised against a failing checklist response or EMP test result. Tracks the action required, who is responsible, and the resolution status.';

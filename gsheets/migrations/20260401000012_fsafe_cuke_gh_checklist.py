@@ -247,7 +247,7 @@ def upsert_templates(supabase):
             "id": t["id"],
             "org_id": ORG_ID,
             "farm_id": FARM_ID,
-            "org_module_id": MODULE_ID,
+            "sys_module_id": MODULE_ID,
             "description": f"Cuke greenhouse {'pre' if 'pre' in t['id'].lower() else 'post'}-operations checklist (migrated from legacy fsafe sheet)",
             "display_order": i + 1,
         }))

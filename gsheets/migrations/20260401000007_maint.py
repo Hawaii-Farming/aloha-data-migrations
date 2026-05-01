@@ -915,14 +915,11 @@ def migrate_house_inspections(supabase, client):
     # 2. Create ops_template + ops_template_question for each room type
     template_questions = {}  # room_type -> {question_text: question_id}
     for room_type, tmpl in TEMPLATES.items():
-        org_module_result = supabase.table("org_module").select("id").eq("sys_module_id", "Maintenance").execute()
-        org_module_id = org_module_result.data[0]["id"] if org_module_result.data else None
-
         tmpl_name = tmpl["id"]
         supabase.table("ops_template").insert({
             "org_id": ORG_ID,
             "id": tmpl_name,
-            "org_module_id": org_module_id,
+            "sys_module_id": "Maintenance",
             "display_order": list(TEMPLATES.keys()).index(room_type) + 1,
             "created_by": AUDIT_USER,
             "updated_by": AUDIT_USER,

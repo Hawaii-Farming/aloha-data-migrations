@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_harvest_weight (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
-    farm_id                     TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id                     TEXT NOT NULL,
     site_id                     TEXT REFERENCES org_site(id),
     ops_task_tracker_id         UUID REFERENCES ops_task_tracker(id),
     grow_lettuce_seed_batch_id  UUID REFERENCES grow_lettuce_seed_batch(id),
@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS grow_harvest_weight (
         (grow_lettuce_seed_batch_id IS NOT NULL AND grow_cuke_seed_batch_id IS NULL)
         OR
         (grow_lettuce_seed_batch_id IS NULL AND grow_cuke_seed_batch_id IS NOT NULL)
-    )
+    ),
+    CONSTRAINT grow_harvest_weight_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE grow_harvest_weight IS 'Individual weigh-in for a harvest. One row per container type weighed. Links directly to the seeding batch for traceability. Tare is calculated on the fly from grow_harvest_container.tare_weight × number_of_containers.';

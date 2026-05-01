@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS invnt_po (
     id                     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                 TEXT NOT NULL REFERENCES org(id),
-    farm_id                TEXT REFERENCES org_farm(id),
+    farm_id                TEXT,
 
     -- Request classification
     request_type           TEXT NOT NULL DEFAULT 'inventory_item' CHECK (request_type IN ('Non Inventory Item', 'Inventory Item')),
@@ -43,7 +43,8 @@ CREATE TABLE IF NOT EXISTS invnt_po (
     created_by             TEXT,
     updated_at             TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by             TEXT,
-    is_deleted              BOOLEAN NOT NULL DEFAULT false
+    is_deleted              BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT invnt_po_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE invnt_po IS 'Tracks purchase order requests through a workflow from request to receipt. Each order snapshots the item name, units, and cost at order time so the record stays accurate even if the item changes later.';

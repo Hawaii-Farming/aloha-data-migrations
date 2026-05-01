@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_scout_result (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                  TEXT NOT NULL REFERENCES org(id),
-    farm_id                 TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id                 TEXT NOT NULL,
     ops_task_tracker_id        UUID NOT NULL REFERENCES ops_task_tracker(id),
     site_id                 TEXT REFERENCES org_site(id),
     observation_type        TEXT NOT NULL CHECK (observation_type IN ('Pest', 'Disease')),
@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS grow_scout_result (
     CONSTRAINT chk_grow_scout_result_type CHECK (
         (observation_type = 'Pest' AND grow_pest_id IS NOT NULL AND grow_disease_id IS NULL)
         OR (observation_type = 'Disease' AND grow_disease_id IS NOT NULL AND grow_pest_id IS NULL)
-    )
+    ),
+    CONSTRAINT grow_scout_result_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE grow_scout_result IS 'Individual pest or disease finding within a scouting event. Either a pest or disease, enforced by CHECK constraint.';

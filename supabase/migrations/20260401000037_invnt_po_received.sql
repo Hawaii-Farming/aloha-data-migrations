@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS invnt_po_received (
     id                     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                 TEXT NOT NULL REFERENCES org(id),
-    farm_id                TEXT REFERENCES org_farm(id),
+    farm_id                TEXT,
     invnt_po_id            UUID NOT NULL REFERENCES invnt_po(id),
     received_date          DATE NOT NULL,
     received_uom           TEXT NOT NULL REFERENCES sys_uom(id),
@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS invnt_po_received (
     created_by             TEXT,
     updated_at             TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by             TEXT,
-    is_deleted              BOOLEAN NOT NULL DEFAULT false
+    is_deleted              BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT invnt_po_received_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE invnt_po_received IS 'Individual deliveries received against a purchase order. One order can have multiple received records to handle partial deliveries. References invnt_lot for lot tracking.';

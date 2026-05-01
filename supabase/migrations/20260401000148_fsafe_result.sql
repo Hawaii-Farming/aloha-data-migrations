@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS fsafe_result (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_id         TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id         TEXT NOT NULL,
     site_id         TEXT REFERENCES org_site(id),
     fsafe_test_hold_id  UUID REFERENCES fsafe_test_hold(id),
     fsafe_lab_id    TEXT REFERENCES fsafe_lab(id),
@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS fsafe_result (
     CONSTRAINT fk_fsafe_result_sampled_by
       FOREIGN KEY (sampled_by) REFERENCES hr_employee(id),
     CONSTRAINT fk_fsafe_result_verified_by
-      FOREIGN KEY (verified_by) REFERENCES hr_employee(id)
+      FOREIGN KEY (verified_by) REFERENCES hr_employee(id),
+    CONSTRAINT fsafe_result_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE fsafe_result IS 'Unified food safety test results table. Result type is derived from existing fields: EMP (site_id set, fsafe_test_hold_id null, zone != water), Test-and-Hold (fsafe_test_hold_id set), Water (site_id set, zone = water). Retests and vector tests link back to the original via fsafe_result_id_original.';

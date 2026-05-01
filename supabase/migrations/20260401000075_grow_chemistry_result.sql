@@ -18,7 +18,7 @@
 CREATE TABLE IF NOT EXISTS grow_chemistry_result (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id       TEXT NOT NULL REFERENCES org(id),
-    farm_id      TEXT REFERENCES org_farm(id),
+    farm_id      TEXT,
     site_id      TEXT NOT NULL,
     sample_date  DATE NOT NULL,
     nutrient     TEXT NOT NULL,
@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS grow_chemistry_result (
     created_by   TEXT,
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by   TEXT,
-    is_deleted   BOOLEAN NOT NULL DEFAULT false
+    is_deleted   BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT grow_chemistry_result_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE grow_chemistry_result IS 'External-lab chemistry readings for ponds and water sources. One row per (sample_date, site_id, nutrient). Loaded nightly from the lab spreadsheet.';

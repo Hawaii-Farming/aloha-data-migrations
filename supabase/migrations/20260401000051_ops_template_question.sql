@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS ops_template_question (
     id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id              TEXT        NOT NULL REFERENCES org(id),
-    farm_id             TEXT        REFERENCES org_farm(id),
+    farm_id             TEXT,
     ops_template_id     TEXT        NOT NULL REFERENCES ops_template(id),
 
     question_text       TEXT        NOT NULL,
@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS ops_template_question (
     created_by          TEXT,
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by          TEXT,
-    is_deleted           BOOLEAN     NOT NULL DEFAULT false
+    is_deleted           BOOLEAN     NOT NULL DEFAULT false,
+    CONSTRAINT ops_template_question_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE ops_template_question IS 'Questions within a checklist template. Ordered by display_order within each template.';

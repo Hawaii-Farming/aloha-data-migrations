@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_spray_compliance (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
-    farm_id                     TEXT REFERENCES org_farm(id),
+    farm_id                     TEXT,
     invnt_item_id               TEXT REFERENCES invnt_item(id),
 
     -- Regulatory Information — legacy label rows often lack these fields.
@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS grow_spray_compliance (
     created_by                  TEXT,
     updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by                  TEXT,
-    is_deleted                  BOOLEAN NOT NULL DEFAULT false
+    is_deleted                  BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT grow_spray_compliance_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE grow_spray_compliance IS 'Chemical label registry storing regulatory information per product. One row per chemical/fertilizer item with REI, PHI, label rates, and application restrictions.';

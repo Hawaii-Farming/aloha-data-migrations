@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pack_shelf_life (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
-    farm_id                     TEXT REFERENCES org_farm(id),
+    farm_id                     TEXT,
     pack_lot_id                 UUID REFERENCES pack_lot(id),
     sales_product_id            TEXT REFERENCES sales_product(id),
     invnt_item_id               TEXT REFERENCES invnt_item(id),
@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS pack_shelf_life (
     created_by                  TEXT,
     updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by                  TEXT,
-    is_deleted                   BOOLEAN NOT NULL DEFAULT false
+    is_deleted                   BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT pack_shelf_life_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE pack_shelf_life IS 'Shelf life trial header. One row per trial. Tracks the product, lot, packaging type, target shelf life, and trial outcome.';

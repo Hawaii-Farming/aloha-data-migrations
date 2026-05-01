@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_task_seed_batch (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
-    farm_id                     TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id                     TEXT NOT NULL,
     ops_task_tracker_id         UUID NOT NULL REFERENCES ops_task_tracker(id),
     grow_lettuce_seed_batch_id  UUID REFERENCES grow_lettuce_seed_batch(id),
     grow_cuke_seed_batch_id     UUID REFERENCES grow_cuke_seed_batch(id),
@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS grow_task_seed_batch (
         (grow_lettuce_seed_batch_id IS NOT NULL AND grow_cuke_seed_batch_id IS NULL)
         OR
         (grow_lettuce_seed_batch_id IS NULL AND grow_cuke_seed_batch_id IS NOT NULL)
-    )
+    ),
+    CONSTRAINT grow_task_seed_batch_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE grow_task_seed_batch IS 'Unified join table linking any grow activity (scouting, spraying, fertigation, monitoring) to the seeding batches involved. Exactly one of grow_lettuce_seed_batch_id / grow_cuke_seed_batch_id is set, determined by the farm. Activity type is derived from ops_task_tracker -> ops_task_id.';

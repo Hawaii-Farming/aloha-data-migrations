@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pack_productivity_hour (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                  TEXT NOT NULL REFERENCES org(id),
-    farm_id                 TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id                 TEXT NOT NULL,
     ops_task_tracker_id     UUID NOT NULL REFERENCES ops_task_tracker(id),
     pack_end_hour               TIMESTAMPTZ NOT NULL,
 
@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS pack_productivity_hour (
     created_by              TEXT,
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by              TEXT,
-    is_deleted              BOOLEAN NOT NULL DEFAULT false
+    is_deleted              BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT pack_productivity_hour_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE pack_productivity_hour IS 'Hourly pack line productivity snapshot. One row per hour per packing session. Product is on ops_task_tracker.sales_product_id. Derived metrics: trays = cases_packed × product.pack_per_case, trays_per_packer_per_minute = trays / (packers × 60), pounds = cases_packed × product.case_net_weight.';

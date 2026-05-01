@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS org_site_cuke_gh_row (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id              TEXT NOT NULL REFERENCES org(id),
-    farm_id             TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id             TEXT NOT NULL,
     site_id             TEXT NOT NULL REFERENCES org_site_cuke_gh(id),
     row_number             INTEGER NOT NULL,
     notes               TEXT,
@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS org_site_cuke_gh_row (
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by          TEXT,
     is_deleted          BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT uq_org_site_cuke_gh_row_site_row UNIQUE (site_id, row_number)
+    CONSTRAINT uq_org_site_cuke_gh_row_site_row UNIQUE (site_id, row_number),
+    CONSTRAINT org_site_cuke_gh_row_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE org_site_cuke_gh_row IS 'Physical greenhouse row infrastructure. One row per physical GH row — pure identity (site_id, row_number). Crop-agnostic and rendering-agnostic. Referenced by seeding, scouting, maintenance, and spraying activities when they target a specific row. Bag counts and planting state live on grow_cuke_gh_row_planting (per scenario). Block membership and render order are defined in org_site_cuke_gh_block.';

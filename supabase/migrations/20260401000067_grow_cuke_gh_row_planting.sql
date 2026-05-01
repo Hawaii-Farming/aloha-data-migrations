@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_cuke_gh_row_planting (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                  TEXT NOT NULL REFERENCES org(id),
-    farm_id                 TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id                 TEXT NOT NULL,
     org_site_cuke_gh_row_id      UUID NOT NULL,
     scenario                TEXT NOT NULL CHECK (scenario IN ('Current', 'Planned')),
     grow_variety_id         TEXT NOT NULL,
@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS grow_cuke_gh_row_planting (
     CONSTRAINT fk_grow_cuke_gh_row_planting_variety_primary
         FOREIGN KEY (grow_variety_id) REFERENCES grow_variety(id),
     CONSTRAINT fk_grow_cuke_gh_row_planting_variety_secondary
-        FOREIGN KEY (grow_variety_id_2) REFERENCES grow_variety(id)
+        FOREIGN KEY (grow_variety_id_2) REFERENCES grow_variety(id),
+    CONSTRAINT grow_cuke_gh_row_planting_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE grow_cuke_gh_row_planting IS 'Cuke planting assignment per physical GH row. Two scenarios per row: current (live layout the transplant crew follows) and planned (proposed future layout). Rows are always planted to full capacity; split rows are always 50/50.';

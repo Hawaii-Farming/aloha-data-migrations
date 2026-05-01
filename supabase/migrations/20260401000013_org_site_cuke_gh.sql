@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS org_site_cuke_gh (
     id                  TEXT PRIMARY KEY,
     org_id              TEXT NOT NULL REFERENCES org(id),
-    farm_id             TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id             TEXT NOT NULL,
     farm_section        TEXT NOT NULL CHECK (farm_section IN ('JTL', 'BIP')),
     acres               NUMERIC,
     rows_orientation    TEXT NOT NULL CHECK (rows_orientation IN ('Vertical', 'Horizontal')),
@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS org_site_cuke_gh (
     created_by          TEXT,
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by          TEXT,
-    is_deleted          BOOLEAN NOT NULL DEFAULT false
+    is_deleted          BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT org_site_cuke_gh_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE org_site_cuke_gh IS 'Cuke greenhouse registry — one row per GH with layout and display config for the plant-map dashboard and other GH-aware features. Standalone: id is a cuke-GH-scoped identifier and is not FK-linked to org_site.';

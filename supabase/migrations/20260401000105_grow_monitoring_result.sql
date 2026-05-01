@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_monitoring_result (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
-    farm_id                     TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id                     TEXT NOT NULL,
     site_id                     TEXT NOT NULL REFERENCES org_site(id),
     ops_task_tracker_id         UUID NOT NULL REFERENCES ops_task_tracker(id),
     grow_monitoring_metric_id    TEXT NOT NULL REFERENCES grow_monitoring_metric(id),
@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS grow_monitoring_result (
     updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by                  TEXT,
     is_deleted                  BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT uq_grow_monitoring_result UNIQUE (ops_task_tracker_id, grow_monitoring_metric_id, monitoring_station)
+    CONSTRAINT uq_grow_monitoring_result UNIQUE (ops_task_tracker_id, grow_monitoring_metric_id, monitoring_station),
+    CONSTRAINT grow_monitoring_result_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE grow_monitoring_result IS 'Individual measurement recorded during a monitoring event. One row per point per station. Calculated points store the computed result for historical record.';

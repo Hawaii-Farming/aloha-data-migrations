@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pack_dryer_result (
     id                              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                          TEXT NOT NULL REFERENCES org(id),
-    farm_id                         TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id                         TEXT NOT NULL,
     site_id                         TEXT NOT NULL REFERENCES org_site(id),
     grow_lettuce_seed_batch_id      UUID REFERENCES grow_lettuce_seed_batch(id),
     invnt_item_id                   TEXT REFERENCES invnt_item(id),
@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS pack_dryer_result (
     created_by                      TEXT,
     updated_at                      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by                      TEXT,
-    is_deleted                      BOOLEAN NOT NULL DEFAULT false
+    is_deleted                      BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT pack_dryer_result_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE pack_dryer_result IS 'Environmental and moisture readings taken during the packing process. One row per check at a specific time, tracking temperature and moisture conditions before and after the dryer.';

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS ops_template_result (
     id                      UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                  TEXT        NOT NULL REFERENCES org(id),
-    farm_id                 TEXT        REFERENCES org_farm(id),
+    farm_id                 TEXT,
     ops_task_tracker_id     UUID        NOT NULL REFERENCES ops_task_tracker(id),
     ops_template_id         TEXT        NOT NULL REFERENCES ops_template(id),
     ops_template_question_id         UUID        REFERENCES ops_template_question(id),
@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS ops_template_result (
     created_by              TEXT,
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by              TEXT,
-    is_deleted               BOOLEAN     NOT NULL DEFAULT false
+    is_deleted               BOOLEAN     NOT NULL DEFAULT false,
+    CONSTRAINT ops_template_result_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE ops_template_result IS 'Employee responses to checklist questions. One row per question per task tracker session. Each result targets either a site or equipment, never both. The linked ops_task_tracker record acts as the header (who completed the checklist, when).';

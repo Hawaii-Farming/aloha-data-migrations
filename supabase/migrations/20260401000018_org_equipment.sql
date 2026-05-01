@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS org_equipment (
     id                    TEXT PRIMARY KEY,
     org_id                  TEXT NOT NULL REFERENCES org(id),
-    farm_id                 TEXT REFERENCES org_farm(id),
+    farm_id                 TEXT,
     type                    TEXT CHECK (type IN ('Vehicle', 'Tool', 'Machine', 'PPE', 'Bag Pack Sprayer', 'Fogger', 'Tank')),
     description             TEXT,
     manufacturer            TEXT,
@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS org_equipment (
     created_by              TEXT,
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by              TEXT,
-    is_deleted              BOOLEAN NOT NULL DEFAULT false
+    is_deleted              BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT org_equipment_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE org_equipment IS 'Equipment register for all physical assets across the organization. Farm-level or shared (farm_id null).';

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS invnt_item (
     id                     TEXT PRIMARY KEY,
     org_id                   TEXT NOT NULL REFERENCES org(id),
-    farm_id                  TEXT REFERENCES org_farm(id),
+    farm_id                  TEXT,
     invnt_category_id        TEXT REFERENCES invnt_category(id),
     invnt_subcategory_id     TEXT REFERENCES invnt_category(id),
     qb_account            TEXT,
@@ -56,7 +56,8 @@ CREATE TABLE IF NOT EXISTS invnt_item (
     updated_by               TEXT,
     is_deleted                BOOLEAN NOT NULL DEFAULT false,
 
-    CONSTRAINT uq_invnt_item UNIQUE (org_id, id)
+    CONSTRAINT uq_invnt_item UNIQUE (org_id, id),
+    CONSTRAINT invnt_item_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE invnt_item IS 'The main inventory record. Items belong to an organization and optionally to a specific farm. Classification is handled by the category/subcategory structure. All item details are proper columns grouped by logical sections. Seed-specific fields are prefixed seed_; maintenance part fields are prefixed maint_.';

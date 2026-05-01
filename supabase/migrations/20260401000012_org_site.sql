@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS org_site (
     id                      TEXT PRIMARY KEY,
     org_id                  TEXT NOT NULL REFERENCES org(id),
-    farm_id                 TEXT REFERENCES org_farm(id),
+    farm_id                 TEXT,
     name                    TEXT NOT NULL,
     org_site_category_id    TEXT NOT NULL,
     org_site_subcategory_id TEXT,
@@ -33,7 +33,8 @@ CREATE TABLE IF NOT EXISTS org_site (
     CONSTRAINT fk_org_site_category
       FOREIGN KEY (org_site_category_id) REFERENCES org_site_category(id),
     CONSTRAINT fk_org_site_subcategory
-      FOREIGN KEY (org_site_subcategory_id) REFERENCES org_site_category(id)
+      FOREIGN KEY (org_site_subcategory_id) REFERENCES org_site_category(id),
+    CONSTRAINT org_site_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE org_site IS 'Site register for growing sites, packhouses, and food-safety zones. Supports parent-child hierarchy via site_id_parent. Cuke greenhouses and housing facilities live in their own dedicated standalone tables (org_site_cuke_gh, org_site_housing).';

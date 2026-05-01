@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pack_shelf_life_photo (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
-    farm_id                     TEXT REFERENCES org_farm(id),
+    farm_id                     TEXT,
     pack_shelf_life_id    UUID NOT NULL REFERENCES pack_shelf_life(id),
 
     observation_date            DATE NOT NULL,
@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS pack_shelf_life_photo (
     created_by                  TEXT,
     updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by                  TEXT,
-    is_deleted                   BOOLEAN NOT NULL DEFAULT false
+    is_deleted                   BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT pack_shelf_life_photo_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE pack_shelf_life_photo IS 'Photos taken during a shelf life trial observation. Multiple photos per observation date per trial.';

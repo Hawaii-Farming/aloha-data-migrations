@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS invnt_onhand (
     id                     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                 TEXT NOT NULL REFERENCES org(id),
-    farm_id                TEXT REFERENCES org_farm(id),
+    farm_id                TEXT,
     invnt_item_id          TEXT NOT NULL REFERENCES invnt_item(id),
     onhand_date            DATE NOT NULL,
     burn_uom               TEXT REFERENCES sys_uom(id),
@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS invnt_onhand (
     created_by             TEXT,
     updated_at             TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by             TEXT,
-    is_deleted              BOOLEAN NOT NULL DEFAULT false
+    is_deleted              BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT invnt_onhand_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE invnt_onhand IS 'Records on-hand inventory snapshots per item. References invnt_lot for lot tracking. Source of truth for computed totals like current stock, burn-per-week, and weeks-on-hand.';

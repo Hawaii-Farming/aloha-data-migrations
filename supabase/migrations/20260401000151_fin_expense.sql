@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS fin_expense (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id              TEXT NOT NULL REFERENCES org(id),
-    farm_id             TEXT REFERENCES org_farm(id),
+    farm_id             TEXT,
     txn_date            DATE NOT NULL,
     payee_name          TEXT,
     description         TEXT,
@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS fin_expense (
     created_by          TEXT,
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by          TEXT,
-    is_deleted          BOOLEAN NOT NULL DEFAULT false
+    is_deleted          BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT fin_expense_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE fin_expense IS 'Financial expense transactions sourced from QuickBooks (nightly-synced from the invoices/expense spreadsheet today, moving to direct QB API later). One row per line item on a QB expense transaction.';

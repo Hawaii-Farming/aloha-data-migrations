@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pack_lot (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_id         TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id         TEXT NOT NULL,
 
     lot_number      TEXT NOT NULL,
     harvest_date    DATE,
@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS pack_lot (
     updated_by      TEXT,
     is_deleted       BOOLEAN NOT NULL DEFAULT false,
 
-    CONSTRAINT uq_pack_lot UNIQUE (org_id, lot_number)
+    CONSTRAINT uq_pack_lot UNIQUE (org_id, lot_number),
+    CONSTRAINT pack_lot_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE pack_lot IS 'Production lot header. One row per lot. The same lot number is shared across all products packed on the same day.';

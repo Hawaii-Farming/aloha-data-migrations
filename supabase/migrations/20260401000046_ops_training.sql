@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS ops_training (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                  TEXT NOT NULL REFERENCES org(id),
-    farm_id                 TEXT REFERENCES org_farm(id),
+    farm_id                 TEXT,
 
     ops_training_type_id    TEXT REFERENCES ops_training_type(id),
     training_date           DATE,
@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS ops_training (
     CONSTRAINT fk_ops_training_trainer
       FOREIGN KEY (trainer_id) REFERENCES hr_employee(id),
     CONSTRAINT fk_ops_training_verified_by
-      FOREIGN KEY (verified_by) REFERENCES hr_employee(id)
+      FOREIGN KEY (verified_by) REFERENCES hr_employee(id),
+    CONSTRAINT ops_training_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE ops_training IS 'Staff training session records. Each row is one training event covering a specific topic for a group of employees.';

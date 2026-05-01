@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_lettuce_seed_mix_item (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_id         TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id         TEXT NOT NULL,
     grow_lettuce_seed_mix_id TEXT NOT NULL REFERENCES grow_lettuce_seed_mix(id),
     invnt_item_id   TEXT NOT NULL REFERENCES invnt_item(id),
     invnt_lot_id    TEXT REFERENCES invnt_lot(id),
@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS grow_lettuce_seed_mix_item (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by      TEXT,
     is_deleted      BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT uq_grow_lettuce_seed_mix_item UNIQUE (grow_lettuce_seed_mix_id, invnt_item_id)
+    CONSTRAINT uq_grow_lettuce_seed_mix_item UNIQUE (grow_lettuce_seed_mix_id, invnt_item_id),
+    CONSTRAINT grow_lettuce_seed_mix_item_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE grow_lettuce_seed_mix_item IS 'Individual seed items within a mix recipe with their proportion. Each row defines one seed and its percentage in the blend.';

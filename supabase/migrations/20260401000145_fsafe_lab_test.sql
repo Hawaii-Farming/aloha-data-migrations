@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS fsafe_lab_test (
     id       TEXT PRIMARY KEY,
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_id         TEXT REFERENCES org_farm(id),
+    farm_id         TEXT,
 
     test_methods    JSONB NOT NULL DEFAULT '[]',
     test_description TEXT,
@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS fsafe_lab_test (
     updated_by      TEXT,
     is_deleted       BOOLEAN NOT NULL DEFAULT false,
 
-    CONSTRAINT uq_fsafe_lab_test UNIQUE (org_id, id)
+    CONSTRAINT uq_fsafe_lab_test UNIQUE (org_id, id),
+    CONSTRAINT fsafe_lab_test_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE fsafe_lab_test IS 'Catalog of EMP test definitions and their result configuration. Defines how results are evaluated and how many retests or vector tests are required on a fail.';

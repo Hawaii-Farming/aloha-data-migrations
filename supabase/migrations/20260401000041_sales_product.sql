@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS sales_product (
     id                       TEXT PRIMARY KEY,
     org_id                     TEXT NOT NULL REFERENCES org(id),
-    farm_id                    TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id                    TEXT NOT NULL,
     grow_grade_id              TEXT REFERENCES grow_grade(id),
     name                       TEXT NOT NULL,
     description                TEXT,
@@ -57,7 +57,8 @@ CREATE TABLE IF NOT EXISTS sales_product (
     updated_by                 TEXT,
     is_deleted                 BOOLEAN NOT NULL DEFAULT false,
 
-    CONSTRAINT uq_sales_product_name UNIQUE (farm_id, name)
+    CONSTRAINT uq_sales_product_name UNIQUE (farm_id, name),
+    CONSTRAINT sales_product_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE sales_product IS 'The sellable products from each farm. Combines a grade with a full packaging hierarchy (item → pack → case → pallet). The sale unit is always a case; the shipping unit is always a pallet.';

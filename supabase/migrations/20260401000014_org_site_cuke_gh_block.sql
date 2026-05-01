@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS org_site_cuke_gh_block (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_id         TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id         TEXT NOT NULL,
     site_id         TEXT NOT NULL REFERENCES org_site_cuke_gh(id),
     block_number       INTEGER NOT NULL,
     name            TEXT NOT NULL,
@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS org_site_cuke_gh_block (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by      TEXT,
     is_deleted      BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT uq_org_site_cuke_gh_block_site_block UNIQUE (site_id, block_number)
+    CONSTRAINT uq_org_site_cuke_gh_block_site_block UNIQUE (site_id, block_number),
+    CONSTRAINT org_site_cuke_gh_block_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE org_site_cuke_gh_block IS 'Block definitions per greenhouse. A block is a visually contiguous group of rows rendered together on the dashboard. Sidewalks render between blocks. GHs with no side divisions have a single block covering all rows.';

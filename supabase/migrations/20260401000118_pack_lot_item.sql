@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pack_lot_item (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id              TEXT NOT NULL REFERENCES org(id),
-    farm_id             TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id             TEXT NOT NULL,
     pack_lot_id         UUID NOT NULL REFERENCES pack_lot(id),
     sales_product_id    TEXT NOT NULL REFERENCES sales_product(id),
 
@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS pack_lot_item (
     updated_by          TEXT,
     is_deleted           BOOLEAN NOT NULL DEFAULT false,
 
-    CONSTRAINT uq_pack_lot_item UNIQUE (pack_lot_id, sales_product_id)
+    CONSTRAINT uq_pack_lot_item UNIQUE (pack_lot_id, sales_product_id),
+    CONSTRAINT pack_lot_item_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE pack_lot_item IS 'Individual products packed within a lot. One row per product per lot. pack_quantity is always in the product sale_uom.';

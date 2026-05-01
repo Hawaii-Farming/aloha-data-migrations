@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS sales_invoice (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id              TEXT NOT NULL REFERENCES org(id),
-    farm_id             TEXT REFERENCES org_farm(id),
+    farm_id             TEXT,
     invoice_number      TEXT NOT NULL,
     invoice_date        DATE NOT NULL,
     customer_name       TEXT NOT NULL,
@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS sales_invoice (
     created_by          TEXT,
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by          TEXT,
-    is_deleted          BOOLEAN NOT NULL DEFAULT false
+    is_deleted          BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT sales_invoice_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE sales_invoice IS 'QuickBooks invoice line items (nightly-synced from the invoices spreadsheet today, moving to direct QB API later). One row per line item — a single invoice_number can appear across multiple rows with different product_code/variety/grade combinations. No uniqueness constraint until QB line-item numbers are included in the pull, at which point (org_id, invoice_number, line_number) will be unique.';

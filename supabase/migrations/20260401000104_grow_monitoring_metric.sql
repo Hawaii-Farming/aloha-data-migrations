@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_monitoring_metric (
     id              TEXT PRIMARY KEY,
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_id         TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id         TEXT NOT NULL,
     site_category   TEXT NOT NULL,
     name            TEXT NOT NULL,
     description     TEXT,
@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS grow_monitoring_metric (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by      TEXT,
     is_deleted      BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT uq_grow_monitoring_metric UNIQUE (org_id, farm_id, site_category, name)
+    CONSTRAINT uq_grow_monitoring_metric UNIQUE (org_id, farm_id, site_category, name),
+    CONSTRAINT grow_monitoring_metric_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE grow_monitoring_metric IS 'Defines what to measure per farm and site category. Direct points are entered manually; calculated points are derived from other points using a formula.';

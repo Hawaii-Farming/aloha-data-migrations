@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS fsafe_pest_result (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                  TEXT NOT NULL REFERENCES org(id),
-    farm_id                 TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id                 TEXT NOT NULL,
     ops_task_tracker_id     UUID NOT NULL REFERENCES ops_task_tracker(id),
     site_id                 TEXT NOT NULL REFERENCES org_site(id),
     pest_type               TEXT CHECK (pest_type IN ('Mouse', 'Rat')),
@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS fsafe_pest_result (
     created_by              TEXT,
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by              TEXT,
-    is_deleted              BOOLEAN NOT NULL DEFAULT false
+    is_deleted              BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT fsafe_pest_result_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE fsafe_pest_result IS 'Per-station pest trap inspection result. One row per trap station per inspection event. The ops_task_tracker acts as the inspection header with date, farm, and verification.';

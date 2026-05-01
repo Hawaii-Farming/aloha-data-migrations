@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pack_shelf_life_result (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
-    farm_id                     TEXT REFERENCES org_farm(id),
+    farm_id                     TEXT,
     pack_shelf_life_id    UUID NOT NULL REFERENCES pack_shelf_life(id),
     pack_shelf_life_metric_id    TEXT NOT NULL REFERENCES pack_shelf_life_metric(id),
 
@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS pack_shelf_life_result (
     updated_by                  TEXT,
     is_deleted                   BOOLEAN NOT NULL DEFAULT false,
 
-    CONSTRAINT uq_pack_shelf_life_result UNIQUE (pack_shelf_life_id, pack_shelf_life_metric_id, observation_date)
+    CONSTRAINT uq_pack_shelf_life_result UNIQUE (pack_shelf_life_id, pack_shelf_life_metric_id, observation_date),
+    CONSTRAINT pack_shelf_life_result_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE pack_shelf_life_result IS 'Individual observation responses for a shelf life trial. One row per check per observation date per trial.';

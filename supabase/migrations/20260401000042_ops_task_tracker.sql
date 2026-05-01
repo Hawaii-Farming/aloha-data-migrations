@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS ops_task_tracker (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_id         TEXT REFERENCES org_farm(id),
+    farm_id         TEXT,
     site_id         TEXT REFERENCES org_site(id),
     sales_product_id TEXT REFERENCES sales_product(id),
     ops_task_id     TEXT NOT NULL REFERENCES ops_task(id),
@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS ops_task_tracker (
     created_by      TEXT,
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by      TEXT,
-    is_deleted       BOOLEAN NOT NULL DEFAULT false
+    is_deleted       BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT ops_task_tracker_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE ops_task_tracker IS 'Header record for a task event. One record per task session — captures what task was done, where, when, and its verification status.';

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_lettuce_seed_batch (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id              TEXT NOT NULL REFERENCES org(id),
-    farm_id             TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id             TEXT NOT NULL,
     site_id             TEXT REFERENCES org_site(id),
     ops_task_tracker_id UUID REFERENCES ops_task_tracker(id),
     batch_code          TEXT NOT NULL,
@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS grow_lettuce_seed_batch (
     CONSTRAINT chk_grow_lettuce_seed_batch_source CHECK (
         (invnt_item_id IS NOT NULL AND grow_lettuce_seed_mix_id IS NULL)
         OR (invnt_item_id IS NULL AND grow_lettuce_seed_mix_id IS NOT NULL)
-    )
+    ),
+    CONSTRAINT grow_lettuce_seed_batch_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE grow_lettuce_seed_batch IS 'Lettuce seeding batch linked to an ops activity. Either a single seed item or a seed mix, never both. Cuke seeding lives in grow_cuke_seed_batch.';

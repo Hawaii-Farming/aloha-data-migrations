@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS ops_task_schedule (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                  TEXT NOT NULL REFERENCES org(id),
-    farm_id                 TEXT REFERENCES org_farm(id),
+    farm_id                 TEXT,
     ops_task_id             TEXT NOT NULL REFERENCES ops_task(id),
     ops_task_tracker_id     UUID REFERENCES ops_task_tracker(id),
     hr_employee_id          TEXT NOT NULL REFERENCES hr_employee(id),
@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS ops_task_schedule (
     created_by              TEXT,
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by              TEXT,
-    is_deleted               BOOLEAN NOT NULL DEFAULT false
+    is_deleted               BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT ops_task_schedule_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE ops_task_schedule IS 'Employee task assignments for both planning and execution. When ops_task_tracker_id is null, the row is a planned schedule entry. When set, it is an executed activity. ops_task_id is always set — derived from the tracker when linked, or selected by the user for planned entries.';

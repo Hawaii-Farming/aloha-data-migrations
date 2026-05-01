@@ -295,6 +295,28 @@ def migrate_hr_employee(supabase, records, app_users):
     # here would re-introduce the legacy id-drift collision on uq_hr_employee_name.
     insert_rows(supabase, "hr_employee", employees, upsert=False)
 
+    # is_deleted hygiene for hawaii_farming: any hr_employee row that exists
+    # in the DB but is NOT in the current hr_ee_register sheet must be marked
+    # is_deleted=true. _clear_transactional truncates HF employees so this is
+    # usually a no-op, but other org rows (e.g. campo_caribe) and any legacy
+    # rows that survived a partial truncate get the right state regardless.
+    sheet_emp_ids = [emp["id"] for emp in employees]
+    if sheet_emp_ids:
+        with get_pg_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """UPDATE hr_employee
+                       SET is_deleted = true, updated_at = now()
+                       WHERE org_id = %s
+                         AND id <> ALL(%s)
+                         AND is_deleted = false""",
+                    (ORG_ID, sheet_emp_ids),
+                )
+                marked_deleted = cur.rowcount
+            conn.commit()
+        if marked_deleted:
+            print(f"  Marked {marked_deleted} HF employees not in sheet as is_deleted=true")
+
     # Second pass: update team_lead_id and compensation_manager_id
     print("  Resolving team_lead_id and compensation_manager_id...")
     updates = 0
@@ -345,7 +367,7 @@ def migrate_hr_module_access(supabase, employees, app_users_lookup, module_map):
                 rows.append(audit({
                     "org_id": ORG_ID,
                     "hr_employee_id": emp["id"],
-                    "org_module_id": mod_id,
+                    "sys_module_id": mod_id,
                     "is_enabled": True,
                     "can_edit": True,
                     "can_delete": False,

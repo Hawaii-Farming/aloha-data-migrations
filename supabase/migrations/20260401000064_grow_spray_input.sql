@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS grow_spray_input (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
-    farm_id                     TEXT NOT NULL REFERENCES org_farm(id),
+    farm_id                     TEXT NOT NULL,
     ops_task_tracker_id            UUID NOT NULL REFERENCES ops_task_tracker(id),
     grow_spray_compliance_id    UUID NOT NULL REFERENCES grow_spray_compliance(id),
     invnt_item_id               TEXT NOT NULL REFERENCES invnt_item(id),
@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS grow_spray_input (
     created_by                  TEXT,
     updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by                  TEXT,
-    is_deleted                  BOOLEAN NOT NULL DEFAULT false
+    is_deleted                  BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT grow_spray_input_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE grow_spray_input IS 'Individual chemical or fertilizer applied during a spraying event. One row per input product. The compliance record is the source of truth — only compliant products can be sprayed, and the app enforces label rate limits via maximum_quantity_per_acre.';

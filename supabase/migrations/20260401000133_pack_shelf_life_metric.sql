@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pack_shelf_life_metric (
     id       TEXT PRIMARY KEY,
     org_id          TEXT NOT NULL REFERENCES org(id),
-    farm_id         TEXT REFERENCES org_farm(id),
+    farm_id         TEXT,
     description     TEXT,
 
     -- Response configuration
@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS pack_shelf_life_metric (
     created_by      TEXT,
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by      TEXT,
-    is_deleted      BOOLEAN NOT NULL DEFAULT false
+    is_deleted      BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT pack_shelf_life_metric_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE pack_shelf_life_metric IS 'Defines what gets checked during a shelf life observation (e.g. color, texture, moisture). Each metric specifies a response type and optional fail criteria that trigger trial termination.';

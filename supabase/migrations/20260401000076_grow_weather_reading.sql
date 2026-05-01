@@ -17,7 +17,7 @@
 CREATE TABLE IF NOT EXISTS grow_weather_reading (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id       TEXT NOT NULL REFERENCES org(id),
-    farm_id      TEXT REFERENCES org_farm(id),
+    farm_id      TEXT,
     reading_at   TIMESTAMPTZ NOT NULL,
 
     -- Outside (ambient) sensors
@@ -43,7 +43,8 @@ CREATE TABLE IF NOT EXISTS grow_weather_reading (
     created_by   TEXT,
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by   TEXT,
-    is_deleted   BOOLEAN NOT NULL DEFAULT false
+    is_deleted   BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT grow_weather_reading_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE grow_weather_reading IS 'Greenhouse weather-station readings, one row per ~10-minute sample. Outside (ambient) + inside (greenhouse) + atmospheric channels. Loaded nightly from the station spreadsheet. DLI is excluded — derived on demand from inside_par + sample interval.';

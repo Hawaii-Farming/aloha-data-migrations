@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS maint_request (
     id                        UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                    TEXT        NOT NULL REFERENCES org(id),
-    farm_id                   TEXT        REFERENCES org_farm(id),
+    farm_id                   TEXT,
     site_id                   TEXT        REFERENCES org_site(id),
     equipment_id              TEXT        REFERENCES org_equipment(id),
     CHECK ((site_id IS NOT NULL AND equipment_id IS NULL) OR (site_id IS NULL AND equipment_id IS NOT NULL)),
@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS maint_request (
     CONSTRAINT fk_maint_request_fixer
       FOREIGN KEY (fixer_id) REFERENCES hr_employee(id),
     CONSTRAINT fk_maint_request_requested_by
-      FOREIGN KEY (requested_by) REFERENCES hr_employee(id)
+      FOREIGN KEY (requested_by) REFERENCES hr_employee(id),
+    CONSTRAINT maint_request_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 
 COMMENT ON TABLE maint_request IS 'Standalone maintenance work order requests. Each request targets either a site or equipment, never both. Equipment location is derived from org_equipment.site_id. Preventive maintenance is indicated by recurring_frequency being set.';
