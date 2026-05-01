@@ -459,7 +459,126 @@ RULES = [
     ),
 
     # =====================================================================
-    # 7b. SALES CRM — store visits, market intelligence
+    # 7c. SALES SPS / EDI — Costco / Safeway / etc. document exchange
+    # =====================================================================
+    rule(
+        "sps_trading_partner_setup", "Business Rule", "sales",
+        "Three records required before any inbound 850 will resolve",
+        "Onboarding a new SPS buyer requires (1) a sales_customer row, (2) a sales_trading_partner "
+        "row bridging sps_partner_id to that customer with the asn_required / invoice_required / "
+        "acknowledgement_required flags set per the partner's contract, and (3) one "
+        "sales_product_buyer_part row per (buyer, our product) pair mapping the buyer's SKU + "
+        "case GTIN to our sales_product_id. Without all three in place, the inbound 850 parser "
+        "fails at either the partner-routing step (unknown sps_partner_id) or the line-resolution "
+        "step (unknown buyer_part_number).",
+        "EDI documents arrive with the buyer's identifiers, not ours. The two lookup tables are "
+        "the only way to translate them — and the data needs to exist before the first PO comes "
+        "in or the parse fails and the 997 acknowledgement misses its 24h SLA.",
+        '["sales_trading_partner", "sales_product_buyer_part", "sales_customer"]',
+        40,
+    ),
+    rule(
+        "sps_inbound_850_flow", "Workflow", "sales",
+        "Inbound 850 PO ingestion -> parse -> ack",
+        "1. Worker receives 850 via SPS SFTP / API, writes raw payload to sales_edi_inbound_message "
+        "with document_type='850' and parsed_at NULL. 2. Parser looks up sales_trading_partner "
+        "by sps_partner_id from the envelope, creates one sales_po row with status='Received' "
+        "and snapshot of all ship_to_*/bill_to_*/buyer_*/carrier_*/requested_*_date/"
+        "payment_terms_net_days fields. 3. For each line, parser resolves sales_product_id via "
+        "sales_product_buyer_part(sales_customer_id, buyer_part_number) and creates sales_po_line "
+        "with the buyer_* snapshot. 4. On success: sets parsed_at + sales_po_id on the inbound "
+        "message. On failure: leaves parsed_at NULL and records parse_error for replay. 5. Worker "
+        "sends 997 Functional Acknowledgement to SPS within 24h, recording outcome on "
+        "acknowledgement_status / acknowledgement_sent_at. 6. If sales_trading_partner."
+        "acknowledgement_required = true, worker also sends 855 PO Acknowledgement and "
+        "transitions sales_po.status to Acknowledged.",
+        "Failed parses are recoverable: fix the missing sales_trading_partner or "
+        "sales_product_buyer_part row, then re-process by setting parsed_at = NULL.",
+        '["sales_edi_inbound_message", "sales_po.status", "sales_po.sales_trading_partner_id", '
+        '"sales_po_line.buyer_part_number"]',
+        41,
+    ),
+    rule(
+        "sps_outbound_856_flow", "Workflow", "sales",
+        "Outbound 856 ASN: shipment -> container -> ASN -> carton hierarchy",
+        "Generated when sales_po.status transitions to Shipped AND "
+        "sales_trading_partner.asn_required = true. Worker (1) finds or creates the sales_shipment "
+        "row for this booking (carrier_scac, BOL, ship_date), (2) finds or creates the "
+        "sales_shipment_container row for the physical container goods are loaded in, (3) inserts a "
+        "sales_po_asn row referencing the container — the (sales_shipment_container_id, sales_po_id) "
+        "UNIQUE constraint prevents duplicate ASNs, (4) inserts one sales_po_asn_carton row per "
+        "physical case with its GS1 SSCC-18 barcode, optionally nested under a Tare-type pallet "
+        "carton via parent_carton_id, (5) builds the 856 X12/XML by joining shipment + container + "
+        "asn + cartons and transmits to SPS, recording sent_at + raw_outbound on the ASN. SPS "
+        "returns a 997 within hours; worker updates acknowledged_at and sales_po_asn.status on receipt.",
+        "Buyers (especially Costco) require ASN within ~1h of departure. Splitting the model into "
+        "shipment/container/ASN/carton matches the EDI 856 HL hierarchy exactly so the message "
+        "build is a direct join, not an aggregation.",
+        '["sales_shipment", "sales_shipment_container", "sales_po_asn", "sales_po_asn_carton", '
+        '"sales_trading_partner.asn_required"]',
+        42,
+    ),
+    rule(
+        "sps_outbound_810_flow", "Workflow", "sales",
+        "Outbound 810 Invoice flow",
+        "Triggered after the 856 is acknowledged AND sales_trading_partner.invoice_required = true "
+        "(some retailers self-invoice from receipt and skip 810). Worker builds the 810 on demand "
+        "from sales_po (header — po_number, payment_terms_net_days, bill_to_*) + sales_po_line "
+        "(lines — buyer_part_number, buyer_line_sequence, gtin_case, price_per_case) + sales_po_asn "
+        "-> sales_shipment_container -> sales_shipment (BOL reference). Transmits, then sets "
+        "sales_po.status = Invoiced. The 810 is not persisted to its own table — re-rendering is "
+        "deterministic from the source rows.",
+        "Avoiding a separate 810 table keeps the schema simpler. Every field on the 810 is captured "
+        "elsewhere on sales_po + lines + ASN, so re-render is safe.",
+        '["sales_po.status", "sales_trading_partner.invoice_required", "sales_po_asn"]',
+        43,
+    ),
+    rule(
+        "sps_997_acknowledgement_sla", "Requirement", "sales",
+        "24h Functional Acknowledgement SLA for inbound documents",
+        "SPS partner contracts require a 997 Functional Acknowledgement transmitted within 24 hours "
+        "of receiving any inbound document (850, 860, 870, etc.). The worker writes "
+        "acknowledgement_status (Accepted / AcceptedWithErrors / Rejected) and "
+        "acknowledgement_sent_at on the sales_edi_inbound_message row when the 997 leaves. Missing the "
+        "SLA triggers SPS-side alerts and may put the partner relationship into compliance review.",
+        "Hard contractual SLA, not negotiable — the 997 also signals to the buyer that we "
+        "received their document so they can move on operationally.",
+        '["sales_edi_inbound_message.acknowledgement_status", "sales_edi_inbound_message.acknowledgement_sent_at"]',
+        44,
+    ),
+    rule(
+        "sps_sscc_uniqueness", "Business Rule", "sales",
+        "GS1 SSCC-18 carton labels are globally unique, never reused",
+        "Every sales_po_asn_carton.sscc is a GS1 Serial Shipping Container Code (SSCC-18) printed "
+        "as the UCC-128 barcode on the case. Per GS1 spec, an SSCC value must NEVER be reused — "
+        "not even after a shipment is cancelled, returned, or voided. The uq_sales_po_asn_carton_sscc "
+        "UNIQUE constraint enforces this. If the buyer scans an SSCC at receiving, it must match "
+        "exactly one carton record in the 856 transmitted; mismatch = carton refused at the dock.",
+        "GS1 spec: reusing an SSCC corrupts the global supply-chain identifier space. Buyer "
+        "receiving systems treat duplicates as fraud / error and quarantine the load.",
+        '["sales_po_asn_carton.sscc", "sales_po_asn_carton.pack_lot_id"]',
+        45,
+    ),
+    rule(
+        "sps_buyer_part_resolution", "Business Rule", "sales",
+        "Buyer SKUs resolve to sales_product at PO receipt; lookup is editable, history is not",
+        "Inbound 850 LineItems carry the buyer's part number, not ours. At PO receipt, the parser "
+        "looks up sales_product_buyer_part on (sales_customer_id, buyer_part_number) and writes "
+        "sales_po_line.sales_product_id from the resolved row, while ALSO snapshotting the buyer's "
+        "values (buyer_part_number, buyer_description, buyer_uom, buyer_line_sequence, gtin_case) "
+        "directly onto sales_po_line. Subsequent edits to sales_product_buyer_part change future "
+        "PO resolution but never rewrite the snapshotted values on past lines, so outbound 856/810 "
+        "echo what the buyer originally sent.",
+        "Buyers occasionally re-key SKUs or change case GTINs. Snapshotting the buyer values at "
+        "receipt time means the EDI roundtrip stays consistent for the original PO even after "
+        "the lookup is updated for new POs.",
+        '["sales_product_buyer_part", "sales_po_line.buyer_part_number", '
+        '"sales_po_line.gtin_case", "sales_po_line.sales_product_id"]',
+        46,
+    ),
+
+    # =====================================================================
+    # 7d. SALES CRM — store visits, market intelligence
     # =====================================================================
     rule(
         "sales_crm_store_customer_link", "Business Rule", "sales",
@@ -469,7 +588,7 @@ RULES = [
         "Stores without a customer link are tracked for competitive intelligence only.",
         None,
         '["sales_crm_store.sales_customer_id"]',
-        37,
+        47,
     ),
     rule(
         "sales_crm_visit_result_product_exclusivity", "Business Rule", "sales",
@@ -480,7 +599,7 @@ RULES = [
         None,
         '["sales_crm_store_visit_result.sales_product_id", '
         '"sales_crm_store_visit_result.sales_crm_external_product_id"]',
-        38,
+        48,
     ),
 
     # =====================================================================
@@ -493,7 +612,7 @@ RULES = [
         "ATP: randomly select atp_site_count zone_1 sites.",
         None,
         '["fsafe_lab_test.enum_pass_options", "fsafe_lab_test.minimum_value", "fsafe_lab_test.maximum_value"]',
-        39,
+        49,
     ),
     rule(
         "fsafe_retest_auto_create", "Workflow", "food_safety",
@@ -501,7 +620,7 @@ RULES = [
         "Failed initial test auto-creates retest and vector results based on lab test config.",
         None,
         '["fsafe_result", "fsafe_lab_test.requires_retest", "fsafe_lab_test.requires_vector_test"]',
-        40,
+        50,
     ),
 
     # =====================================================================
@@ -513,7 +632,7 @@ RULES = [
         "When recurring_frequency is set and status = done, a new request is auto-created.",
         None,
         '["maint_request.recurring_frequency", "maint_request.status"]',
-        41,
+        51,
     ),
 
     # =====================================================================
@@ -536,7 +655,7 @@ RULES = [
         "Eliminates manual auth.users seeding. Employees are managed in hr_employee only — the auth "
         "layer links automatically on first login.",
         '["auth.users", "hr_employee.company_email", "hr_employee.user_id"]',
-        42,
+        52,
     ),
 
     # =====================================================================
@@ -557,7 +676,7 @@ RULES = [
         "follows the same pattern as grow_monitoring_metric.formula.",
         '["grow_harvest_container.tare_formula", "grow_harvest_container.is_tare_calculated", '
         '"grow_harvest_weight.gross_weight", "grow_harvest_weight.net_weight"]',
-        43,
+        53,
     ),
     rule(
         "grow_scouting_site_hierarchy", "Business Rule", "grow",
@@ -573,7 +692,7 @@ RULES = [
         "observations across different spots within it. Keeping the two levels separate lets us aggregate "
         "findings by primary site while preserving the granularity of where each observation was made.",
         '["ops_task_tracker.site_id", "grow_scout_result.site_id", "org_site"]',
-        44,
+        54,
     ),
 ]
 

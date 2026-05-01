@@ -18,7 +18,7 @@ sequenceDiagram
 
     B->>S: Customer PO
     S->>A: 850 Purchase Order
-    Note over A: edi_inbound_message (raw payload)
+    Note over A: sales_edi_inbound_message (raw payload)
     Note over A: sales_po + sales_po_line<br/>status = Received
     A->>S: 997 Functional Acknowledgement
     A->>S: 855 PO Acknowledgement (if required)
@@ -66,12 +66,12 @@ stateDiagram-v2
 
 | X12 Set | Direction | Purpose | Stored In |
 |---------|-----------|---------|-----------|
-| 850 | Inbound | Purchase Order | `edi_inbound_message` (raw) → `sales_po`, `sales_po_line` (parsed) |
+| 850 | Inbound | Purchase Order | `sales_edi_inbound_message` (raw) → `sales_po`, `sales_po_line` (parsed) |
 | 855 | Outbound | PO Acknowledgement | (transient — sent immediately on parse) |
 | 856 | Outbound | Advance Ship Notice | `sales_shipment` + `sales_shipment_container` + `sales_po_asn` + `sales_po_asn_carton` |
 | 810 | Outbound | Invoice | (built on demand from `sales_po` + `sales_po_asn`) |
-| 860 | Inbound | PO Change | `edi_inbound_message` → updates existing `sales_po` |
-| 997 | Both | Functional Acknowledgement | Inbound: `edi_inbound_message.acknowledgement_*` columns. Outbound: sent immediately on parse. |
+| 860 | Inbound | PO Change | `sales_edi_inbound_message` → updates existing `sales_po` |
+| 997 | Both | Functional Acknowledgement | Inbound: `sales_edi_inbound_message.acknowledgement_*` columns. Outbound: sent immediately on parse. |
 
 ---
 
@@ -90,14 +90,14 @@ Onboarding a new buyer requires three records before the first 850 can be ingest
 ## 4. Inbound 850 Flow
 
 1. SPS delivers the 850 (X12 or SPS XML) via SFTP / API.
-2. Worker writes the raw payload to `edi_inbound_message` with `document_type = '850'`, `parsed_at = NULL`.
+2. Worker writes the raw payload to `sales_edi_inbound_message` with `document_type = '850'`, `parsed_at = NULL`.
 3. Parser reads each unparsed message:
    - Looks up `sales_trading_partner` by `sps_partner_id` from the envelope.
    - Creates one `sales_po` row with `sales_trading_partner_id` set, `status = 'Received'`, snapshot of all `ship_to_*` / `bill_to_*` / `buyer_*` / `carrier_*` / `requested_*_date` / `payment_terms_net_days` fields from the 850 segments.
    - For each PO line, looks up `sales_product_buyer_part` by `(sales_customer_id, buyer_part_number)` to resolve `sales_product_id`. Creates `sales_po_line` with the snapshot of `buyer_part_number`, `buyer_description`, `buyer_uom`, `buyer_line_sequence`, `gtin_case`.
    - On success, sets `parsed_at = now()` and `sales_po_id = <new PO id>`.
    - On failure, sets `parse_error` and leaves `parsed_at` NULL.
-4. Worker sends the 997 Functional Acknowledgement back to SPS within 24h (mandatory). Result is recorded on `edi_inbound_message.acknowledgement_status` / `acknowledgement_sent_at`.
+4. Worker sends the 997 Functional Acknowledgement back to SPS within 24h (mandatory). Result is recorded on `sales_edi_inbound_message.acknowledgement_status` / `acknowledgement_sent_at`.
 5. If `sales_trading_partner.acknowledgement_required = true`, worker also sends an 855 PO Acknowledgement confirming acceptance/rejection per line.
 
 **Failure modes and recovery:**
@@ -159,7 +159,7 @@ The 810 is built on demand and not persisted to its own table; the source data i
 ### New tables (slot 145–153)
 - `sales_trading_partner` — EDI bridge from `sps_partner_id` to `sales_customer`. Declares which doc flows are required.
 - `sales_product_buyer_part` — `(sales_customer_id, buyer_part_number)` → `sales_product_id` lookup. Required for 850 line resolution.
-- `edi_inbound_message` — raw archive of every inbound document. Audit trail and replay source.
+- `sales_edi_inbound_message` — raw archive of every inbound document. Audit trail and replay source.
 - `sales_shipment` — booking / voyage record. Carrier, BOL, booking_number, ship_date, ETA. One row per booking.
 - `sales_shipment_container` — physical container / trailer in a booking. Container number, seal, container type, reefer setpoint. One row per box; ocean bookings have several, trucking has one.
 - `sales_po_asn` — outbound 856 header. One row per PO per container; FKs to `sales_shipment_container`.

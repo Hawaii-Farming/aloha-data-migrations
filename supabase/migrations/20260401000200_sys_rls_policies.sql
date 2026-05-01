@@ -1303,16 +1303,16 @@ CREATE POLICY "sales_product_buyer_part_read" ON public.sales_product_buyer_part
 GRANT SELECT ON public.sales_product_buyer_part TO authenticated;
 
 -- ============================================================
--- edi_inbound_message
+-- sales_edi_inbound_message
 -- ============================================================
 
-ALTER TABLE public.edi_inbound_message ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sales_edi_inbound_message ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "edi_inbound_message_read" ON public.edi_inbound_message
+CREATE POLICY "sales_edi_inbound_message_read" ON public.sales_edi_inbound_message
   FOR SELECT TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT SELECT ON public.edi_inbound_message TO authenticated;
+GRANT SELECT ON public.sales_edi_inbound_message TO authenticated;
 
 -- ============================================================
 -- sales_shipment
@@ -1410,3 +1410,1167 @@ GRANT SELECT ON public.invnt_item_summary             TO authenticated;
 GRANT SELECT ON public.ops_task_weekly_schedule       TO authenticated;
 GRANT SELECT ON public.org_site_housing_tenant_count  TO authenticated;
 GRANT SELECT ON public.sales_invoice_v                TO authenticated;
+
+-- ============================================================
+-- WRITE POLICIES (INSERT / UPDATE / DELETE)
+-- ============================================================
+-- Browser session client (anon JWT) writes directly when row.org_id is
+-- one of the caller's orgs. The fine-grained can_edit / can_delete /
+-- can_verify flags on hr_module_access are NOT checked at the DB layer
+-- -- they exist to drive frontend UI (rendering action buttons) and
+-- the app filters by them before allowing a request to leave the client.
+--
+-- Tables NOT listed here remain service-role-only -- reference data
+-- (sys_*, org_module, sales_fob, grow_grade, etc.), tables only written
+-- by server workers (sales_edi_inbound_message), or admin-controlled
+-- tables (hr_module_access, hr_department, hr_work_authorization,
+-- ops_task / ops_template definitions).
+
+
+-- ===== Operations =====
+
+CREATE POLICY "ops_task_tracker_insert" ON public.ops_task_tracker
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "ops_task_tracker_update" ON public.ops_task_tracker
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "ops_task_tracker_delete" ON public.ops_task_tracker
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.ops_task_tracker TO authenticated;
+
+CREATE POLICY "ops_task_schedule_insert" ON public.ops_task_schedule
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "ops_task_schedule_update" ON public.ops_task_schedule
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "ops_task_schedule_delete" ON public.ops_task_schedule
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.ops_task_schedule TO authenticated;
+
+CREATE POLICY "ops_template_result_insert" ON public.ops_template_result
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "ops_template_result_update" ON public.ops_template_result
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "ops_template_result_delete" ON public.ops_template_result
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.ops_template_result TO authenticated;
+
+CREATE POLICY "ops_template_result_photo_insert" ON public.ops_template_result_photo
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "ops_template_result_photo_update" ON public.ops_template_result_photo
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "ops_template_result_photo_delete" ON public.ops_template_result_photo
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.ops_template_result_photo TO authenticated;
+
+CREATE POLICY "ops_corrective_action_taken_insert" ON public.ops_corrective_action_taken
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "ops_corrective_action_taken_update" ON public.ops_corrective_action_taken
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "ops_corrective_action_taken_delete" ON public.ops_corrective_action_taken
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.ops_corrective_action_taken TO authenticated;
+
+CREATE POLICY "ops_training_insert" ON public.ops_training
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "ops_training_update" ON public.ops_training
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "ops_training_delete" ON public.ops_training
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.ops_training TO authenticated;
+
+CREATE POLICY "ops_training_attendee_insert" ON public.ops_training_attendee
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "ops_training_attendee_update" ON public.ops_training_attendee
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "ops_training_attendee_delete" ON public.ops_training_attendee
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.ops_training_attendee TO authenticated;
+
+CREATE POLICY "fin_expense_insert" ON public.fin_expense
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "fin_expense_update" ON public.fin_expense
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "fin_expense_delete" ON public.fin_expense
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.fin_expense TO authenticated;
+
+
+-- ===== Grow =====
+
+CREATE POLICY "grow_task_photo_insert" ON public.grow_task_photo
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_task_photo_update" ON public.grow_task_photo
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_task_photo_delete" ON public.grow_task_photo
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_task_photo TO authenticated;
+
+CREATE POLICY "grow_task_seed_batch_insert" ON public.grow_task_seed_batch
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_task_seed_batch_update" ON public.grow_task_seed_batch
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_task_seed_batch_delete" ON public.grow_task_seed_batch
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_task_seed_batch TO authenticated;
+
+CREATE POLICY "grow_monitoring_result_insert" ON public.grow_monitoring_result
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_monitoring_result_update" ON public.grow_monitoring_result
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_monitoring_result_delete" ON public.grow_monitoring_result
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_monitoring_result TO authenticated;
+
+CREATE POLICY "grow_scout_result_insert" ON public.grow_scout_result
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_scout_result_update" ON public.grow_scout_result
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_scout_result_delete" ON public.grow_scout_result
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_scout_result TO authenticated;
+
+CREATE POLICY "grow_spray_input_insert" ON public.grow_spray_input
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_spray_input_update" ON public.grow_spray_input
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_spray_input_delete" ON public.grow_spray_input
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_spray_input TO authenticated;
+
+CREATE POLICY "grow_spray_equipment_insert" ON public.grow_spray_equipment
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_spray_equipment_update" ON public.grow_spray_equipment
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_spray_equipment_delete" ON public.grow_spray_equipment
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_spray_equipment TO authenticated;
+
+CREATE POLICY "grow_fertigation_insert" ON public.grow_fertigation
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_fertigation_update" ON public.grow_fertigation
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_fertigation_delete" ON public.grow_fertigation
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_fertigation TO authenticated;
+
+CREATE POLICY "grow_fertigation_recipe_insert" ON public.grow_fertigation_recipe
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_fertigation_recipe_update" ON public.grow_fertigation_recipe
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_fertigation_recipe_delete" ON public.grow_fertigation_recipe
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_fertigation_recipe TO authenticated;
+
+CREATE POLICY "grow_fertigation_recipe_site_insert" ON public.grow_fertigation_recipe_site
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_fertigation_recipe_site_update" ON public.grow_fertigation_recipe_site
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_fertigation_recipe_site_delete" ON public.grow_fertigation_recipe_site
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_fertigation_recipe_site TO authenticated;
+
+CREATE POLICY "grow_fertigation_recipe_item_insert" ON public.grow_fertigation_recipe_item
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_fertigation_recipe_item_update" ON public.grow_fertigation_recipe_item
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_fertigation_recipe_item_delete" ON public.grow_fertigation_recipe_item
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_fertigation_recipe_item TO authenticated;
+
+CREATE POLICY "grow_harvest_weight_insert" ON public.grow_harvest_weight
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_harvest_weight_update" ON public.grow_harvest_weight
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_harvest_weight_delete" ON public.grow_harvest_weight
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_harvest_weight TO authenticated;
+
+CREATE POLICY "grow_harvest_container_insert" ON public.grow_harvest_container
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_harvest_container_update" ON public.grow_harvest_container
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_harvest_container_delete" ON public.grow_harvest_container
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_harvest_container TO authenticated;
+
+CREATE POLICY "grow_chemistry_result_insert" ON public.grow_chemistry_result
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_chemistry_result_update" ON public.grow_chemistry_result
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_chemistry_result_delete" ON public.grow_chemistry_result
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_chemistry_result TO authenticated;
+
+CREATE POLICY "grow_weather_reading_insert" ON public.grow_weather_reading
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_weather_reading_update" ON public.grow_weather_reading
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_weather_reading_delete" ON public.grow_weather_reading
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_weather_reading TO authenticated;
+
+CREATE POLICY "grow_lettuce_seed_batch_insert" ON public.grow_lettuce_seed_batch
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_lettuce_seed_batch_update" ON public.grow_lettuce_seed_batch
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_lettuce_seed_batch_delete" ON public.grow_lettuce_seed_batch
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_lettuce_seed_batch TO authenticated;
+
+CREATE POLICY "grow_lettuce_seed_mix_insert" ON public.grow_lettuce_seed_mix
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_lettuce_seed_mix_update" ON public.grow_lettuce_seed_mix
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_lettuce_seed_mix_delete" ON public.grow_lettuce_seed_mix
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_lettuce_seed_mix TO authenticated;
+
+CREATE POLICY "grow_lettuce_seed_mix_item_insert" ON public.grow_lettuce_seed_mix_item
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_lettuce_seed_mix_item_update" ON public.grow_lettuce_seed_mix_item
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_lettuce_seed_mix_item_delete" ON public.grow_lettuce_seed_mix_item
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_lettuce_seed_mix_item TO authenticated;
+
+CREATE POLICY "grow_cuke_gh_row_planting_insert" ON public.grow_cuke_gh_row_planting
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_cuke_gh_row_planting_update" ON public.grow_cuke_gh_row_planting
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_cuke_gh_row_planting_delete" ON public.grow_cuke_gh_row_planting
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_cuke_gh_row_planting TO authenticated;
+
+CREATE POLICY "grow_cuke_seed_batch_insert" ON public.grow_cuke_seed_batch
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_cuke_seed_batch_update" ON public.grow_cuke_seed_batch
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "grow_cuke_seed_batch_delete" ON public.grow_cuke_seed_batch
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.grow_cuke_seed_batch TO authenticated;
+
+
+-- ===== Pack =====
+
+CREATE POLICY "pack_lot_insert" ON public.pack_lot
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "pack_lot_update" ON public.pack_lot
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "pack_lot_delete" ON public.pack_lot
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.pack_lot TO authenticated;
+
+CREATE POLICY "pack_lot_item_insert" ON public.pack_lot_item
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "pack_lot_item_update" ON public.pack_lot_item
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "pack_lot_item_delete" ON public.pack_lot_item
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.pack_lot_item TO authenticated;
+
+CREATE POLICY "pack_productivity_hour_insert" ON public.pack_productivity_hour
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "pack_productivity_hour_update" ON public.pack_productivity_hour
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "pack_productivity_hour_delete" ON public.pack_productivity_hour
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.pack_productivity_hour TO authenticated;
+
+CREATE POLICY "pack_productivity_hour_fail_insert" ON public.pack_productivity_hour_fail
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "pack_productivity_hour_fail_update" ON public.pack_productivity_hour_fail
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "pack_productivity_hour_fail_delete" ON public.pack_productivity_hour_fail
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.pack_productivity_hour_fail TO authenticated;
+
+CREATE POLICY "pack_dryer_result_insert" ON public.pack_dryer_result
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "pack_dryer_result_update" ON public.pack_dryer_result
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "pack_dryer_result_delete" ON public.pack_dryer_result
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.pack_dryer_result TO authenticated;
+
+CREATE POLICY "pack_shelf_life_insert" ON public.pack_shelf_life
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "pack_shelf_life_update" ON public.pack_shelf_life
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "pack_shelf_life_delete" ON public.pack_shelf_life
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.pack_shelf_life TO authenticated;
+
+CREATE POLICY "pack_shelf_life_result_insert" ON public.pack_shelf_life_result
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "pack_shelf_life_result_update" ON public.pack_shelf_life_result
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "pack_shelf_life_result_delete" ON public.pack_shelf_life_result
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.pack_shelf_life_result TO authenticated;
+
+CREATE POLICY "pack_shelf_life_photo_insert" ON public.pack_shelf_life_photo
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "pack_shelf_life_photo_update" ON public.pack_shelf_life_photo
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "pack_shelf_life_photo_delete" ON public.pack_shelf_life_photo
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.pack_shelf_life_photo TO authenticated;
+
+
+-- ===== Food Safety =====
+
+CREATE POLICY "fsafe_lab_insert" ON public.fsafe_lab
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "fsafe_lab_update" ON public.fsafe_lab
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "fsafe_lab_delete" ON public.fsafe_lab
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.fsafe_lab TO authenticated;
+
+CREATE POLICY "fsafe_lab_test_insert" ON public.fsafe_lab_test
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "fsafe_lab_test_update" ON public.fsafe_lab_test
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "fsafe_lab_test_delete" ON public.fsafe_lab_test
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.fsafe_lab_test TO authenticated;
+
+CREATE POLICY "fsafe_result_insert" ON public.fsafe_result
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "fsafe_result_update" ON public.fsafe_result
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "fsafe_result_delete" ON public.fsafe_result
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.fsafe_result TO authenticated;
+
+CREATE POLICY "fsafe_pest_result_insert" ON public.fsafe_pest_result
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "fsafe_pest_result_update" ON public.fsafe_pest_result
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "fsafe_pest_result_delete" ON public.fsafe_pest_result
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.fsafe_pest_result TO authenticated;
+
+CREATE POLICY "fsafe_test_hold_insert" ON public.fsafe_test_hold
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "fsafe_test_hold_update" ON public.fsafe_test_hold
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "fsafe_test_hold_delete" ON public.fsafe_test_hold
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.fsafe_test_hold TO authenticated;
+
+CREATE POLICY "fsafe_test_hold_po_insert" ON public.fsafe_test_hold_po
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "fsafe_test_hold_po_update" ON public.fsafe_test_hold_po
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "fsafe_test_hold_po_delete" ON public.fsafe_test_hold_po
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.fsafe_test_hold_po TO authenticated;
+
+
+-- ===== Maintenance =====
+
+CREATE POLICY "maint_request_insert" ON public.maint_request
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "maint_request_update" ON public.maint_request
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "maint_request_delete" ON public.maint_request
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.maint_request TO authenticated;
+
+CREATE POLICY "maint_request_invnt_item_insert" ON public.maint_request_invnt_item
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "maint_request_invnt_item_update" ON public.maint_request_invnt_item
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "maint_request_invnt_item_delete" ON public.maint_request_invnt_item
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.maint_request_invnt_item TO authenticated;
+
+CREATE POLICY "maint_request_photo_insert" ON public.maint_request_photo
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "maint_request_photo_update" ON public.maint_request_photo
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "maint_request_photo_delete" ON public.maint_request_photo
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.maint_request_photo TO authenticated;
+
+
+-- ===== Inventory =====
+
+CREATE POLICY "invnt_po_insert" ON public.invnt_po
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "invnt_po_update" ON public.invnt_po
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "invnt_po_delete" ON public.invnt_po
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.invnt_po TO authenticated;
+
+CREATE POLICY "invnt_po_received_insert" ON public.invnt_po_received
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "invnt_po_received_update" ON public.invnt_po_received
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "invnt_po_received_delete" ON public.invnt_po_received
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.invnt_po_received TO authenticated;
+
+CREATE POLICY "invnt_lot_insert" ON public.invnt_lot
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "invnt_lot_update" ON public.invnt_lot
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "invnt_lot_delete" ON public.invnt_lot
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.invnt_lot TO authenticated;
+
+CREATE POLICY "invnt_onhand_insert" ON public.invnt_onhand
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "invnt_onhand_update" ON public.invnt_onhand
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "invnt_onhand_delete" ON public.invnt_onhand
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.invnt_onhand TO authenticated;
+
+
+-- ===== Sales =====
+
+CREATE POLICY "sales_po_insert" ON public.sales_po
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_po_update" ON public.sales_po
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_po_delete" ON public.sales_po
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_po TO authenticated;
+
+CREATE POLICY "sales_po_line_insert" ON public.sales_po_line
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_po_line_update" ON public.sales_po_line
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_po_line_delete" ON public.sales_po_line
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_po_line TO authenticated;
+
+CREATE POLICY "sales_po_fulfillment_insert" ON public.sales_po_fulfillment
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_po_fulfillment_update" ON public.sales_po_fulfillment
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_po_fulfillment_delete" ON public.sales_po_fulfillment
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_po_fulfillment TO authenticated;
+
+CREATE POLICY "sales_customer_insert" ON public.sales_customer
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_customer_update" ON public.sales_customer
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_customer_delete" ON public.sales_customer
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_customer TO authenticated;
+
+CREATE POLICY "sales_customer_group_insert" ON public.sales_customer_group
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_customer_group_update" ON public.sales_customer_group
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_customer_group_delete" ON public.sales_customer_group
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_customer_group TO authenticated;
+
+CREATE POLICY "sales_product_insert" ON public.sales_product
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_product_update" ON public.sales_product
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_product_delete" ON public.sales_product
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_product TO authenticated;
+
+CREATE POLICY "sales_product_price_insert" ON public.sales_product_price
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_product_price_update" ON public.sales_product_price
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_product_price_delete" ON public.sales_product_price
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_product_price TO authenticated;
+
+CREATE POLICY "sales_invoice_insert" ON public.sales_invoice
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_invoice_update" ON public.sales_invoice
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_invoice_delete" ON public.sales_invoice
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_invoice TO authenticated;
+
+CREATE POLICY "sales_crm_external_product_insert" ON public.sales_crm_external_product
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_crm_external_product_update" ON public.sales_crm_external_product
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_crm_external_product_delete" ON public.sales_crm_external_product
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_crm_external_product TO authenticated;
+
+CREATE POLICY "sales_crm_store_insert" ON public.sales_crm_store
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_crm_store_update" ON public.sales_crm_store
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_crm_store_delete" ON public.sales_crm_store
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_crm_store TO authenticated;
+
+CREATE POLICY "sales_crm_store_visit_insert" ON public.sales_crm_store_visit
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_crm_store_visit_update" ON public.sales_crm_store_visit
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_crm_store_visit_delete" ON public.sales_crm_store_visit
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_crm_store_visit TO authenticated;
+
+CREATE POLICY "sales_crm_store_visit_photo_insert" ON public.sales_crm_store_visit_photo
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_crm_store_visit_photo_update" ON public.sales_crm_store_visit_photo
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_crm_store_visit_photo_delete" ON public.sales_crm_store_visit_photo
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_crm_store_visit_photo TO authenticated;
+
+CREATE POLICY "sales_crm_store_visit_result_insert" ON public.sales_crm_store_visit_result
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_crm_store_visit_result_update" ON public.sales_crm_store_visit_result
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_crm_store_visit_result_delete" ON public.sales_crm_store_visit_result
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_crm_store_visit_result TO authenticated;
+
+CREATE POLICY "sales_trading_partner_insert" ON public.sales_trading_partner
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_trading_partner_update" ON public.sales_trading_partner
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_trading_partner_delete" ON public.sales_trading_partner
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_trading_partner TO authenticated;
+
+CREATE POLICY "sales_product_buyer_part_insert" ON public.sales_product_buyer_part
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_product_buyer_part_update" ON public.sales_product_buyer_part
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_product_buyer_part_delete" ON public.sales_product_buyer_part
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_product_buyer_part TO authenticated;
+
+CREATE POLICY "sales_shipment_insert" ON public.sales_shipment
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_shipment_update" ON public.sales_shipment
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_shipment_delete" ON public.sales_shipment
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_shipment TO authenticated;
+
+CREATE POLICY "sales_shipment_container_insert" ON public.sales_shipment_container
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_shipment_container_update" ON public.sales_shipment_container
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_shipment_container_delete" ON public.sales_shipment_container
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_shipment_container TO authenticated;
+
+CREATE POLICY "sales_pallet_insert" ON public.sales_pallet
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_pallet_update" ON public.sales_pallet
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_pallet_delete" ON public.sales_pallet
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_pallet TO authenticated;
+
+CREATE POLICY "sales_pallet_allocation_insert" ON public.sales_pallet_allocation
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_pallet_allocation_update" ON public.sales_pallet_allocation
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_pallet_allocation_delete" ON public.sales_pallet_allocation
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_pallet_allocation TO authenticated;
+
+CREATE POLICY "sales_po_asn_insert" ON public.sales_po_asn
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_po_asn_update" ON public.sales_po_asn
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_po_asn_delete" ON public.sales_po_asn
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_po_asn TO authenticated;
+
+CREATE POLICY "sales_po_asn_carton_insert" ON public.sales_po_asn_carton
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_po_asn_carton_update" ON public.sales_po_asn_carton
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "sales_po_asn_carton_delete" ON public.sales_po_asn_carton
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.sales_po_asn_carton TO authenticated;
+
+
+-- ===== Human Resources =====
+
+CREATE POLICY "hr_employee_insert" ON public.hr_employee
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "hr_employee_update" ON public.hr_employee
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "hr_employee_delete" ON public.hr_employee
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.hr_employee TO authenticated;
+
+CREATE POLICY "hr_employee_review_insert" ON public.hr_employee_review
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "hr_employee_review_update" ON public.hr_employee_review
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "hr_employee_review_delete" ON public.hr_employee_review
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.hr_employee_review TO authenticated;
+
+CREATE POLICY "hr_disciplinary_warning_insert" ON public.hr_disciplinary_warning
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "hr_disciplinary_warning_update" ON public.hr_disciplinary_warning
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "hr_disciplinary_warning_delete" ON public.hr_disciplinary_warning
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.hr_disciplinary_warning TO authenticated;
+
+CREATE POLICY "hr_time_off_request_insert" ON public.hr_time_off_request
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "hr_time_off_request_update" ON public.hr_time_off_request
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "hr_time_off_request_delete" ON public.hr_time_off_request
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.hr_time_off_request TO authenticated;
+
+CREATE POLICY "hr_travel_request_insert" ON public.hr_travel_request
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "hr_travel_request_update" ON public.hr_travel_request
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "hr_travel_request_delete" ON public.hr_travel_request
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.hr_travel_request TO authenticated;
+
+CREATE POLICY "hr_payroll_insert" ON public.hr_payroll
+  FOR INSERT TO authenticated
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "hr_payroll_update" ON public.hr_payroll
+  FOR UPDATE TO authenticated
+  USING      (org_id IN (SELECT public.get_user_org_ids()))
+  WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
+
+CREATE POLICY "hr_payroll_delete" ON public.hr_payroll
+  FOR DELETE TO authenticated
+  USING (org_id IN (SELECT public.get_user_org_ids()));
+
+GRANT INSERT, UPDATE, DELETE ON public.hr_payroll TO authenticated;
