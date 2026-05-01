@@ -38,3 +38,8 @@ supabase/.branches/
 # Scratch files
 *.tmp
 *.tmp.json
+.tmp/
+
+# Generated reports / one-off auditor artifacts
+mock_recall_report.*
+*.docx

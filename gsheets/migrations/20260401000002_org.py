@@ -43,6 +43,7 @@ ORG_ID = "hawaii_farming"
 
 SHEET_ID_GLOBAL = "1VOVyYt_Mk7QJkjZFRyq3iLf6xkBrZUWarobv7tf8yZA"
 SHEET_ID_VARIETY = "1VtEecYn-W1pbnIU1hRHfxIpkH2DtK7hj0CpcpiLoziM"
+SHEET_ID_HR      = "13DUQTQyZf0CW07xv4FJ4ukP2x3Yoz8PyAw3Z2SwNsts"
 
 
 # ---------------------------------------------------------------------------
@@ -410,16 +411,21 @@ def migrate_org_site(supabase):
         }))
 
     # -- HOUSING (standalone table, not org_site) --
-    housing_sites = [
-        "BIP (5)", "Duplex", "JTL (1)", "JTL (2)",
-        "Kawano (3)", "Kawano (4)", "Minor's", "Pete's",
-        "Todd's", "South Kohala",
-    ]
+    # Source: hr_ee_housing tab on the HR Google Sheet. Each row carries
+    # `Housing` (display name = id) and `MaximumBeds`. The first row is a
+    # "Total" summary line which we skip.
+    housing_records = gc.open_by_key(SHEET_ID_HR).worksheet("hr_ee_housing").get_all_records()
     housing_rows = []
-    for name in housing_sites:
+    for r in housing_records:
+        name = str(r.get("Housing", "")).strip()
+        if not name or name.lower() == "total":
+            continue
+        max_beds_raw = str(r.get("MaximumBeds", "")).strip()
+        max_beds = int(max_beds_raw) if max_beds_raw.isdigit() else None
         housing_rows.append(audit({
             "id": name,
             "org_id": ORG_ID,
+            "maximum_beds": max_beds,
         }))
 
     # Insert parents first, then children. Housing goes to its own table.

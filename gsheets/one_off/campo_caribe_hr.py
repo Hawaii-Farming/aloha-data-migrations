@@ -135,14 +135,23 @@ def provision_org(cur):
     print(f"  org: '{ORG_ID}' upserted")
 
 
+ENABLED_MODULES = ("Human Resources",)
+# Campo Caribe is HR-only for now. Add module names to ENABLED_MODULES as
+# other modules come online; rows for non-listed modules still get inserted
+# (so the org can toggle them on later) but ship is_enabled=false.
+
+
 def provision_modules(cur):
     cur.execute("""
         INSERT INTO org_module (org_id, sys_module_id, is_enabled, display_order, created_by, updated_by)
-        SELECT %s, id, true, display_order, %s, %s
+        SELECT %s, id, id = ANY(%s), display_order, %s, %s
         FROM sys_module
-        ON CONFLICT (org_id, sys_module_id) DO NOTHING
-    """, (ORG_ID, AUDIT_USER, AUDIT_USER))
-    print(f"  org_module: {cur.rowcount} rows inserted")
+        ON CONFLICT (org_id, sys_module_id) DO UPDATE SET
+            is_enabled = EXCLUDED.is_enabled,
+            updated_at = now(),
+            updated_by = EXCLUDED.updated_by
+    """, (ORG_ID, list(ENABLED_MODULES), AUDIT_USER, AUDIT_USER))
+    print(f"  org_module: {cur.rowcount} rows upserted (only {ENABLED_MODULES} enabled)")
 
 
 def provision_sub_modules(cur):
@@ -150,11 +159,15 @@ def provision_sub_modules(cur):
         INSERT INTO org_sub_module (org_id, sys_module_id, sys_sub_module_id,
                                     sys_access_level_id, is_enabled, display_order,
                                     created_by, updated_by)
-        SELECT %s, sys_module_id, id, sys_access_level_id, true, display_order, %s, %s
+        SELECT %s, sys_module_id, id, sys_access_level_id,
+               sys_module_id = ANY(%s), display_order, %s, %s
         FROM sys_sub_module
-        ON CONFLICT (org_id, sys_sub_module_id) DO NOTHING
-    """, (ORG_ID, AUDIT_USER, AUDIT_USER))
-    print(f"  org_sub_module: {cur.rowcount} rows inserted")
+        ON CONFLICT (org_id, sys_sub_module_id) DO UPDATE SET
+            is_enabled = EXCLUDED.is_enabled,
+            updated_at = now(),
+            updated_by = EXCLUDED.updated_by
+    """, (ORG_ID, list(ENABLED_MODULES), AUDIT_USER, AUDIT_USER))
+    print(f"  org_sub_module: {cur.rowcount} rows upserted (only {ENABLED_MODULES} sub-modules enabled)")
 
 
 def provision_farm(cur):
@@ -291,11 +304,11 @@ def insert_employees(cur, rows):
         placeholders = ", ".join(["%s"] * len(columns))
         col_list = ", ".join(columns)
         update_set = ", ".join(
-            f"{c} = EXCLUDED.{c}" for c in columns if c not in ("id", "created_by")
+            f"{c} = EXCLUDED.{c}" for c in columns if c not in ("id", "org_id", "created_by")
         )
         cur.execute(
             f"INSERT INTO hr_employee ({col_list}) VALUES ({placeholders}) "
-            f"ON CONFLICT (id) DO UPDATE SET {update_set}, updated_at = now()",
+            f"ON CONFLICT (org_id, id) DO UPDATE SET {update_set}, updated_at = now()",
             values,
         )
         inserted += 1
