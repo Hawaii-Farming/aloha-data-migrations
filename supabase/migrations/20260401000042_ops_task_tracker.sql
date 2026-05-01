@@ -11,13 +11,14 @@ CREATE TABLE IF NOT EXISTS ops_task_tracker (
     number_of_people INTEGER,
     notes           TEXT,
     verified_at     TIMESTAMPTZ,
-    verified_by     TEXT REFERENCES hr_employee(id),
+    verified_by     TEXT,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by      TEXT,
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by      TEXT,
     is_deleted       BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT ops_task_tracker_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
+    CONSTRAINT ops_task_tracker_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id),
+    CONSTRAINT ops_task_tracker_verified_by_emp_fkey FOREIGN KEY (org_id, verified_by) REFERENCES hr_employee(org_id, id)
 );
 
 COMMENT ON TABLE ops_task_tracker IS 'Header record for a task event. One record per task session — captures what task was done, where, when, and its verification status.';

@@ -33,9 +33,9 @@ CREATE TABLE IF NOT EXISTS fsafe_result (
 
     -- Named FKs so PostgREST can disambiguate when embedding hr_employee
     CONSTRAINT fk_fsafe_result_sampled_by
-      FOREIGN KEY (sampled_by) REFERENCES hr_employee(id),
+      FOREIGN KEY (org_id, sampled_by) REFERENCES hr_employee(org_id, id),
     CONSTRAINT fk_fsafe_result_verified_by
-      FOREIGN KEY (verified_by) REFERENCES hr_employee(id),
+      FOREIGN KEY (org_id, verified_by) REFERENCES hr_employee(org_id, id),
     CONSTRAINT fsafe_result_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 

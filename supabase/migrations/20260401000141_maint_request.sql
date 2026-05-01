@@ -24,9 +24,9 @@ CREATE TABLE IF NOT EXISTS maint_request (
 
     -- Named FKs so PostgREST can disambiguate when embedding hr_employee
     CONSTRAINT fk_maint_request_fixer
-      FOREIGN KEY (fixer_id) REFERENCES hr_employee(id),
+      FOREIGN KEY (org_id, fixer_id) REFERENCES hr_employee(org_id, id),
     CONSTRAINT fk_maint_request_requested_by
-      FOREIGN KEY (requested_by) REFERENCES hr_employee(id),
+      FOREIGN KEY (org_id, requested_by) REFERENCES hr_employee(org_id, id),
     CONSTRAINT maint_request_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 

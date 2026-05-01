@@ -33,11 +33,11 @@ CREATE TABLE IF NOT EXISTS hr_disciplinary_warning (
 
     -- Named FKs so PostgREST can disambiguate when embedding hr_employee
     CONSTRAINT fk_hr_disciplinary_warning_employee
-      FOREIGN KEY (hr_employee_id) REFERENCES hr_employee(id),
+      FOREIGN KEY (org_id, hr_employee_id) REFERENCES hr_employee(org_id, id),
     CONSTRAINT fk_hr_disciplinary_warning_reported_by
-      FOREIGN KEY (reported_by) REFERENCES hr_employee(id),
+      FOREIGN KEY (org_id, reported_by) REFERENCES hr_employee(org_id, id),
     CONSTRAINT fk_hr_disciplinary_warning_reviewed_by
-      FOREIGN KEY (reviewed_by) REFERENCES hr_employee(id)
+      FOREIGN KEY (org_id, reviewed_by) REFERENCES hr_employee(org_id, id)
 );
 
 COMMENT ON TABLE hr_disciplinary_warning IS 'Employee disciplinary warning records. Tracks the offense, action plan, and employee acknowledgment alongside a pending to reviewed workflow.';

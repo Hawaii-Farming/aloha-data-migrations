@@ -34,17 +34,20 @@ CREATE TABLE IF NOT EXISTS invnt_po (
     -- Status & audit
     status                 TEXT NOT NULL DEFAULT 'requested' CHECK (status IN ('Requested', 'Approved', 'Rejected', 'Ordered', 'Partial', 'Received', 'Cancelled')),
     requested_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
-    requested_by           TEXT NOT NULL REFERENCES hr_employee(id),
+    requested_by           TEXT NOT NULL,
     reviewed_at            TIMESTAMPTZ,
-    reviewed_by            TEXT REFERENCES hr_employee(id),
+    reviewed_by            TEXT,
     ordered_at             TIMESTAMPTZ,
-    ordered_by             TEXT REFERENCES hr_employee(id),
+    ordered_by             TEXT,
     created_at             TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by             TEXT,
     updated_at             TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by             TEXT,
     is_deleted              BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT invnt_po_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
+    CONSTRAINT invnt_po_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id),
+    CONSTRAINT invnt_po_requested_by_emp_fkey FOREIGN KEY (org_id, requested_by) REFERENCES hr_employee(org_id, id),
+    CONSTRAINT invnt_po_reviewed_by_emp_fkey FOREIGN KEY (org_id, reviewed_by) REFERENCES hr_employee(org_id, id),
+    CONSTRAINT invnt_po_ordered_by_emp_fkey FOREIGN KEY (org_id, ordered_by) REFERENCES hr_employee(org_id, id)
 );
 
 COMMENT ON TABLE invnt_po IS 'Tracks purchase order requests through a workflow from request to receipt. Each order snapshots the item name, units, and cost at order time so the record stays accurate even if the item changes later.';

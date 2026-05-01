@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS hr_module_access (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id          TEXT NOT NULL REFERENCES org(id),
-    hr_employee_id  TEXT NOT NULL REFERENCES hr_employee(id),
+    hr_employee_id  TEXT NOT NULL,
     sys_module_id   TEXT NOT NULL,
     is_enabled      BOOLEAN NOT NULL DEFAULT true,
     can_edit        BOOLEAN NOT NULL DEFAULT true,
@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS hr_module_access (
     is_deleted      BOOLEAN NOT NULL DEFAULT false,
     CONSTRAINT uq_hr_module_access UNIQUE (hr_employee_id, sys_module_id),
     CONSTRAINT hr_module_access_org_module_fkey
-      FOREIGN KEY (org_id, sys_module_id) REFERENCES org_module(org_id, sys_module_id)
+      FOREIGN KEY (org_id, sys_module_id) REFERENCES org_module(org_id, sys_module_id),
+    CONSTRAINT hr_module_access_hr_employee_id_emp_fkey FOREIGN KEY (org_id, hr_employee_id) REFERENCES hr_employee(org_id, id)
 );
 
 COMMENT ON TABLE hr_module_access IS 'Controls which modules each employee can access. One row per employee per module; is_enabled toggles access without deleting the record. Composite FK (org_id, sys_module_id) into org_module.';

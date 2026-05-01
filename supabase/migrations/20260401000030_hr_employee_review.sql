@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS hr_employee_review (
     notes               TEXT,
     lead_id             TEXT,
     is_locked           BOOLEAN NOT NULL DEFAULT false,
-    created_by          TEXT REFERENCES hr_employee(id),
-    updated_by          TEXT REFERENCES hr_employee(id),
+    created_by          TEXT,
+    updated_by          TEXT,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     is_deleted          BOOLEAN NOT NULL DEFAULT false,
@@ -23,9 +23,11 @@ CREATE TABLE IF NOT EXISTS hr_employee_review (
     CONSTRAINT uq_hr_employee_review_quarter
         UNIQUE (org_id, hr_employee_id, review_year, review_quarter),
     CONSTRAINT fk_hr_employee_review_employee
-        FOREIGN KEY (hr_employee_id) REFERENCES hr_employee(id),
+        FOREIGN KEY (org_id, hr_employee_id) REFERENCES hr_employee(org_id, id),
     CONSTRAINT fk_hr_employee_review_lead
-        FOREIGN KEY (lead_id) REFERENCES hr_employee(id)
+        FOREIGN KEY (org_id, lead_id) REFERENCES hr_employee(org_id, id),
+    CONSTRAINT hr_employee_review_created_by_emp_fkey FOREIGN KEY (org_id, created_by) REFERENCES hr_employee(org_id, id),
+    CONSTRAINT hr_employee_review_updated_by_emp_fkey FOREIGN KEY (org_id, updated_by) REFERENCES hr_employee(org_id, id)
 );
 
 -- RLS lives in 20260401000200_sys_rls_policies.sql.

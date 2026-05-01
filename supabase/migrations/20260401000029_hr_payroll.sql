@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS hr_payroll (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id                      TEXT NOT NULL REFERENCES org(id),
-    hr_employee_id              TEXT NOT NULL REFERENCES hr_employee(id),
+    hr_employee_id              TEXT NOT NULL,
     payroll_id                  TEXT NOT NULL,
 
     -- Pay period
@@ -76,7 +76,8 @@ CREATE TABLE IF NOT EXISTS hr_payroll (
     created_by                  TEXT,
     updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by                  TEXT,
-    is_deleted                  BOOLEAN NOT NULL DEFAULT false
+    is_deleted                  BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT hr_payroll_hr_employee_id_emp_fkey FOREIGN KEY (org_id, hr_employee_id) REFERENCES hr_employee(org_id, id)
 );
 
 COMMENT ON TABLE hr_payroll IS 'Merged payroll data imported from external payroll processor. One row per employee per check date. Employee fields are snapshotted at time of processing to preserve historical accuracy.';

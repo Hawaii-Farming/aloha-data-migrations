@@ -215,10 +215,10 @@ def build_employee_rows(records, dept_map):
             print(f"  WARN: could not parse name '{full}', skipping")
             continue
 
-        # hr_employee.id is still a global PK -- prefix with org abbrev
-        # to avoid collisions with HF employees (e.g., a 'jose_garcia' on
-        # both orgs).
-        emp_id = f"campo_{to_id(f'{last} {first}')}"
+        # hr_employee uses composite (org_id, id) PK so the same id can
+        # legitimately exist in both orgs (e.g. a 'jose_garcia' working
+        # for both HF and Campo).
+        emp_id = to_id(f"{last} {first}")
         # Disambiguate id collisions (rare with 82 rows)
         suffix = 2
         base_id = emp_id

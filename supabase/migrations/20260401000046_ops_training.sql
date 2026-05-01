@@ -21,9 +21,9 @@ CREATE TABLE IF NOT EXISTS ops_training (
 
     -- Named FKs so PostgREST can disambiguate when embedding hr_employee
     CONSTRAINT fk_ops_training_trainer
-      FOREIGN KEY (trainer_id) REFERENCES hr_employee(id),
+      FOREIGN KEY (org_id, trainer_id) REFERENCES hr_employee(org_id, id),
     CONSTRAINT fk_ops_training_verified_by
-      FOREIGN KEY (verified_by) REFERENCES hr_employee(id),
+      FOREIGN KEY (org_id, verified_by) REFERENCES hr_employee(org_id, id),
     CONSTRAINT ops_training_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 

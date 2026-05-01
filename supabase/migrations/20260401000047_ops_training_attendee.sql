@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS ops_training_attendee (
     org_id                      TEXT NOT NULL REFERENCES org(id),
     farm_id                     TEXT,
     ops_training_id             UUID NOT NULL REFERENCES ops_training(id),
-    hr_employee_id              TEXT NOT NULL REFERENCES hr_employee(id),
+    hr_employee_id              TEXT NOT NULL,
 
     signed_at                   TIMESTAMPTZ,
 
@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS ops_training_attendee (
     is_deleted           BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT uq_ops_training_attendee UNIQUE (ops_training_id, hr_employee_id),
-    CONSTRAINT ops_training_attendee_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
+    CONSTRAINT ops_training_attendee_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id),
+    CONSTRAINT ops_training_attendee_hr_employee_id_emp_fkey FOREIGN KEY (org_id, hr_employee_id) REFERENCES hr_employee(org_id, id)
 );
 
 COMMENT ON TABLE ops_training_attendee IS 'Individual attendance and certification records for each employee per training session. One row per employee per training.';

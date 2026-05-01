@@ -18,18 +18,15 @@ SELECT
     h.id,
     h.org_id,
     h.maximum_beds,
-    h.address,
-    h.notes,
-    h.created_at,
-    h.created_by,
-    h.updated_at,
-    h.updated_by,
-    h.is_deleted,
     COALESCE(t.tenant_count, 0)                       AS tenant_count,
     CASE
       WHEN h.maximum_beds IS NULL THEN NULL
       ELSE GREATEST(h.maximum_beds - COALESCE(t.tenant_count, 0), 0)
-    END                                               AS available_beds
+    END                                               AS available_beds,
+    h.created_at,
+    h.created_by,
+    h.updated_at,
+    h.updated_by
 FROM org_site_housing h
 LEFT JOIN (
     SELECT housing_id, COUNT(*)::int AS tenant_count

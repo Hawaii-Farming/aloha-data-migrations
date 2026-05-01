@@ -27,9 +27,9 @@ CREATE TABLE IF NOT EXISTS ops_corrective_action_taken (
 
     -- Named FKs so PostgREST can disambiguate when embedding hr_employee
     CONSTRAINT fk_ops_corrective_action_taken_assigned_to
-      FOREIGN KEY (assigned_to) REFERENCES hr_employee(id),
+      FOREIGN KEY (org_id, assigned_to) REFERENCES hr_employee(org_id, id),
     CONSTRAINT fk_ops_corrective_action_taken_verified_by
-      FOREIGN KEY (verified_by) REFERENCES hr_employee(id),
+      FOREIGN KEY (org_id, verified_by) REFERENCES hr_employee(org_id, id),
     CONSTRAINT ops_corrective_action_taken_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
 );
 

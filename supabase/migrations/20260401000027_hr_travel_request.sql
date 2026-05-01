@@ -27,11 +27,11 @@ CREATE TABLE IF NOT EXISTS hr_travel_request (
 
     -- Named FKs so PostgREST can disambiguate when embedding hr_employee
     CONSTRAINT fk_hr_travel_request_employee
-      FOREIGN KEY (hr_employee_id) REFERENCES hr_employee(id),
+      FOREIGN KEY (org_id, hr_employee_id) REFERENCES hr_employee(org_id, id),
     CONSTRAINT fk_hr_travel_request_requested_by
-      FOREIGN KEY (requested_by) REFERENCES hr_employee(id),
+      FOREIGN KEY (org_id, requested_by) REFERENCES hr_employee(org_id, id),
     CONSTRAINT fk_hr_travel_request_reviewed_by
-      FOREIGN KEY (reviewed_by) REFERENCES hr_employee(id)
+      FOREIGN KEY (org_id, reviewed_by) REFERENCES hr_employee(org_id, id)
 );
 
 COMMENT ON TABLE hr_travel_request IS 'Employee travel requests with a simple approval workflow. Captures trip details, purpose, and dates alongside a pending, approved, or denied status flow.';

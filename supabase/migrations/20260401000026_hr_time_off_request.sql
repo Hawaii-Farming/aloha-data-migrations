@@ -25,11 +25,11 @@ CREATE TABLE IF NOT EXISTS hr_time_off_request (
 
     -- Named FKs so PostgREST can disambiguate when embedding hr_employee
     CONSTRAINT fk_hr_time_off_request_employee
-      FOREIGN KEY (hr_employee_id) REFERENCES hr_employee(id),
+      FOREIGN KEY (org_id, hr_employee_id) REFERENCES hr_employee(org_id, id),
     CONSTRAINT fk_hr_time_off_request_requested_by
-      FOREIGN KEY (requested_by) REFERENCES hr_employee(id),
+      FOREIGN KEY (org_id, requested_by) REFERENCES hr_employee(org_id, id),
     CONSTRAINT fk_hr_time_off_request_reviewed_by
-      FOREIGN KEY (reviewed_by) REFERENCES hr_employee(id)
+      FOREIGN KEY (org_id, reviewed_by) REFERENCES hr_employee(org_id, id)
 );
 
 COMMENT ON TABLE hr_time_off_request IS 'Employee time off requests with PTO and sick leave breakdown and a simple approval workflow.';

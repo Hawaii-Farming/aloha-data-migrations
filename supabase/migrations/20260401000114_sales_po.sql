@@ -83,9 +83,9 @@ CREATE TABLE IF NOT EXISTS sales_po (
 
     -- Named FKs so PostgREST can disambiguate when embedding hr_employee
     CONSTRAINT fk_sales_po_approved_by
-      FOREIGN KEY (approved_by) REFERENCES hr_employee(id),
+      FOREIGN KEY (org_id, approved_by) REFERENCES hr_employee(org_id, id),
     CONSTRAINT fk_sales_po_qb_uploaded_by
-      FOREIGN KEY (qb_uploaded_by) REFERENCES hr_employee(id)
+      FOREIGN KEY (org_id, qb_uploaded_by) REFERENCES hr_employee(org_id, id)
 );
 
 COMMENT ON TABLE sales_po IS 'Customer order header. One row per order. Tracks customer, FOB, dates, approval workflow, optional recurring frequency, and EDI snapshot fields (buyer_*, ship_to_*, bill_to_*, carrier_*, payment_terms_*) populated from inbound SPS 850 documents.';

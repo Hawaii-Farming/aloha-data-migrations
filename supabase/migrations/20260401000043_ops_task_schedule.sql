@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS ops_task_schedule (
     farm_id                 TEXT,
     ops_task_id             TEXT NOT NULL REFERENCES ops_task(id),
     ops_task_tracker_id     UUID REFERENCES ops_task_tracker(id),
-    hr_employee_id          TEXT NOT NULL REFERENCES hr_employee(id),
+    hr_employee_id          TEXT NOT NULL,
     start_time              TIMESTAMPTZ NOT NULL,
     stop_time               TIMESTAMPTZ,
     -- Lunch-adjusted hours sourced from the schedule capture (sheet's daily
@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS ops_task_schedule (
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by              TEXT,
     is_deleted               BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT ops_task_schedule_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id)
+    CONSTRAINT ops_task_schedule_farm_fkey FOREIGN KEY (org_id, farm_id) REFERENCES org_farm(org_id, id),
+    CONSTRAINT ops_task_schedule_hr_employee_id_emp_fkey FOREIGN KEY (org_id, hr_employee_id) REFERENCES hr_employee(org_id, id)
 );
 
 COMMENT ON TABLE ops_task_schedule IS 'Employee task assignments for both planning and execution. When ops_task_tracker_id is null, the row is a planned schedule entry. When set, it is an executed activity. ops_task_id is always set — derived from the tracker when linked, or selected by the user for planned entries.';
