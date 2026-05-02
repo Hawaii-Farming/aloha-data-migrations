@@ -111,7 +111,6 @@ SELECT
     a.org_id,
     a.hr_employee_id,
     a.check_date,
-    e.is_manager,
     e.compensation_manager_id,
     a.hr_work_authorization_id                          AS status,
     a.wc                                                AS workers_compensation_code,
