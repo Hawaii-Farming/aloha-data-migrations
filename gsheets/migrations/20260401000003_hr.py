@@ -219,7 +219,9 @@ def migrate_hr_employee(supabase, records, app_users):
 
         emp_id = to_id(full)
         email = str(r.get("Email", "")).strip().lower()
-        short = proper_case(r.get("ShortName", ""))
+        # Preserve uppercase ShortNames (e.g. "JV") -- those are initials, not nicknames.
+        raw_short = str(r.get("ShortName", "")).strip()
+        short = raw_short if raw_short.isalpha() and raw_short.isupper() else proper_case(raw_short)
 
         # Map name for team_lead/compensation_manager resolution
         if short:
@@ -274,7 +276,6 @@ def migrate_hr_employee(supabase, records, app_users):
             "is_primary_org": True,
             "hr_department_id": dept or None,
             "sys_access_level_id": access_level,
-            "is_manager": parse_bool(r.get("IsManager", False)),
             "hr_work_authorization_id": status or None,
             "start_date": parse_date(r.get("StartDate", "")),
             "end_date": parse_date(r.get("EndDate", "")),

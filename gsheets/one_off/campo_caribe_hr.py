@@ -276,7 +276,6 @@ def build_employee_rows(records, dept_map):
             "hr_department_id": hr_department_id,
             "hr_work_authorization_id": WORK_AUTH_ID,
             "sys_access_level_id": access_level,
-            "is_manager": access_level in ("Owner", "Admin", "Manager"),
             "start_date": parse_date(r.get("Hire/Rehire Date")),
             "payroll_id": payroll_id,
             "pay_structure": pay_structure,
@@ -295,7 +294,7 @@ def insert_employees(cur, rows):
     columns = [
         "id", "org_id", "first_name", "last_name", "gender", "date_of_birth",
         "company_email", "phone", "hr_department_id", "hr_work_authorization_id",
-        "sys_access_level_id", "is_manager", "start_date", "payroll_id",
+        "sys_access_level_id", "start_date", "payroll_id",
         "pay_structure", "is_primary_org", "created_by", "updated_by",
     ]
     inserted = 0
