@@ -1,0 +1,239 @@
+QUICKBOOKS ONLINE OAUTH INTEGRATION — aloha-app SETUP NOTES
+=============================================================
+
+This file tracks the Intuit Developer Portal app config and the
+aloha-app routes/code that need to exist for the OAuth flow to work.
+Edit aloha-app once you're ready to implement; nothing in this repo
+needs to change.
+
+
+1. INTUIT DEVELOPER PORTAL — APP DETAILS FORM
+---------------------------------------------
+
+Saved values (production app):
+
+  Host domain:           aloha.ag
+  Launch URL:            https://aloha.ag/
+  Disconnect URL:        https://aloha.ag/api/quickbooks/disconnect
+  Connect/Reconnect URL: https://aloha.ag/api/quickbooks/connect
+
+These follow aloha-app's existing /api/... convention (see app/routes.ts
+under `apiRoutes`).
+
+Also save (when prompted) the OAuth Redirect URI:
+
+  Redirect URI:          https://aloha.ag/api/quickbooks/callback
+
+Intuit will accept these URLs even if the handlers don't exist yet —
+the form just stores the strings.
+
+
+1b. INTUIT DEVELOPER PORTAL — "WHERE YOUR APP IS HOSTED" FORM
+-------------------------------------------------------------
+
+aloha-app is deployed on Google Cloud Run (region us-west1, project
+aloha-96743) with the custom domain aloha.ag mapped via Google's
+global load balancer. The domain resolves to Google's anycast IP pool.
+
+  Country:        United States
+
+  IP addresses (4 anycast IPs that aloha.ag resolves to):
+    216.239.32.21
+    216.239.34.21
+    216.239.36.21
+    216.239.38.21
+
+  If Intuit accepts CIDR, use 216.239.32.0/22 — it covers the entire
+  Google anycast load-balancer block and survives Google rotating
+  between the 4 IPs above.
+
+  Re-check with: nslookup aloha.ag
+  These should remain stable as long as the domain mapping in Cloud
+  Run / Google's managed cert isn't changed.
+
+
+1c. INTUIT DEVELOPER PORTAL — EULA + PRIVACY POLICY URLS
+---------------------------------------------------------
+
+Intuit requires both URLs for production approval. They must return
+HTTP 200 with relevant content (Intuit's automated checker hits them).
+
+aloha-app has no legal pages today. Recommended setup — two new public
+routes in aloha-app:
+
+  app/routes/legal/eula.tsx
+  app/routes/legal/privacy.tsx
+
+Add to app/routes.ts (alongside the existing rootRoutes):
+
+  route('legal/eula',    'routes/legal/eula.tsx'),
+  route('legal/privacy', 'routes/legal/privacy.tsx'),
+
+Each can render a single markdown file (or just plain JSX) — no auth,
+no DB access. Then on the Intuit form:
+
+  End-user license agreement URL: https://aloha.ag/legal/eula
+  Privacy policy URL:             https://aloha.ag/legal/privacy
+
+Content scope: identify the operator (Hawaii Farming), describe what
+data the app collects/processes, list third-party processors (Supabase,
+Google Cloud, Anthropic, Intuit), state retention/deletion policy, and
+provide a contact email for data requests. Have your legal advisor
+review before submitting for production approval.
+
+Lighter alternative: drop static HTML at public/legal/eula.html and
+public/legal/privacy.html so Cloud Run serves them without going
+through React Router. Faster to ship; styling won't match app shell.
+
+
+2. ROUTES TO ADD IN aloha-app
+------------------------------
+
+Three new files under app/routes/api/quickbooks/:
+
+  app/routes/api/quickbooks/connect.ts
+  app/routes/api/quickbooks/disconnect.ts
+  app/routes/api/quickbooks/callback.ts
+
+Add to app/routes.ts (in the apiRoutes array):
+
+  route('api/quickbooks/connect',    'routes/api/quickbooks/connect.ts'),
+  route('api/quickbooks/disconnect', 'routes/api/quickbooks/disconnect.ts'),
+  route('api/quickbooks/callback',   'routes/api/quickbooks/callback.ts'),
+
+
+3. WHAT EACH ROUTE DOES
+------------------------
+
+connect.ts
+  Where users click "Connect to QuickBooks". Build the Intuit authorize
+  URL and 302-redirect:
+
+    GET https://appcenter.intuit.com/connect/oauth2
+        ?client_id=<INTUIT_CLIENT_ID>
+        &response_type=code
+        &scope=com.intuit.quickbooks.accounting
+        &redirect_uri=https://aloha.ag/api/quickbooks/callback
+        &state=<random-anti-csrf-string-stored-in-session>
+
+  Use scope = com.intuit.quickbooks.accounting (add openid+profile+email
+  if you also want OpenID claims). Generate a random `state` and stash
+  it in a session/cookie so callback.ts can verify it.
+
+callback.ts
+  Intuit redirects here after the merchant authorizes. Query string:
+
+    ?code=<auth_code>
+    &state=<echo>
+    &realmId=<QB-company-id>
+
+  Verify state matches the value you stored. Then POST to:
+
+    POST https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer
+    Authorization: Basic base64(CLIENT_ID:CLIENT_SECRET)
+    Content-Type:  application/x-www-form-urlencoded
+    Body:
+      grant_type=authorization_code
+      &code=<auth_code>
+      &redirect_uri=https://aloha.ag/api/quickbooks/callback
+
+  Response:
+    {
+      "access_token":  "...",
+      "refresh_token": "...",
+      "expires_in":    3600,        // seconds (~1 hour)
+      "x_refresh_token_expires_in": 8726400  // ~101 days
+    }
+
+  Store realmId + access_token + refresh_token + expiry in a new table
+  (proposed: org_quickbooks_token, one row per org). Redirect back to
+  settings with a success flash message.
+
+disconnect.ts
+  Two ways the user lands here:
+
+    a) From within aloha-app — user clicks "Disconnect QB" in settings.
+       Revoke the refresh token (POST to
+       https://developer.api.intuit.com/v2/oauth2/tokens/revoke with
+       Basic auth + body `token=<refresh_token>`), delete the local
+       org_quickbooks_token row, redirect to settings.
+
+    b) From QB itself — Intuit fires a server-to-server call here when
+       the merchant disconnects in QuickBooks UI. Same cleanup: delete
+       the local org_quickbooks_token row. Respond 200 OK.
+
+
+4. ENV VARS / SECRETS
+----------------------
+
+Add these to aloha-app's .env (and the prod environment):
+
+  INTUIT_CLIENT_ID         = <from Intuit Developer Portal — Keys & OAuth>
+  INTUIT_CLIENT_SECRET     = <from Intuit Developer Portal — Keys & OAuth>
+  INTUIT_ENV               = production         # or 'sandbox' during testing
+  INTUIT_REDIRECT_URI      = https://aloha.ag/api/quickbooks/callback
+
+Sandbox endpoints differ — use https://sandbox-quickbooks.api.intuit.com
+for API calls during dev; production uses https://quickbooks.api.intuit.com.
+
+
+5. SUPABASE TABLE FOR TOKEN STORAGE
+------------------------------------
+
+Proposed schema for a new migration in this repo
+(supabase/migrations/<timestamp>_org_quickbooks_token.sql):
+
+  CREATE TABLE IF NOT EXISTS org_quickbooks_token (
+      org_id              TEXT NOT NULL REFERENCES org(id),
+      realm_id            TEXT NOT NULL,
+      access_token        TEXT NOT NULL,
+      refresh_token       TEXT NOT NULL,
+      access_expires_at   TIMESTAMPTZ NOT NULL,
+      refresh_expires_at  TIMESTAMPTZ NOT NULL,
+      connected_by        TEXT,                       -- hr_employee.id
+      connected_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+      is_deleted          BOOLEAN NOT NULL DEFAULT false,
+      PRIMARY KEY (org_id)
+  );
+
+  -- Service-role only: tokens never exposed via PostgREST to authenticated.
+  -- (Don't add a SELECT policy.)
+
+The composite-PK pattern we just adopted means we can have separate QB
+connections per org if we ever multi-tenant beyond Hawaii Farming.
+
+
+6. UPLOAD FLOW (later)
+-----------------------
+
+The sales_po table already has qb_uploaded_at + qb_uploaded_by columns.
+Once OAuth is wired up, the upload action would:
+
+  1. Read org_quickbooks_token; refresh access_token if expired.
+  2. POST invoice batch to QB Online (Invoice + Customer endpoints).
+  3. On success, set sales_po.qb_uploaded_at = now() and
+     sales_po.qb_uploaded_by = current employee id.
+
+Token refresh (when access_token is expired but refresh_token is not):
+
+  POST https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer
+  Authorization: Basic base64(CLIENT_ID:CLIENT_SECRET)
+  Body: grant_type=refresh_token&refresh_token=<refresh_token>
+
+  Response includes a NEW refresh_token (rotation). Store both.
+
+
+7. OPEN QUESTIONS
+-----------------
+
+- Single QB company per org, or per-farm? Current schema assumes
+  per-org (PRIMARY KEY (org_id)). Revisit if Cuke and Lettuce books
+  are kept separate in QB.
+
+- Who can connect/disconnect? Probably hr_module_access(can_edit)
+  scoped to a specific 'Sales' or 'Finance' sub-module. Decide before
+  shipping.
+
+- Webhook from QB (Intuit fires when a customer changes invoice
+  status, etc.) — separate route, not covered here. Add when needed.
