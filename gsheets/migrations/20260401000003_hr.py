@@ -17,6 +17,7 @@ Rerunnable: clears and reinserts all data on each run.
 import os
 import re
 import sys
+import time
 from pathlib import Path
 
 import gspread
@@ -135,16 +136,44 @@ def get_sheets():
     return gspread.authorize(creds)
 
 
+# Transient HTTP statuses returned by the Google Sheets API. The 2026-05-03
+# nightly run died on a single 503 from open_by_key(); these are common
+# enough that one retry-pass should be the default.
+_TRANSIENT_GSHEET_STATUSES = (429, 500, 502, 503, 504)
+
+
+def _read_worksheet_with_retry(gc, sheet_id, worksheet_name, attempts=5):
+    """Open a worksheet and return all records, retrying transient 5xx/429."""
+    delay = 2.0
+    last_err = None
+    for i in range(attempts):
+        try:
+            ws = gc.open_by_key(sheet_id).worksheet(worksheet_name)
+            return ws.get_all_records()
+        except gspread.exceptions.APIError as e:
+            status = getattr(getattr(e, "response", None), "status_code", None)
+            if status not in _TRANSIENT_GSHEET_STATUSES:
+                raise
+            last_err = e
+            if i == attempts - 1:
+                break
+            print(f"  gspread {status} on {worksheet_name} -- retrying in {delay:.0f}s ({i+1}/{attempts-1})")
+            time.sleep(delay)
+            delay *= 2
+    assert last_err is not None
+    raise last_err
+
+
 def get_sheet_records(gc):
     """Return hr_ee_register records from Google Sheets."""
-    ws = gc.open_by_key(SHEET_ID).worksheet("hr_ee_register")
-    return ws.get_all_records()
+    return _read_worksheet_with_retry(gc, SHEET_ID, "hr_ee_register")
 
 
 def get_app_users(gc):
     """Get global_app_users_list from the global spreadsheet."""
-    ws = gc.open_by_key("1VOVyYt_Mk7QJkjZFRyq3iLf6xkBrZUWarobv7tf8yZA").worksheet("global_app_users_list")
-    return ws.get_all_records()
+    return _read_worksheet_with_retry(
+        gc, "1VOVyYt_Mk7QJkjZFRyq3iLf6xkBrZUWarobv7tf8yZA", "global_app_users_list"
+    )
 
 
 def migrate_hr_department(supabase, records):
@@ -381,8 +410,7 @@ def migrate_hr_module_access(supabase, employees, app_users_lookup, module_map):
 
 def migrate_hr_time_off_request(supabase, gc, emp_records):
     """Migrate time off requests from hr_ee_time_off_request sheet."""
-    ws = gc.open_by_key(SHEET_ID).worksheet("hr_ee_time_off_request")
-    records = ws.get_all_records()
+    records = _read_worksheet_with_retry(gc, SHEET_ID, "hr_ee_time_off_request")
 
     # Build employee lookups: full_name -> id, email -> id
     name_to_id = {}
@@ -466,8 +494,9 @@ def migrate_hr_time_off_request(supabase, gc, emp_records):
 
 def migrate_hr_travel_request(supabase, gc, emp_records):
     """Migrate travel requests from proc_requests sheet (request_type = Travel)."""
-    ws = gc.open_by_key("1EFgT0XyBlUe10ENVkm4-_bb4uSPyd9hPbCIzD-RKNRA").worksheet("proc_requests")
-    records = ws.get_all_records()
+    records = _read_worksheet_with_retry(
+        gc, "1EFgT0XyBlUe10ENVkm4-_bb4uSPyd9hPbCIzD-RKNRA", "proc_requests"
+    )
 
     # Build email -> employee ID lookup
     email_to_id = {}
