@@ -118,12 +118,13 @@ SELECT
 
     -- OT status driven by the employee's CUMULATIVE weekly hours across
     -- every task, not just this row's task. Window-summed over (employee,
-    -- week) so a 30h + 25h split across two tasks correctly flags as
-    -- 'above' on both rows when the threshold is 40.
-    --   'above'  -> cumulative weekly hours have reached OR exceeded the
-    --               threshold (i.e. >= weekly_threshold). Hitting the line
-    --               counts because the next minute worked is overtime.
-    --   'below'  -> employee has a threshold and is strictly under it
+    -- week) so an employee split across multiple tasks is evaluated on
+    -- their total, not on each task in isolation.
+    --   'above'  -> cumulative weekly hours strictly exceed the threshold
+    --               (the operator owes overtime pay)
+    --   'at'     -> cumulative weekly hours land exactly on the threshold
+    --               (no OT yet, but the next minute is overtime)
+    --   'below'  -> cumulative weekly hours are strictly under the threshold
     --   NULL     -> no overtime_threshold set on the employee
     CASE
         WHEN overtime_threshold IS NULL THEN NULL
@@ -131,8 +132,14 @@ SELECT
                   SUM(total_hours) OVER (
                       PARTITION BY hr_employee_id, week_start_date
                   )::NUMERIC, 2
-             ) >= ROUND((overtime_threshold / 2.0)::NUMERIC, 2)
+             ) > ROUND((overtime_threshold / 2.0)::NUMERIC, 2)
             THEN 'above'
+        WHEN ROUND(
+                  SUM(total_hours) OVER (
+                      PARTITION BY hr_employee_id, week_start_date
+                  )::NUMERIC, 2
+             ) = ROUND((overtime_threshold / 2.0)::NUMERIC, 2)
+            THEN 'at'
         ELSE 'below'
     END                                                                     AS ot_status
 
@@ -143,4 +150,4 @@ ORDER BY
 
 GRANT SELECT ON public.ops_task_weekly_schedule TO authenticated;
 
-COMMENT ON VIEW public.ops_task_weekly_schedule IS 'Weekly schedule grid: one row per (employee, task, week) with day-by-day shift strings. total_hours is per-row (this task only); ot_status reflects the employee''s cumulative weekly hours across ALL tasks (''above'' / ''below'' / NULL) so an employee split across multiple tasks but still over the threshold is flagged on every row. Joined employee display fields (full_name = first + last, profile_photo_url) are pre-flattened for the ag-grid renderer.';
+COMMENT ON VIEW public.ops_task_weekly_schedule IS 'Weekly schedule grid: one row per (employee, task, week) with day-by-day shift strings. total_hours is per-row (this task only); ot_status reflects the employee''s cumulative weekly hours across ALL tasks (''above'' / ''at'' / ''below'' / NULL) so an employee split across multiple tasks is evaluated on their week total. Joined employee display fields (full_name = first + last, profile_photo_url) are pre-flattened for the ag-grid renderer.';
