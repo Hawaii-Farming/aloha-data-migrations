@@ -1,24 +1,29 @@
 """
-TRUNCATE all transactional tables in reverse FK dependency order.
+Clear transactional tables before a full re-run of migrations 003-034.
 
-Used before a full re-run of migrations 003-034 to avoid cross-migration
-FK violations (e.g. clearing grow_lettuce_seed_batch while grow_harvest_weight
-still references it).
+Two-phase strategy:
 
-HR reference tables (hr_employee + its descendants) ARE truncated here
-because the HR module must be fully refreshed nightly from the source
-sheet — legacy id drift between runs would otherwise accumulate and
-block re-inserts via unique-name constraints. Migration 003 is
-responsible for re-linking auth.users → hr_employee.user_id after the
-truncate-and-reinsert, so the RLS chain stays intact.
+  1. TRUNCATE ... CASCADE on the non-HR transactional tables (sales / pack /
+     fsafe / grow / ops / maint / invnt / org_business_rule). Today these
+     only carry hawaii_farming data, so a global TRUNCATE is the simplest
+     way to clear them and lets CASCADE catch any descendant tables we
+     haven't enumerated (e.g. EDI / ASN / pallet allocations recently
+     added). If a future org starts writing to these, switch the relevant
+     entries from the TRUNCATE list to the per-org DELETE list.
 
-Does NOT touch the remaining reference / seed tables (sys_uom, org,
-org_farm, org_site, invnt_item, invnt_vendor, invnt_category,
-grow_variety, grow_grade, grow_pest, grow_disease, ops_task, etc.) —
-those are upserted idempotently by migrations 001-002 and 006, and
-CASCADE-wiping them would also wipe the static cuke_plantmap-seeded
-tables (grow_cuke_seed_batch, grow_cuke_gh_row_planting, org_site_cuke_gh*)
-which have no nightly re-populator.
+  2. DELETE WHERE org_id = HF_ORG_ID on the HR reference chain
+     (hr_employee + descendants). Campo Caribe has its own rows in these
+     tables and the previous all-org TRUNCATE wiped them every night.
+     Deleting per-org leaves Campo intact.
+
+Post-clear, migration 003 reinserts HF employees and re-links
+auth.users -> hr_employee.user_id; the campo_caribe_hr.py one-off does
+the equivalent for Campo when re-run.
+
+Does NOT touch reference / seed tables (sys_uom, org, org_farm, org_site,
+invnt_item, invnt_vendor, invnt_category, grow_variety, grow_grade,
+grow_pest, grow_disease, ops_task, etc.) -- those are upserted
+idempotently by migrations 001-002 and 006.
 
 Usage:
     python migrations/_clear_transactional.py
@@ -34,9 +39,14 @@ import psycopg2
 
 from _config import _load_env_file  # noqa: triggers .env load
 
-# In reverse FK dependency order — deepest dependents first so the single
-# TRUNCATE ... CASCADE handles any missed chain.
-TABLES = [
+HF_ORG_ID = "hawaii_farming"
+
+# ---------------------------------------------------------------------------
+# Phase 1 -- non-HR transactional tables, TRUNCATEd CASCADE all-org.
+# Reverse FK order is preserved here so the single TRUNCATE call works even
+# if CASCADE has to chase any unlisted descendant.
+# ---------------------------------------------------------------------------
+NON_HR_TABLES = [
     "ops_corrective_action_taken",
     "ops_template_result_photo",
     "ops_template_result",
@@ -78,7 +88,7 @@ TABLES = [
     "sales_fob",
     "grow_spray_compliance",
     # grow_cuke_gh_row_planting and grow_cuke_seed_batch are intentionally
-    # excluded — both are static/forward-planned tables populated by the
+    # excluded -- both are static/forward-planned tables populated by the
     # one-time 20260417000001_cuke_plantmap.py seeder (and recoverable via
     # 20260418000001_rebuild_cuke_seed_batch_and_planting.py). No nightly
     # re-populator exists for them, so truncating them here leaves the
@@ -87,11 +97,9 @@ TABLES = [
     "grow_lettuce_seed_batch",
     "grow_lettuce_seed_mix_item",
     "grow_lettuce_seed_mix",
-    # grow_trial_type excluded — reference data upserted idempotently by
+    # grow_trial_type excluded -- reference data upserted idempotently by
     # its own migrations, and truncating it CASCADE-wipes grow_cuke_seed_batch
-    # via the trial_type FK. Retired 024 was the only thing reseeding
-    # 'legacy_trial'; with 024 gone, truncating leaves the 13 historical
-    # cuke trial batches orphaned. Treat as static reference data.
+    # via the trial_type FK.
     "grow_cycle_pattern",
     "grow_monitoring_metric",
     "maint_request_photo",
@@ -110,9 +118,14 @@ TABLES = [
     "invnt_lot",
     "fsafe_lab_test",
     "fsafe_lab",
-    # HR reference chain — truncate in reverse FK order. Migration 003 is
-    # responsible for re-linking auth.users → hr_employee.user_id after
-    # reinserting hr_employee rows.
+    "org_business_rule",
+]
+
+# ---------------------------------------------------------------------------
+# Phase 2 -- HR chain, deleted per-org. Reverse FK order so children go
+# before their parents.
+# ---------------------------------------------------------------------------
+HR_TABLES_REVERSE_FK = [
     "hr_disciplinary_warning",
     "hr_employee_review",
     "hr_module_access",
@@ -122,7 +135,6 @@ TABLES = [
     "hr_employee",
     "hr_work_authorization",
     "hr_department",
-    "org_business_rule",
 ]
 
 
@@ -132,15 +144,43 @@ def main():
         raise SystemExit("ERROR: SUPABASE_DB_URL not set")
 
     conn = psycopg2.connect(db_url)
-    conn.autocommit = True
+    conn.autocommit = False
     cur = conn.cursor()
 
-    sql = "TRUNCATE TABLE " + ", ".join(TABLES) + " CASCADE;"
-    print(f"Truncating {len(TABLES)} transactional tables...")
-    cur.execute(sql)
-    print("  Done.")
+    # Phase 1: non-HR tables, all-org TRUNCATE CASCADE.
+    print(f"Phase 1: TRUNCATE CASCADE {len(NON_HR_TABLES)} non-HR tables...")
+    cur.execute("TRUNCATE TABLE " + ", ".join(NON_HR_TABLES) + " CASCADE;")
+
+    # Phase 2: HR chain, scoped DELETE.
+    # 2a. Break external FK to hr_employee (org_quickbooks_token.connected_by)
+    #     before deleting HF employees.
+    cur.execute(
+        "UPDATE org_quickbooks_token SET connected_by = NULL WHERE org_id = %s",
+        (HF_ORG_ID,),
+    )
+
+    # 2b. Break self-FKs on hr_employee so the per-row FK check during DELETE
+    #     doesn't trip when team_lead/comp_manager point at another HF row
+    #     also being deleted.
+    cur.execute(
+        "UPDATE hr_employee "
+        "SET team_lead_id = NULL, compensation_manager_id = NULL "
+        "WHERE org_id = %s",
+        (HF_ORG_ID,),
+    )
+
+    # 2c. Delete the HR chain in reverse FK order, scoped to HF.
+    print(f"Phase 2: DELETE org_id='{HF_ORG_ID}' from {len(HR_TABLES_REVERSE_FK)} HR tables...")
+    total_deleted = 0
+    for tbl in HR_TABLES_REVERSE_FK:
+        cur.execute(f"DELETE FROM {tbl} WHERE org_id = %s", (HF_ORG_ID,))
+        print(f"  {tbl:30s} {cur.rowcount} rows")
+        total_deleted += cur.rowcount
+
+    conn.commit()
     cur.close()
     conn.close()
+    print(f"Done. {total_deleted} HR rows cleared for {HF_ORG_ID}; Campo Caribe data preserved.")
 
 
 if __name__ == "__main__":
