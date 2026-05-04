@@ -120,8 +120,10 @@ SELECT
     -- every task, not just this row's task. Window-summed over (employee,
     -- week) so a 30h + 25h split across two tasks correctly flags as
     -- 'above' on both rows when the threshold is 40.
-    --   'above'  -> cumulative weekly hours strictly exceed the threshold
-    --   'below'  -> employee has a threshold and is at-or-under it
+    --   'above'  -> cumulative weekly hours have reached OR exceeded the
+    --               threshold (i.e. >= weekly_threshold). Hitting the line
+    --               counts because the next minute worked is overtime.
+    --   'below'  -> employee has a threshold and is strictly under it
     --   NULL     -> no overtime_threshold set on the employee
     CASE
         WHEN overtime_threshold IS NULL THEN NULL
@@ -129,7 +131,7 @@ SELECT
                   SUM(total_hours) OVER (
                       PARTITION BY hr_employee_id, week_start_date
                   )::NUMERIC, 2
-             ) > ROUND((overtime_threshold / 2.0)::NUMERIC, 2)
+             ) >= ROUND((overtime_threshold / 2.0)::NUMERIC, 2)
             THEN 'above'
         ELSE 'below'
     END                                                                     AS ot_status
