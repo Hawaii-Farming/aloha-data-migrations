@@ -341,6 +341,26 @@ def resolve_comp_managers(cur, rows, name_to_id):
         print(f"  unresolved comp managers ({len(unmatched)}): {sorted(unmatched)}")
 
 
+def relink_auth_users(cur):
+    """Restore hr_employee.user_id from auth.users.email for this org.
+
+    The nightly's _clear_transactional truncates hr_employee, wiping the
+    user_id set by handle_new_auth_user() at signup. The HF re-link in
+    003_hr.py runs while Campo rows aren't back yet, so Campo signed-in
+    users would lose RLS access until they re-sign-in. This pass closes
+    that gap whenever the Campo one-off is re-run.
+    """
+    cur.execute("""
+        UPDATE hr_employee he
+        SET user_id = au.id
+        FROM auth.users au
+        WHERE he.org_id = %s
+          AND lower(he.company_email) = lower(au.email)
+          AND he.user_id IS DISTINCT FROM au.id
+    """, (ORG_ID,))
+    print(f"  Re-linked {cur.rowcount} hr_employee.user_id values from auth.users")
+
+
 def grant_module_access(cur, rows):
     """Create one hr_module_access row per (employee with company_email) per
     org_module of campo_caribe. Uses default flags from the table:
@@ -401,6 +421,9 @@ def main():
 
             print("\n--- Granting module access (employees with company_email) ---")
             grant_module_access(cur, rows)
+
+            print("\n--- auth re-link ---")
+            relink_auth_users(cur)
 
         conn.commit()
 
