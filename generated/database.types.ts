@@ -10749,16 +10749,12 @@ export type Database = {
       }
       ops_task_weekly_schedule: {
         Row: {
-          department_name: string | null
-          farm_name: string | null
           friday: string | null
           full_name: string | null
-          hr_department_id: string | null
           hr_employee_id: string | null
-          hr_work_authorization_id: string | null
-          is_over_ot_threshold: boolean | null
           monday: string | null
           org_id: string | null
+          ot_status: string | null
           ot_threshold_weekly: number | null
           profile_photo_url: string | null
           saturday: string | null
@@ -10769,7 +10765,6 @@ export type Database = {
           tuesday: string | null
           wednesday: string | null
           week_start_date: string | null
-          work_authorization_name: string | null
         }
         Relationships: [
           {

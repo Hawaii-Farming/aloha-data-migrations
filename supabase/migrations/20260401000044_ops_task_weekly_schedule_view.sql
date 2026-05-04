@@ -2,12 +2,11 @@
 -- ========================
 -- Weekly schedule grid: one row per (employee, task, week) with each
 -- day's shift formatted as "HH:MM - HH:MM", weekly totals, and the
--- bi-weekly OT threshold halved + the over-threshold flag.
+-- bi-weekly OT threshold halved + a text status for row coloring.
 --
--- Joined employee display fields (full_name, profile_photo_url,
--- department_name, work_authorization_name) are surfaced here so the
--- ag-grid renderer can read them off the row directly without an
--- additional embed.
+-- Joined employee display fields (full_name, profile_photo_url) are
+-- surfaced here so the ag-grid renderer can read them off the row
+-- directly without an additional embed.
 
 CREATE OR REPLACE VIEW public.ops_task_weekly_schedule
 WITH (security_invoker = true) AS
@@ -34,13 +33,11 @@ SELECT
     sb.org_id,
     sb.week_start_date,
     e.id                                                                    AS hr_employee_id,
-    COALESCE(NULLIF(e.preferred_name, ''),
-             TRIM(e.first_name || ' ' || e.last_name))                      AS full_name,
+    -- full_name uses first + last only. Preferred name is intentionally
+    -- not used here -- the schedule grid is a payroll/manager view where
+    -- legal name matters more than nickname.
+    TRIM(e.first_name || ' ' || e.last_name)                                AS full_name,
     e.profile_photo_url,
-    e.hr_department_id,
-    e.hr_department_id                                                      AS department_name,
-    e.hr_work_authorization_id,
-    e.hr_work_authorization_id                                              AS work_authorization_name,
     t.id                                                                    AS task,
 
     -- Day columns — formatted as "HH:MM - HH:MM"; null when employee is not scheduled that day
@@ -98,9 +95,13 @@ SELECT
          THEN ROUND((e.overtime_threshold / 2.0)::NUMERIC, 2)
          ELSE NULL END                                                      AS ot_threshold_weekly,
 
-    -- OT flag — true when total planned weekly hours exceed the weekly threshold
-    CASE WHEN e.overtime_threshold IS NOT NULL
-         THEN ROUND(
+    -- OT status -- text so the frontend can map it to a row color.
+    -- 'above' when total planned weekly hours strictly exceed the threshold.
+    -- 'below' when the employee has a threshold but total is at-or-under it.
+    -- NULL    when no overtime_threshold is set on the employee.
+    CASE
+        WHEN e.overtime_threshold IS NULL THEN NULL
+        WHEN ROUND(
                   SUM(COALESCE(
                       sb.schedule_total_hours,
                       CASE WHEN sb.schedule_stop IS NOT NULL
@@ -108,7 +109,9 @@ SELECT
                            ELSE 0 END
                   ))::NUMERIC, 2
               ) > ROUND((e.overtime_threshold / 2.0)::NUMERIC, 2)
-         ELSE false END                                                     AS is_over_ot_threshold
+            THEN 'above'
+        ELSE 'below'
+    END                                                                     AS ot_status
 
 FROM schedule_base sb
 JOIN hr_employee e  ON e.id = sb.hr_employee_id
@@ -117,9 +120,7 @@ GROUP BY
     sb.week_start_date,
     sb.org_id,
     sb.farm_id,
-    e.id, e.preferred_name, e.first_name, e.last_name, e.profile_photo_url,
-    e.hr_department_id,
-    e.hr_work_authorization_id,
+    e.id, e.first_name, e.last_name, e.profile_photo_url,
     e.overtime_threshold,
     t.id
 ORDER BY
@@ -128,4 +129,4 @@ ORDER BY
 
 GRANT SELECT ON public.ops_task_weekly_schedule TO authenticated;
 
-COMMENT ON VIEW public.ops_task_weekly_schedule IS 'Weekly schedule grid: one row per (employee, task, week) with day-by-day shift strings, weekly totals, and the OT threshold flag. Joined employee display fields (full_name, profile_photo_url, department_name, work_authorization_name) are pre-flattened for the ag-grid renderer.';
+COMMENT ON VIEW public.ops_task_weekly_schedule IS 'Weekly schedule grid: one row per (employee, task, week) with day-by-day shift strings, weekly totals, and an ot_status text flag (''above'' / ''below'' / NULL) for row coloring. Joined employee display fields (full_name = first + last, profile_photo_url) are pre-flattened for the ag-grid renderer.';
