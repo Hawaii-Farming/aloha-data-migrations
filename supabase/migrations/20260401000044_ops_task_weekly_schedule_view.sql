@@ -83,14 +83,15 @@ per_task AS (
 
         -- Per-row total: hours this employee has on THIS task in this week.
         -- Uses ops_task_schedule.total_hours when set (already lunch-adjusted)
-        -- and falls back to stop-start when not.
+        -- and falls back to stop-start when not. Rounded to whole hours --
+        -- the grid renders integers; precision below an hour isn't useful here.
         ROUND(
             SUM(COALESCE(
                 sb.schedule_total_hours,
                 CASE WHEN sb.schedule_stop IS NOT NULL
                      THEN EXTRACT(EPOCH FROM (sb.schedule_stop - sb.schedule_start)) / 3600.0
                      ELSE 0 END
-            ))::NUMERIC, 2
+            ))::NUMERIC
         )                                                                   AS total_hours
     FROM schedule_base sb
     JOIN hr_employee e  ON e.id = sb.hr_employee_id
@@ -112,8 +113,9 @@ SELECT
     total_hours,
 
     -- Weekly OT threshold = bi-weekly threshold halved; null if not set on employee.
+    -- Rounded to whole hours to match total_hours.
     CASE WHEN overtime_threshold IS NOT NULL
-         THEN ROUND((overtime_threshold / 2.0)::NUMERIC, 2)
+         THEN ROUND((overtime_threshold / 2.0)::NUMERIC)
          ELSE NULL END                                                      AS ot_threshold_weekly,
 
     -- OT status driven by the employee's CUMULATIVE weekly hours across
@@ -131,14 +133,14 @@ SELECT
         WHEN ROUND(
                   SUM(total_hours) OVER (
                       PARTITION BY hr_employee_id, week_start_date
-                  )::NUMERIC, 2
-             ) > ROUND((overtime_threshold / 2.0)::NUMERIC, 2)
+                  )::NUMERIC
+             ) > ROUND((overtime_threshold / 2.0)::NUMERIC)
             THEN 'above'
         WHEN ROUND(
                   SUM(total_hours) OVER (
                       PARTITION BY hr_employee_id, week_start_date
-                  )::NUMERIC, 2
-             ) = ROUND((overtime_threshold / 2.0)::NUMERIC, 2)
+                  )::NUMERIC
+             ) = ROUND((overtime_threshold / 2.0)::NUMERIC)
             THEN 'at'
         ELSE 'below'
     END                                                                     AS ot_status
