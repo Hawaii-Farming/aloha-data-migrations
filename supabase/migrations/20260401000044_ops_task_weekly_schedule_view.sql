@@ -1,8 +1,10 @@
 -- ops_task_weekly_schedule
 -- ========================
 -- Weekly schedule grid: one row per (employee, task, week) with each
--- day's shift formatted as "HH:MM - HH:MM", weekly totals, and the
--- bi-weekly OT threshold halved + a text status for row coloring.
+-- day's shift formatted as "HH:MM - HH:MM", per-row weekly totals for
+-- THAT task, the bi-weekly OT threshold halved, and a text status for
+-- row coloring driven by the employee's CUMULATIVE hours across all
+-- tasks in the week (not just the row's task).
 --
 -- Joined employee display fields (full_name, profile_photo_url) are
 -- surfaced here so the ag-grid renderer can read them off the row
@@ -28,105 +30,115 @@ WITH schedule_base AS (
     WHERE s.ops_task_tracker_id IS NULL
       AND s.start_time IS NOT NULL
       AND s.is_deleted = false
+),
+per_task AS (
+    SELECT
+        sb.org_id,
+        sb.week_start_date,
+        e.id                                                                AS hr_employee_id,
+        -- full_name uses first + last only. Preferred name is intentionally
+        -- not used here -- the schedule grid is a payroll/manager view where
+        -- legal name matters more than nickname.
+        TRIM(e.first_name || ' ' || e.last_name)                            AS full_name,
+        e.profile_photo_url,
+        e.overtime_threshold,
+        t.id                                                                AS task,
+
+        -- Day columns formatted as "HH:MM - HH:MM"; null when employee not scheduled that day
+        MAX(CASE WHEN sb.day_of_week = 0
+            THEN TO_CHAR(sb.schedule_start AT TIME ZONE 'UTC', 'HH24:MI')
+                 || CASE WHEN sb.schedule_stop IS NOT NULL
+                         THEN ' - ' || TO_CHAR(sb.schedule_stop AT TIME ZONE 'UTC', 'HH24:MI')
+                         ELSE '' END END)                                   AS sunday,
+        MAX(CASE WHEN sb.day_of_week = 1
+            THEN TO_CHAR(sb.schedule_start AT TIME ZONE 'UTC', 'HH24:MI')
+                 || CASE WHEN sb.schedule_stop IS NOT NULL
+                         THEN ' - ' || TO_CHAR(sb.schedule_stop AT TIME ZONE 'UTC', 'HH24:MI')
+                         ELSE '' END END)                                   AS monday,
+        MAX(CASE WHEN sb.day_of_week = 2
+            THEN TO_CHAR(sb.schedule_start AT TIME ZONE 'UTC', 'HH24:MI')
+                 || CASE WHEN sb.schedule_stop IS NOT NULL
+                         THEN ' - ' || TO_CHAR(sb.schedule_stop AT TIME ZONE 'UTC', 'HH24:MI')
+                         ELSE '' END END)                                   AS tuesday,
+        MAX(CASE WHEN sb.day_of_week = 3
+            THEN TO_CHAR(sb.schedule_start AT TIME ZONE 'UTC', 'HH24:MI')
+                 || CASE WHEN sb.schedule_stop IS NOT NULL
+                         THEN ' - ' || TO_CHAR(sb.schedule_stop AT TIME ZONE 'UTC', 'HH24:MI')
+                         ELSE '' END END)                                   AS wednesday,
+        MAX(CASE WHEN sb.day_of_week = 4
+            THEN TO_CHAR(sb.schedule_start AT TIME ZONE 'UTC', 'HH24:MI')
+                 || CASE WHEN sb.schedule_stop IS NOT NULL
+                         THEN ' - ' || TO_CHAR(sb.schedule_stop AT TIME ZONE 'UTC', 'HH24:MI')
+                         ELSE '' END END)                                   AS thursday,
+        MAX(CASE WHEN sb.day_of_week = 5
+            THEN TO_CHAR(sb.schedule_start AT TIME ZONE 'UTC', 'HH24:MI')
+                 || CASE WHEN sb.schedule_stop IS NOT NULL
+                         THEN ' - ' || TO_CHAR(sb.schedule_stop AT TIME ZONE 'UTC', 'HH24:MI')
+                         ELSE '' END END)                                   AS friday,
+        MAX(CASE WHEN sb.day_of_week = 6
+            THEN TO_CHAR(sb.schedule_start AT TIME ZONE 'UTC', 'HH24:MI')
+                 || CASE WHEN sb.schedule_stop IS NOT NULL
+                         THEN ' - ' || TO_CHAR(sb.schedule_stop AT TIME ZONE 'UTC', 'HH24:MI')
+                         ELSE '' END END)                                   AS saturday,
+
+        -- Per-row total: hours this employee has on THIS task in this week.
+        -- Uses ops_task_schedule.total_hours when set (already lunch-adjusted)
+        -- and falls back to stop-start when not.
+        ROUND(
+            SUM(COALESCE(
+                sb.schedule_total_hours,
+                CASE WHEN sb.schedule_stop IS NOT NULL
+                     THEN EXTRACT(EPOCH FROM (sb.schedule_stop - sb.schedule_start)) / 3600.0
+                     ELSE 0 END
+            ))::NUMERIC, 2
+        )                                                                   AS total_hours
+    FROM schedule_base sb
+    JOIN hr_employee e  ON e.id = sb.hr_employee_id
+    JOIN ops_task    t  ON t.id = sb.ops_task_id
+    GROUP BY
+        sb.week_start_date, sb.org_id, sb.farm_id,
+        e.id, e.first_name, e.last_name, e.profile_photo_url,
+        e.overtime_threshold,
+        t.id
 )
 SELECT
-    sb.org_id,
-    sb.week_start_date,
-    e.id                                                                    AS hr_employee_id,
-    -- full_name uses first + last only. Preferred name is intentionally
-    -- not used here -- the schedule grid is a payroll/manager view where
-    -- legal name matters more than nickname.
-    TRIM(e.first_name || ' ' || e.last_name)                                AS full_name,
-    e.profile_photo_url,
-    t.id                                                                    AS task,
+    org_id,
+    week_start_date,
+    hr_employee_id,
+    full_name,
+    profile_photo_url,
+    task,
+    sunday, monday, tuesday, wednesday, thursday, friday, saturday,
+    total_hours,
 
-    -- Day columns — formatted as "HH:MM - HH:MM"; null when employee is not scheduled that day
-    MAX(CASE WHEN sb.day_of_week = 0
-        THEN TO_CHAR(sb.schedule_start AT TIME ZONE 'UTC', 'HH24:MI')
-             || CASE WHEN sb.schedule_stop IS NOT NULL
-                     THEN ' - ' || TO_CHAR(sb.schedule_stop AT TIME ZONE 'UTC', 'HH24:MI')
-                     ELSE '' END END)                                       AS sunday,
-    MAX(CASE WHEN sb.day_of_week = 1
-        THEN TO_CHAR(sb.schedule_start AT TIME ZONE 'UTC', 'HH24:MI')
-             || CASE WHEN sb.schedule_stop IS NOT NULL
-                     THEN ' - ' || TO_CHAR(sb.schedule_stop AT TIME ZONE 'UTC', 'HH24:MI')
-                     ELSE '' END END)                                       AS monday,
-    MAX(CASE WHEN sb.day_of_week = 2
-        THEN TO_CHAR(sb.schedule_start AT TIME ZONE 'UTC', 'HH24:MI')
-             || CASE WHEN sb.schedule_stop IS NOT NULL
-                     THEN ' - ' || TO_CHAR(sb.schedule_stop AT TIME ZONE 'UTC', 'HH24:MI')
-                     ELSE '' END END)                                       AS tuesday,
-    MAX(CASE WHEN sb.day_of_week = 3
-        THEN TO_CHAR(sb.schedule_start AT TIME ZONE 'UTC', 'HH24:MI')
-             || CASE WHEN sb.schedule_stop IS NOT NULL
-                     THEN ' - ' || TO_CHAR(sb.schedule_stop AT TIME ZONE 'UTC', 'HH24:MI')
-                     ELSE '' END END)                                       AS wednesday,
-    MAX(CASE WHEN sb.day_of_week = 4
-        THEN TO_CHAR(sb.schedule_start AT TIME ZONE 'UTC', 'HH24:MI')
-             || CASE WHEN sb.schedule_stop IS NOT NULL
-                     THEN ' - ' || TO_CHAR(sb.schedule_stop AT TIME ZONE 'UTC', 'HH24:MI')
-                     ELSE '' END END)                                       AS thursday,
-    MAX(CASE WHEN sb.day_of_week = 5
-        THEN TO_CHAR(sb.schedule_start AT TIME ZONE 'UTC', 'HH24:MI')
-             || CASE WHEN sb.schedule_stop IS NOT NULL
-                     THEN ' - ' || TO_CHAR(sb.schedule_stop AT TIME ZONE 'UTC', 'HH24:MI')
-                     ELSE '' END END)                                       AS friday,
-    MAX(CASE WHEN sb.day_of_week = 6
-        THEN TO_CHAR(sb.schedule_start AT TIME ZONE 'UTC', 'HH24:MI')
-             || CASE WHEN sb.schedule_stop IS NOT NULL
-                     THEN ' - ' || TO_CHAR(sb.schedule_stop AT TIME ZONE 'UTC', 'HH24:MI')
-                     ELSE '' END END)                                       AS saturday,
-
-    -- Total planned hours for the week — uses ops_task_schedule.total_hours
-    -- (captured from the sheet's daily Hours column which already has the
-    -- 30-min lunch deduction). Falls back to stop-start only when the
-    -- lunch-adjusted value isn't available.
-    ROUND(
-        SUM(COALESCE(
-            sb.schedule_total_hours,
-            CASE WHEN sb.schedule_stop IS NOT NULL
-                 THEN EXTRACT(EPOCH FROM (sb.schedule_stop - sb.schedule_start)) / 3600.0
-                 ELSE 0 END
-        ))::NUMERIC, 2
-    )                                                                       AS total_hours,
-
-    -- Weekly OT threshold — the bi-weekly threshold halved; null if not set on employee
-    CASE WHEN e.overtime_threshold IS NOT NULL
-         THEN ROUND((e.overtime_threshold / 2.0)::NUMERIC, 2)
+    -- Weekly OT threshold = bi-weekly threshold halved; null if not set on employee.
+    CASE WHEN overtime_threshold IS NOT NULL
+         THEN ROUND((overtime_threshold / 2.0)::NUMERIC, 2)
          ELSE NULL END                                                      AS ot_threshold_weekly,
 
-    -- OT status -- text so the frontend can map it to a row color.
-    -- 'above' when total planned weekly hours strictly exceed the threshold.
-    -- 'below' when the employee has a threshold but total is at-or-under it.
-    -- NULL    when no overtime_threshold is set on the employee.
+    -- OT status driven by the employee's CUMULATIVE weekly hours across
+    -- every task, not just this row's task. Window-summed over (employee,
+    -- week) so a 30h + 25h split across two tasks correctly flags as
+    -- 'above' on both rows when the threshold is 40.
+    --   'above'  -> cumulative weekly hours strictly exceed the threshold
+    --   'below'  -> employee has a threshold and is at-or-under it
+    --   NULL     -> no overtime_threshold set on the employee
     CASE
-        WHEN e.overtime_threshold IS NULL THEN NULL
+        WHEN overtime_threshold IS NULL THEN NULL
         WHEN ROUND(
-                  SUM(COALESCE(
-                      sb.schedule_total_hours,
-                      CASE WHEN sb.schedule_stop IS NOT NULL
-                           THEN EXTRACT(EPOCH FROM (sb.schedule_stop - sb.schedule_start)) / 3600.0
-                           ELSE 0 END
-                  ))::NUMERIC, 2
-              ) > ROUND((e.overtime_threshold / 2.0)::NUMERIC, 2)
+                  SUM(total_hours) OVER (
+                      PARTITION BY hr_employee_id, week_start_date
+                  )::NUMERIC, 2
+             ) > ROUND((overtime_threshold / 2.0)::NUMERIC, 2)
             THEN 'above'
         ELSE 'below'
     END                                                                     AS ot_status
 
-FROM schedule_base sb
-JOIN hr_employee e  ON e.id = sb.hr_employee_id
-JOIN ops_task    t  ON t.id = sb.ops_task_id
-GROUP BY
-    sb.week_start_date,
-    sb.org_id,
-    sb.farm_id,
-    e.id, e.first_name, e.last_name, e.profile_photo_url,
-    e.overtime_threshold,
-    t.id
+FROM per_task
 ORDER BY
-    sb.week_start_date,
+    week_start_date,
     full_name;
 
 GRANT SELECT ON public.ops_task_weekly_schedule TO authenticated;
 
-COMMENT ON VIEW public.ops_task_weekly_schedule IS 'Weekly schedule grid: one row per (employee, task, week) with day-by-day shift strings, weekly totals, and an ot_status text flag (''above'' / ''below'' / NULL) for row coloring. Joined employee display fields (full_name = first + last, profile_photo_url) are pre-flattened for the ag-grid renderer.';
+COMMENT ON VIEW public.ops_task_weekly_schedule IS 'Weekly schedule grid: one row per (employee, task, week) with day-by-day shift strings. total_hours is per-row (this task only); ot_status reflects the employee''s cumulative weekly hours across ALL tasks (''above'' / ''below'' / NULL) so an employee split across multiple tasks but still over the threshold is flagged on every row. Joined employee display fields (full_name = first + last, profile_photo_url) are pre-flattened for the ag-grid renderer.';
