@@ -187,80 +187,6 @@ def fetch_all_invoices(realm_id, access_token):
 UPSERT_BATCH_SIZE = 200  # commit every N invoices so the pooler can't time us out
 
 
-def _upsert_one_invoice(cur, org_id, inv):
-    """Upsert a single invoice + its lines. Returns (1, line_count, skipped_no_detail)."""
-    qb_id = str(inv.get("Id"))
-    customer = inv.get("CustomerRef") or {}
-    cur.execute(
-        """
-        INSERT INTO edi_qb_invoice
-          (org_id, qb_id, qb_doc_number, qb_customer_id, qb_customer_name,
-           txn_date, total_amt, raw_payload, qb_synced_at)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s::jsonb, now())
-        ON CONFLICT (org_id, qb_id) DO UPDATE SET
-            qb_doc_number    = EXCLUDED.qb_doc_number,
-            qb_customer_id   = EXCLUDED.qb_customer_id,
-            qb_customer_name = EXCLUDED.qb_customer_name,
-            txn_date         = EXCLUDED.txn_date,
-            total_amt        = EXCLUDED.total_amt,
-            raw_payload      = EXCLUDED.raw_payload,
-            qb_synced_at     = now(),
-            updated_at       = now(),
-            is_deleted       = false
-        RETURNING id
-        """,
-        (
-            org_id,
-            qb_id,
-            inv.get("DocNumber"),
-            customer.get("value"),
-            customer.get("name"),
-            inv.get("TxnDate"),
-            inv.get("TotalAmt"),
-            json.dumps(inv),
-        ),
-    )
-    edi_invoice_uuid = cur.fetchone()[0]
-
-    # Wipe + reinsert lines so removed/edited lines drop out cleanly.
-    cur.execute(
-        "DELETE FROM edi_qb_invoice_line WHERE qb_invoice_id = %s",
-        (edi_invoice_uuid,),
-    )
-
-    line_count = 0
-    skipped = 0
-    for line in inv.get("Line") or []:
-        detail = line.get("SalesItemLineDetail")
-        # Skip subtotal / tax / discount lines that don't have a sales-item detail block.
-        if not detail:
-            skipped += 1
-            continue
-        item = detail.get("ItemRef") or {}
-        cur.execute(
-            """
-            INSERT INTO edi_qb_invoice_line
-              (org_id, qb_invoice_id, line_num, qb_item_id, qb_item_name,
-               description, qty, amount, service_date, raw_payload)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
-            """,
-            (
-                org_id,
-                edi_invoice_uuid,
-                line.get("LineNum"),
-                item.get("value"),
-                item.get("name"),
-                line.get("Description"),
-                detail.get("Qty"),
-                line.get("Amount"),
-                detail.get("ServiceDate"),
-                detail.get("ServiceDate"),  # placeholder fixed below
-            ),
-        )
-        line_count += 1
-    return 1, line_count, skipped
-
-
 def upsert_invoices(org_id, invoices):
     """Upsert invoices in batches. Each batch opens its own connection so a
     long HTTP fetch upstream can't leave a Postgres transaction idle past the
@@ -275,43 +201,38 @@ def upsert_invoices(org_id, invoices):
         with get_pg_conn() as conn:
             with conn.cursor() as cur:
                 for inv in batch:
-                    qb_id = str(inv.get("Id"))
+                    invoice_id = str(inv.get("Id"))
                     customer = inv.get("CustomerRef") or {}
                     cur.execute(
                         """
                         INSERT INTO edi_qb_invoice
-                          (org_id, qb_id, qb_doc_number, qb_customer_id, qb_customer_name,
-                           txn_date, total_amt, raw_payload, qb_synced_at)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s::jsonb, now())
-                        ON CONFLICT (org_id, qb_id) DO UPDATE SET
-                            qb_doc_number    = EXCLUDED.qb_doc_number,
-                            qb_customer_id   = EXCLUDED.qb_customer_id,
-                            qb_customer_name = EXCLUDED.qb_customer_name,
-                            txn_date         = EXCLUDED.txn_date,
-                            total_amt        = EXCLUDED.total_amt,
-                            raw_payload      = EXCLUDED.raw_payload,
-                            qb_synced_at     = now(),
-                            updated_at       = now(),
-                            is_deleted       = false
-                        RETURNING id
+                          (org_id, id, invoice_number, customer_id, customer_name,
+                           invoice_date, total_amount, synced_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, now())
+                        ON CONFLICT (org_id, id) DO UPDATE SET
+                            invoice_number = EXCLUDED.invoice_number,
+                            customer_id    = EXCLUDED.customer_id,
+                            customer_name  = EXCLUDED.customer_name,
+                            invoice_date   = EXCLUDED.invoice_date,
+                            total_amount   = EXCLUDED.total_amount,
+                            synced_at      = now()
                         """,
                         (
                             org_id,
-                            qb_id,
+                            invoice_id,
                             inv.get("DocNumber"),
                             customer.get("value"),
                             customer.get("name"),
                             inv.get("TxnDate"),
                             inv.get("TotalAmt"),
-                            json.dumps(inv),
                         ),
                     )
-                    edi_invoice_uuid = cur.fetchone()[0]
                     inv_count += 1
 
+                    # Wipe + reinsert lines so removed/edited lines drop out cleanly.
                     cur.execute(
-                        "DELETE FROM edi_qb_invoice_line WHERE qb_invoice_id = %s",
-                        (edi_invoice_uuid,),
+                        "DELETE FROM edi_qb_invoice_line WHERE org_id = %s AND invoice_id = %s",
+                        (org_id, invoice_id),
                     )
                     for line in inv.get("Line") or []:
                         detail = line.get("SalesItemLineDetail")
@@ -322,21 +243,19 @@ def upsert_invoices(org_id, invoices):
                         cur.execute(
                             """
                             INSERT INTO edi_qb_invoice_line
-                              (org_id, qb_invoice_id, line_num, qb_item_id, qb_item_name,
-                               description, qty, amount, service_date, raw_payload)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
+                              (org_id, invoice_id, line_num, item_name,
+                               description, cases, amount, service_date)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                             """,
                             (
                                 org_id,
-                                edi_invoice_uuid,
+                                invoice_id,
                                 line.get("LineNum"),
-                                item.get("value"),
                                 item.get("name"),
                                 line.get("Description"),
                                 detail.get("Qty"),
                                 line.get("Amount"),
                                 detail.get("ServiceDate"),
-                                json.dumps(line),
                             ),
                         )
                         line_count += 1

@@ -41,55 +41,34 @@ export type Database = {
     Tables: {
       edi_qb_invoice: {
         Row: {
-          created_at: string
-          created_by: string | null
+          customer_id: string | null
+          customer_name: string | null
           id: string
-          is_deleted: boolean
+          invoice_date: string | null
+          invoice_number: string | null
           org_id: string
-          qb_customer_id: string | null
-          qb_customer_name: string | null
-          qb_doc_number: string | null
-          qb_id: string
-          qb_synced_at: string
-          raw_payload: Json
-          total_amt: number | null
-          txn_date: string | null
-          updated_at: string
-          updated_by: string | null
+          synced_at: string
+          total_amount: number | null
         }
         Insert: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          is_deleted?: boolean
+          customer_id?: string | null
+          customer_name?: string | null
+          id: string
+          invoice_date?: string | null
+          invoice_number?: string | null
           org_id: string
-          qb_customer_id?: string | null
-          qb_customer_name?: string | null
-          qb_doc_number?: string | null
-          qb_id: string
-          qb_synced_at?: string
-          raw_payload: Json
-          total_amt?: number | null
-          txn_date?: string | null
-          updated_at?: string
-          updated_by?: string | null
+          synced_at?: string
+          total_amount?: number | null
         }
         Update: {
-          created_at?: string
-          created_by?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
           id?: string
-          is_deleted?: boolean
+          invoice_date?: string | null
+          invoice_number?: string | null
           org_id?: string
-          qb_customer_id?: string | null
-          qb_customer_name?: string | null
-          qb_doc_number?: string | null
-          qb_id?: string
-          qb_synced_at?: string
-          raw_payload?: Json
-          total_amt?: number | null
-          txn_date?: string | null
-          updated_at?: string
-          updated_by?: string | null
+          synced_at?: string
+          total_amount?: number | null
         }
         Relationships: [
           {
@@ -104,51 +83,33 @@ export type Database = {
       edi_qb_invoice_line: {
         Row: {
           amount: number | null
-          created_at: string
+          cases: number | null
           description: string | null
-          id: string
-          is_deleted: boolean
-          line_num: number | null
+          invoice_id: string
+          item_name: string | null
+          line_num: number
           org_id: string
-          qb_invoice_id: string
-          qb_item_id: string | null
-          qb_item_name: string | null
-          qty: number | null
-          raw_payload: Json
           service_date: string | null
-          updated_at: string
         }
         Insert: {
           amount?: number | null
-          created_at?: string
+          cases?: number | null
           description?: string | null
-          id?: string
-          is_deleted?: boolean
-          line_num?: number | null
+          invoice_id: string
+          item_name?: string | null
+          line_num: number
           org_id: string
-          qb_invoice_id: string
-          qb_item_id?: string | null
-          qb_item_name?: string | null
-          qty?: number | null
-          raw_payload: Json
           service_date?: string | null
-          updated_at?: string
         }
         Update: {
           amount?: number | null
-          created_at?: string
+          cases?: number | null
           description?: string | null
-          id?: string
-          is_deleted?: boolean
-          line_num?: number | null
+          invoice_id?: string
+          item_name?: string | null
+          line_num?: number
           org_id?: string
-          qb_invoice_id?: string
-          qb_item_id?: string | null
-          qb_item_name?: string | null
-          qty?: number | null
-          raw_payload?: Json
           service_date?: string | null
-          updated_at?: string
         }
         Relationships: [
           {
@@ -159,11 +120,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "edi_qb_invoice_line_qb_invoice_id_fkey"
-            columns: ["qb_invoice_id"]
+            foreignKeyName: "edi_qb_invoice_line_org_id_invoice_id_fkey"
+            columns: ["org_id", "invoice_id"]
             isOneToOne: false
             referencedRelation: "edi_qb_invoice"
-            referencedColumns: ["id"]
+            referencedColumns: ["org_id", "id"]
           },
         ]
       }
@@ -10202,23 +10163,20 @@ export type Database = {
         }
         Relationships: []
       }
-      edi_qb_invoice_detail: {
+      edi_qb_invoice_summary: {
         Row: {
+          amount: number | null
+          cases: number | null
+          customer_group: string | null
           customer_name: string | null
-          description: string | null
+          farm: string | null
+          invoice_date: string | null
           invoice_number: string | null
-          invoice_total: number | null
           item_name: string | null
-          line_amount: number | null
           line_num: number | null
           org_id: string | null
-          qb_customer_id: string | null
-          qb_invoice_id: string | null
-          qb_item_id: string | null
-          qb_synced_at: string | null
-          qty: number | null
+          pounds: number | null
           service_date: string | null
-          txn_date: string | null
         }
         Relationships: [
           {
@@ -10226,6 +10184,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "org"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_customer_sales_customer_group_id_fkey"
+            columns: ["customer_group"]
+            isOneToOne: false
+            referencedRelation: "sales_customer_group"
             referencedColumns: ["id"]
           },
         ]
