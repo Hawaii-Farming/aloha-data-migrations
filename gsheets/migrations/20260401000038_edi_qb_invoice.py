@@ -156,14 +156,28 @@ def get_valid_access_token(conn, org_id):
     return realm_id, new_access
 
 
-def fetch_all_invoices(realm_id, access_token):
-    """Paginate the QB query endpoint. Returns the full list of Invoice dicts."""
+def fetch_all_invoices(realm_id, access_token, since_date=None):
+    """Paginate the QB query endpoint. Returns invoices with TxnDate >= since_date.
+
+    since_date is an ISO date string ('YYYY-MM-DD'). Defaults to Jan 1 of the
+    current year so the nightly only refreshes the current calendar year --
+    historical invoices are left in place from earlier syncs. Pass an older
+    date or None (None = no filter) to widen the window for backfills.
+    """
+    if since_date is None:
+        since_date = f"{datetime.now(timezone.utc).year}-01-01"
+
+    where_clause = f"WHERE TxnDate >= '{since_date}' " if since_date else ""
+
     invoices = []
     start_pos = 1
     page = 0
     while True:
         page += 1
-        sql = f"SELECT * FROM Invoice STARTPOSITION {start_pos} MAXRESULTS {PAGE_SIZE}"
+        sql = (
+            f"SELECT * FROM Invoice {where_clause}"
+            f"STARTPOSITION {start_pos} MAXRESULTS {PAGE_SIZE}"
+        )
         url = (
             f"{INTUIT_API_BASE}/v3/company/{urllib.parse.quote(realm_id)}/query"
             f"?query={urllib.parse.quote(sql)}&minorversion={MINOR_VERSION}"
@@ -302,6 +316,9 @@ def sync_one_org(org_id):
     if realm_id is None:
         print(f"  [{org_id}] no QB token row -- skipping.")
         return
+    # Nightly window: current calendar year. Older invoices are kept
+    # in the DB from prior syncs and don't get re-touched. To force a
+    # full backfill, pass since_date=None (or a much earlier date).
     print(f"  [{org_id}] realm_id={realm_id}, fetching invoices...")
     invoices = fetch_all_invoices(realm_id, access_token)
     print(f"  [{org_id}] pulled {len(invoices)} invoices from QB; upserting...")
