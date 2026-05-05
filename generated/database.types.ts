@@ -39,6 +39,134 @@ export type Database = {
   }
   public: {
     Tables: {
+      edi_qb_invoice: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_deleted: boolean
+          org_id: string
+          qb_customer_id: string | null
+          qb_customer_name: string | null
+          qb_doc_number: string | null
+          qb_id: string
+          qb_synced_at: string
+          raw_payload: Json
+          total_amt: number | null
+          txn_date: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_deleted?: boolean
+          org_id: string
+          qb_customer_id?: string | null
+          qb_customer_name?: string | null
+          qb_doc_number?: string | null
+          qb_id: string
+          qb_synced_at?: string
+          raw_payload: Json
+          total_amt?: number | null
+          txn_date?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_deleted?: boolean
+          org_id?: string
+          qb_customer_id?: string | null
+          qb_customer_name?: string | null
+          qb_doc_number?: string | null
+          qb_id?: string
+          qb_synced_at?: string
+          raw_payload?: Json
+          total_amt?: number | null
+          txn_date?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edi_qb_invoice_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "org"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      edi_qb_invoice_line: {
+        Row: {
+          amount: number | null
+          created_at: string
+          description: string | null
+          id: string
+          is_deleted: boolean
+          line_num: number | null
+          org_id: string
+          qb_invoice_id: string
+          qb_item_id: string | null
+          qb_item_name: string | null
+          qty: number | null
+          raw_payload: Json
+          service_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_deleted?: boolean
+          line_num?: number | null
+          org_id: string
+          qb_invoice_id: string
+          qb_item_id?: string | null
+          qb_item_name?: string | null
+          qty?: number | null
+          raw_payload: Json
+          service_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_deleted?: boolean
+          line_num?: number | null
+          org_id?: string
+          qb_invoice_id?: string
+          qb_item_id?: string | null
+          qb_item_name?: string | null
+          qty?: number | null
+          raw_payload?: Json
+          service_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edi_qb_invoice_line_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "org"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "edi_qb_invoice_line_qb_invoice_id_fkey"
+            columns: ["qb_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "edi_qb_invoice"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fin_expense: {
         Row: {
           account_name: string | null
@@ -7935,134 +8063,6 @@ export type Database = {
           },
         ]
       }
-      qb_invoice: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          id: string
-          is_deleted: boolean
-          org_id: string
-          qb_customer_id: string | null
-          qb_customer_name: string | null
-          qb_doc_number: string | null
-          qb_id: string
-          qb_synced_at: string
-          raw_payload: Json
-          total_amt: number | null
-          txn_date: string | null
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          is_deleted?: boolean
-          org_id: string
-          qb_customer_id?: string | null
-          qb_customer_name?: string | null
-          qb_doc_number?: string | null
-          qb_id: string
-          qb_synced_at?: string
-          raw_payload: Json
-          total_amt?: number | null
-          txn_date?: string | null
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          is_deleted?: boolean
-          org_id?: string
-          qb_customer_id?: string | null
-          qb_customer_name?: string | null
-          qb_doc_number?: string | null
-          qb_id?: string
-          qb_synced_at?: string
-          raw_payload?: Json
-          total_amt?: number | null
-          txn_date?: string | null
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "qb_invoice_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "org"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      qb_invoice_line: {
-        Row: {
-          amount: number | null
-          created_at: string
-          description: string | null
-          id: string
-          is_deleted: boolean
-          line_num: number | null
-          org_id: string
-          qb_invoice_id: string
-          qb_item_id: string | null
-          qb_item_name: string | null
-          qty: number | null
-          raw_payload: Json
-          service_date: string | null
-          updated_at: string
-        }
-        Insert: {
-          amount?: number | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_deleted?: boolean
-          line_num?: number | null
-          org_id: string
-          qb_invoice_id: string
-          qb_item_id?: string | null
-          qb_item_name?: string | null
-          qty?: number | null
-          raw_payload: Json
-          service_date?: string | null
-          updated_at?: string
-        }
-        Update: {
-          amount?: number | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_deleted?: boolean
-          line_num?: number | null
-          org_id?: string
-          qb_invoice_id?: string
-          qb_item_id?: string | null
-          qb_item_name?: string | null
-          qty?: number | null
-          raw_payload?: Json
-          service_date?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "qb_invoice_line_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "org"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "qb_invoice_line_qb_invoice_id_fkey"
-            columns: ["qb_invoice_id"]
-            isOneToOne: false
-            referencedRelation: "qb_invoice"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       sales_container_type: {
         Row: {
           created_at: string
@@ -10202,6 +10202,34 @@ export type Database = {
         }
         Relationships: []
       }
+      edi_qb_invoice_detail: {
+        Row: {
+          customer_name: string | null
+          description: string | null
+          invoice_number: string | null
+          invoice_total: number | null
+          item_name: string | null
+          line_amount: number | null
+          line_num: number | null
+          org_id: string | null
+          qb_customer_id: string | null
+          qb_invoice_id: string | null
+          qb_item_id: string | null
+          qb_synced_at: string | null
+          qty: number | null
+          service_date: string | null
+          txn_date: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edi_qb_invoice_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "org"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fin_expense_v: {
         Row: {
           account_name: string | null
@@ -10987,34 +11015,6 @@ export type Database = {
           },
           {
             foreignKeyName: "hr_employee_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "org"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      qb_invoice_flat: {
-        Row: {
-          customer_name: string | null
-          description: string | null
-          invoice_number: string | null
-          invoice_total: number | null
-          item_name: string | null
-          line_amount: number | null
-          line_num: number | null
-          org_id: string | null
-          qb_customer_id: string | null
-          qb_invoice_id: string | null
-          qb_item_id: string | null
-          qb_synced_at: string | null
-          qty: number | null
-          service_date: string | null
-          txn_date: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "qb_invoice_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "org"

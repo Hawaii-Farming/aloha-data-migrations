@@ -1,5 +1,5 @@
--- qb_invoice + qb_invoice_line
--- ============================
+-- edi_qb_invoice + edi_qb_invoice_line
+-- ====================================
 -- Local mirror of QuickBooks Online Invoice data so we can browse, query,
 -- and join it without hitting Intuit's API on every request. Pull-only for
 -- now -- the sync job overwrites these tables with the latest from QB.
@@ -7,6 +7,12 @@
 -- Two normalized tables (header + line) plus a flat view that joins them
 -- back together for spreadsheet-style review (matches the legacy G-Accon
 -- export shape).
+--
+-- The `edi_qb_` prefix groups this with the rest of the EDI integration
+-- surface (SPS Commerce 850 / 856 / 810, plus future inbound channels).
+-- QuickBooks isn't EDI in the strict trading-partner sense, but it lives
+-- on the same "data exchange with an external system" axis, so we treat
+-- it as the QB sub-module of EDI for module-organization purposes.
 --
 -- Field selection mirrors what the team was extracting via G-Accon:
 --   header: Invoice Number, Customer Name, Txn Date
@@ -21,9 +27,9 @@
 -- bypasses RLS via the admin client.
 
 -- ============================================================
--- qb_invoice (header)
+-- edi_qb_invoice (header)
 -- ============================================================
-CREATE TABLE IF NOT EXISTS public.qb_invoice (
+CREATE TABLE IF NOT EXISTS public.edi_qb_invoice (
     id                  UUID NOT NULL DEFAULT gen_random_uuid(),
     org_id              TEXT NOT NULL REFERENCES public.org(id),
     qb_id               TEXT NOT NULL,                 -- Intuit's Invoice.Id, unique within a QB company
@@ -42,26 +48,26 @@ CREATE TABLE IF NOT EXISTS public.qb_invoice (
     is_deleted          BOOLEAN NOT NULL DEFAULT false,
 
     PRIMARY KEY (org_id, qb_id),
-    UNIQUE (id)                                         -- surface a stable surrogate for FK use from qb_invoice_line
+    UNIQUE (id)                                         -- surface a stable surrogate for FK use from edi_qb_invoice_line
 );
 
-COMMENT ON TABLE  public.qb_invoice IS 'Local mirror of QuickBooks Online Invoice headers. (org_id, qb_id) is the source-of-truth PK; id is a surrogate UUID exposed via UNIQUE so qb_invoice_line.qb_invoice_id can FK to it without dragging org_id+qb_id around.';
-COMMENT ON COLUMN public.qb_invoice.qb_id            IS 'Intuit Invoice.Id (string). Unique within a QB company; primary key with org_id.';
-COMMENT ON COLUMN public.qb_invoice.qb_doc_number    IS 'Human invoice number shown in QB UI (Invoice.DocNumber).';
-COMMENT ON COLUMN public.qb_invoice.qb_customer_name IS 'CustomerRef.name copied here for fast filtering; canonical name lives on the QB Customer entity.';
-COMMENT ON COLUMN public.qb_invoice.raw_payload      IS 'Full Intuit Invoice JSON. New columns can be backfilled from this without a re-pull.';
+COMMENT ON TABLE  public.edi_qb_invoice IS 'Local mirror of QuickBooks Online Invoice headers. (org_id, qb_id) is the source-of-truth PK; id is a surrogate UUID exposed via UNIQUE so edi_qb_invoice_line.qb_invoice_id can FK to it without dragging org_id+qb_id around.';
+COMMENT ON COLUMN public.edi_qb_invoice.qb_id            IS 'Intuit Invoice.Id (string). Unique within a QB company; primary key with org_id.';
+COMMENT ON COLUMN public.edi_qb_invoice.qb_doc_number    IS 'Human invoice number shown in QB UI (Invoice.DocNumber).';
+COMMENT ON COLUMN public.edi_qb_invoice.qb_customer_name IS 'CustomerRef.name copied here for fast filtering; canonical name lives on the QB Customer entity.';
+COMMENT ON COLUMN public.edi_qb_invoice.raw_payload      IS 'Full Intuit Invoice JSON. New columns can be backfilled from this without a re-pull.';
 
-CREATE INDEX idx_qb_invoice_org_txn_date  ON public.qb_invoice (org_id, txn_date DESC);
-CREATE INDEX idx_qb_invoice_org_customer  ON public.qb_invoice (org_id, qb_customer_id);
-CREATE INDEX idx_qb_invoice_doc_number    ON public.qb_invoice (org_id, qb_doc_number);
+CREATE INDEX idx_edi_qb_invoice_org_txn_date  ON public.edi_qb_invoice (org_id, txn_date DESC);
+CREATE INDEX idx_edi_qb_invoice_org_customer  ON public.edi_qb_invoice (org_id, qb_customer_id);
+CREATE INDEX idx_edi_qb_invoice_doc_number    ON public.edi_qb_invoice (org_id, qb_doc_number);
 
 -- ============================================================
--- qb_invoice_line (line items)
+-- edi_qb_invoice_line (line items)
 -- ============================================================
-CREATE TABLE IF NOT EXISTS public.qb_invoice_line (
+CREATE TABLE IF NOT EXISTS public.edi_qb_invoice_line (
     id                  UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
     org_id              TEXT NOT NULL REFERENCES public.org(id),
-    qb_invoice_id       UUID NOT NULL REFERENCES public.qb_invoice(id) ON DELETE CASCADE,
+    qb_invoice_id       UUID NOT NULL REFERENCES public.edi_qb_invoice(id) ON DELETE CASCADE,
     line_num            INTEGER,                       -- Line[].LineNum (1-based ordering within the invoice)
     qb_item_id          TEXT,                          -- SalesItemLineDetail.ItemRef.value
     qb_item_name        TEXT,                          -- SalesItemLineDetail.ItemRef.name
@@ -76,18 +82,18 @@ CREATE TABLE IF NOT EXISTS public.qb_invoice_line (
     is_deleted          BOOLEAN NOT NULL DEFAULT false
 );
 
-COMMENT ON TABLE  public.qb_invoice_line IS 'Local mirror of QuickBooks Online Invoice line items. One row per line on each invoice.';
-COMMENT ON COLUMN public.qb_invoice_line.line_num     IS 'Line.LineNum from Intuit (1-based). Preserve to maintain print order.';
-COMMENT ON COLUMN public.qb_invoice_line.service_date IS 'When the goods/service on this line were delivered (Line[].SalesItemLineDetail.ServiceDate). Distinct from the invoice TxnDate.';
+COMMENT ON TABLE  public.edi_qb_invoice_line IS 'Local mirror of QuickBooks Online Invoice line items. One row per line on each invoice.';
+COMMENT ON COLUMN public.edi_qb_invoice_line.line_num     IS 'Line.LineNum from Intuit (1-based). Preserve to maintain print order.';
+COMMENT ON COLUMN public.edi_qb_invoice_line.service_date IS 'When the goods/service on this line were delivered (Line[].SalesItemLineDetail.ServiceDate). Distinct from the invoice TxnDate.';
 
-CREATE INDEX idx_qb_invoice_line_invoice ON public.qb_invoice_line (qb_invoice_id);
-CREATE INDEX idx_qb_invoice_line_item    ON public.qb_invoice_line (org_id, qb_item_id);
-CREATE INDEX idx_qb_invoice_line_service ON public.qb_invoice_line (org_id, service_date DESC);
+CREATE INDEX idx_edi_qb_invoice_line_invoice ON public.edi_qb_invoice_line (qb_invoice_id);
+CREATE INDEX idx_edi_qb_invoice_line_item    ON public.edi_qb_invoice_line (org_id, qb_item_id);
+CREATE INDEX idx_edi_qb_invoice_line_service ON public.edi_qb_invoice_line (org_id, service_date DESC);
 
 -- ============================================================
--- qb_invoice_flat (header + lines joined for spreadsheet-style browsing)
+-- edi_qb_invoice_detail (header + lines joined for spreadsheet-style browsing)
 -- ============================================================
-CREATE OR REPLACE VIEW public.qb_invoice_flat
+CREATE OR REPLACE VIEW public.edi_qb_invoice_detail
 WITH (security_invoker = true) AS
 SELECT
     h.org_id,
@@ -105,31 +111,31 @@ SELECT
     l.amount             AS line_amount,
     l.service_date,
     h.qb_synced_at
-FROM public.qb_invoice h
-LEFT JOIN public.qb_invoice_line l ON l.qb_invoice_id = h.id
+FROM public.edi_qb_invoice h
+LEFT JOIN public.edi_qb_invoice_line l ON l.qb_invoice_id = h.id
 WHERE h.is_deleted = false
   AND (l.is_deleted IS NULL OR l.is_deleted = false);
 
-COMMENT ON VIEW public.qb_invoice_flat IS 'One row per (invoice line) for spreadsheet-style review. Header fields (invoice number, customer, txn date, total) repeat across an invoice''s line rows. Excludes soft-deleted rows. Mirrors the legacy G-Accon export shape.';
+COMMENT ON VIEW public.edi_qb_invoice_detail IS 'One row per (invoice line) for spreadsheet-style review. Header fields (invoice number, customer, txn date, total) repeat across an invoice''s line rows. Excludes soft-deleted rows. Mirrors the legacy G-Accon export shape.';
 
-GRANT SELECT ON public.qb_invoice_flat TO authenticated;
+GRANT SELECT ON public.edi_qb_invoice_detail TO authenticated;
 
 -- ============================================================
 -- RLS
 -- ============================================================
-ALTER TABLE public.qb_invoice      ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.qb_invoice_line ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.edi_qb_invoice      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.edi_qb_invoice_line ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "qb_invoice_read" ON public.qb_invoice
+CREATE POLICY "edi_qb_invoice_read" ON public.edi_qb_invoice
   FOR SELECT TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-CREATE POLICY "qb_invoice_line_read" ON public.qb_invoice_line
+CREATE POLICY "edi_qb_invoice_line_read" ON public.edi_qb_invoice_line
   FOR SELECT TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
 -- No INSERT/UPDATE/DELETE policies -- the sync route writes via the
 -- service-role client, which bypasses RLS.
 
-GRANT SELECT ON public.qb_invoice      TO authenticated;
-GRANT SELECT ON public.qb_invoice_line TO authenticated;
+GRANT SELECT ON public.edi_qb_invoice      TO authenticated;
+GRANT SELECT ON public.edi_qb_invoice_line TO authenticated;
