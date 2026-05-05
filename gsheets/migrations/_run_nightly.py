@@ -62,7 +62,8 @@ DEFAULT_SET = [
     "034",  # grow_chemistry — external lab pond/water readings
     "035",  # grow_weather — greenhouse weather-station readings
     "036",  # business_rule
-    "037",  # fin_expense + sales_invoice (nightly QB sheet sync)
+    "037",  # fin_expense + sales_invoice (nightly QB sheet sync, legacy)
+    "038",  # edi_qb_invoice — direct QB API pull into edi_qb_invoice + edi_qb_invoice_line
 ]
 
 RETIRED = set()

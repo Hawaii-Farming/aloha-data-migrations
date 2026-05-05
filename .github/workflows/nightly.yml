@@ -42,6 +42,11 @@ jobs:
       # hardcoded inside each migration script and do not have env overrides.
       MIGRATION_AUDIT_USER: ${{ vars.MIGRATION_AUDIT_USER }}
       MIGRATION_ORG_ID: ${{ vars.MIGRATION_ORG_ID }}
+      # Intuit / QuickBooks credentials — used by 038_edi_qb_invoice.py
+      # to call the QB API and refresh stored access tokens. Same
+      # client_id / client_secret as the aloha-app deploy environment.
+      INTUIT_CLIENT_ID: ${{ secrets.INTUIT_CLIENT_ID }}
+      INTUIT_CLIENT_SECRET: ${{ secrets.INTUIT_CLIENT_SECRET }}
 
     steps:
       - name: Checkout
