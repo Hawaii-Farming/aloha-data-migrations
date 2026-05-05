@@ -71,42 +71,44 @@ SELECT
     COALESCE(c.workers_compensation_code, pr.workers_compensation_code)  AS workers_compensation_code,
     (SELECT cur_date FROM periods)                                       AS check_date,
 
-    -- Hours (always visible)
-    COALESCE(c.scheduled_hours, 0)                                       AS scheduled_hours,
-    COALESCE(c.total_hours, 0)                                           AS total_hours,
-    COALESCE(c.discretionary_overtime_hours, 0)                          AS discretionary_overtime_hours,
-    COALESCE(c.total_hours, 0) - COALESCE(pr.total_hours, 0)             AS hours_delta,
+    -- Hours (always visible) -- rounded to whole hours for display.
+    ROUND(COALESCE(c.scheduled_hours, 0))                                AS scheduled_hours,
+    ROUND(COALESCE(c.total_hours, 0))                                    AS total_hours,
+    ROUND(COALESCE(c.discretionary_overtime_hours, 0))                   AS discretionary_overtime_hours,
+    ROUND(COALESCE(c.total_hours, 0) - COALESCE(pr.total_hours, 0))      AS hours_delta,
 
-    -- Dollars (NULL for Team Lead)
+    -- Dollars (NULL for Team Lead) -- rounded to whole dollars for display.
     CASE WHEN public.auth_access_level(COALESCE(c.org_id, pr.org_id)) = 'Team Lead'
          THEN NULL
-         ELSE COALESCE(c.total_cost, 0)
+         ELSE ROUND(COALESCE(c.total_cost, 0))
     END AS total_cost,
     CASE WHEN public.auth_access_level(COALESCE(c.org_id, pr.org_id)) = 'Team Lead'
          THEN NULL
-         ELSE COALESCE(c.regular_pay, 0)
+         ELSE ROUND(COALESCE(c.regular_pay, 0))
     END AS regular_pay,
     CASE WHEN public.auth_access_level(COALESCE(c.org_id, pr.org_id)) = 'Team Lead'
          THEN NULL
-         ELSE COALESCE(c.discretionary_overtime_pay, 0)
+         ELSE ROUND(COALESCE(c.discretionary_overtime_pay, 0))
     END AS discretionary_overtime_pay,
     CASE WHEN public.auth_access_level(COALESCE(c.org_id, pr.org_id)) = 'Team Lead'
          THEN NULL
-         ELSE COALESCE(c.total_cost, 0) - COALESCE(pr.total_cost, 0)
+         ELSE ROUND(COALESCE(c.total_cost, 0) - COALESCE(pr.total_cost, 0))
     END AS total_cost_delta,
     CASE WHEN public.auth_access_level(COALESCE(c.org_id, pr.org_id)) = 'Team Lead'
          THEN NULL
-         ELSE COALESCE(c.regular_pay, 0) - COALESCE(pr.regular_pay, 0)
+         ELSE ROUND(COALESCE(c.regular_pay, 0) - COALESCE(pr.regular_pay, 0))
     END AS regular_pay_delta,
     CASE WHEN public.auth_access_level(COALESCE(c.org_id, pr.org_id)) = 'Team Lead'
          THEN NULL
-         ELSE COALESCE(c.discretionary_overtime_pay, 0) - COALESCE(pr.discretionary_overtime_pay, 0)
+         ELSE ROUND(COALESCE(c.discretionary_overtime_pay, 0) - COALESCE(pr.discretionary_overtime_pay, 0))
     END AS discretionary_overtime_pay_delta,
     CASE WHEN public.auth_access_level(COALESCE(c.org_id, pr.org_id)) = 'Team Lead'
          THEN NULL
-         ELSE (COALESCE(c.total_cost, 0) - COALESCE(pr.total_cost, 0))
+         ELSE ROUND(
+              (COALESCE(c.total_cost, 0) - COALESCE(pr.total_cost, 0))
             - (COALESCE(c.regular_pay, 0) - COALESCE(pr.regular_pay, 0))
             - (COALESCE(c.discretionary_overtime_pay, 0) - COALESCE(pr.discretionary_overtime_pay, 0))
+         )
     END AS other_pay_delta
 FROM current_p c
 FULL OUTER JOIN previous_p pr
@@ -190,42 +192,44 @@ SELECT
     COALESCE(c.status, pr.status)                                       AS status,
     (SELECT periods.cur_date FROM periods)                              AS check_date,
 
-    -- Hours (always visible)
-    COALESCE(c.scheduled_hours, 0::numeric)                             AS scheduled_hours,
-    COALESCE(c.total_hours, 0::numeric)                                 AS total_hours,
-    COALESCE(c.discretionary_overtime_hours, 0::numeric)                AS discretionary_overtime_hours,
-    COALESCE(c.total_hours, 0::numeric) - COALESCE(pr.total_hours, 0::numeric) AS hours_delta,
+    -- Hours (always visible) -- rounded to whole hours for display.
+    ROUND(COALESCE(c.scheduled_hours, 0::numeric))                      AS scheduled_hours,
+    ROUND(COALESCE(c.total_hours, 0::numeric))                          AS total_hours,
+    ROUND(COALESCE(c.discretionary_overtime_hours, 0::numeric))         AS discretionary_overtime_hours,
+    ROUND(COALESCE(c.total_hours, 0::numeric) - COALESCE(pr.total_hours, 0::numeric)) AS hours_delta,
 
-    -- Dollars (NULL for Team Lead)
+    -- Dollars (NULL for Team Lead) -- rounded to whole dollars for display.
     CASE WHEN public.auth_access_level(COALESCE(c.org_id, pr.org_id)) = 'Team Lead'
          THEN NULL
-         ELSE COALESCE(c.total_cost, 0::numeric)
+         ELSE ROUND(COALESCE(c.total_cost, 0::numeric))
     END AS total_cost,
     CASE WHEN public.auth_access_level(COALESCE(c.org_id, pr.org_id)) = 'Team Lead'
          THEN NULL
-         ELSE COALESCE(c.regular_pay, 0::numeric)
+         ELSE ROUND(COALESCE(c.regular_pay, 0::numeric))
     END AS regular_pay,
     CASE WHEN public.auth_access_level(COALESCE(c.org_id, pr.org_id)) = 'Team Lead'
          THEN NULL
-         ELSE COALESCE(c.discretionary_overtime_pay, 0::numeric)
+         ELSE ROUND(COALESCE(c.discretionary_overtime_pay, 0::numeric))
     END AS discretionary_overtime_pay,
     CASE WHEN public.auth_access_level(COALESCE(c.org_id, pr.org_id)) = 'Team Lead'
          THEN NULL
-         ELSE COALESCE(c.total_cost, 0::numeric) - COALESCE(pr.total_cost, 0::numeric)
+         ELSE ROUND(COALESCE(c.total_cost, 0::numeric) - COALESCE(pr.total_cost, 0::numeric))
     END AS total_cost_delta,
     CASE WHEN public.auth_access_level(COALESCE(c.org_id, pr.org_id)) = 'Team Lead'
          THEN NULL
-         ELSE COALESCE(c.regular_pay, 0::numeric) - COALESCE(pr.regular_pay, 0::numeric)
+         ELSE ROUND(COALESCE(c.regular_pay, 0::numeric) - COALESCE(pr.regular_pay, 0::numeric))
     END AS regular_pay_delta,
     CASE WHEN public.auth_access_level(COALESCE(c.org_id, pr.org_id)) = 'Team Lead'
          THEN NULL
-         ELSE COALESCE(c.discretionary_overtime_pay, 0::numeric) - COALESCE(pr.discretionary_overtime_pay, 0::numeric)
+         ELSE ROUND(COALESCE(c.discretionary_overtime_pay, 0::numeric) - COALESCE(pr.discretionary_overtime_pay, 0::numeric))
     END AS discretionary_overtime_pay_delta,
     CASE WHEN public.auth_access_level(COALESCE(c.org_id, pr.org_id)) = 'Team Lead'
          THEN NULL
-         ELSE (COALESCE(c.total_cost, 0::numeric) - COALESCE(pr.total_cost, 0::numeric))
+         ELSE ROUND(
+              (COALESCE(c.total_cost, 0::numeric) - COALESCE(pr.total_cost, 0::numeric))
             - (COALESCE(c.regular_pay, 0::numeric) - COALESCE(pr.regular_pay, 0::numeric))
             - (COALESCE(c.discretionary_overtime_pay, 0::numeric) - COALESCE(pr.discretionary_overtime_pay, 0::numeric))
+         )
     END AS other_pay_delta
 FROM current_p c
 FULL JOIN previous_p pr
