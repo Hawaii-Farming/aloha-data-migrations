@@ -39,6 +39,8 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from psycopg2.extras import execute_values
+
 sys.path.insert(0, str(Path(__file__).parent))
 
 from _config import _load_env_file  # noqa: E402  triggers .env load
@@ -188,9 +190,15 @@ UPSERT_BATCH_SIZE = 200  # commit every N invoices so the pooler can't time us o
 
 
 def upsert_invoices(org_id, invoices):
-    """Upsert invoices in batches. Each batch opens its own connection so a
-    long HTTP fetch upstream can't leave a Postgres transaction idle past the
-    pooler's timeout."""
+    """Upsert invoices in batches via execute_values bulk inserts.
+
+    For each batch we collect header rows + line rows, then issue:
+       1. one execute_values UPSERT for all headers in the batch
+       2. one DELETE for all old line rows (by invoice_id = ANY(...))
+       3. one execute_values INSERT for all new line rows
+    That collapses ~5 round trips per invoice down to 3 per batch of 200,
+    which is a ~300x reduction in pooler round-trips on the typical mix.
+    """
     inv_count = 0
     line_count = 0
     skipped_no_detail = 0
@@ -198,70 +206,91 @@ def upsert_invoices(org_id, invoices):
 
     for batch_start in range(0, total, UPSERT_BATCH_SIZE):
         batch = invoices[batch_start : batch_start + UPSERT_BATCH_SIZE]
+        sync_time = datetime.now(timezone.utc)
+
+        # Build header + line rows for this batch.
+        header_rows = []
+        line_rows = []
+        invoice_ids = []
+        for inv in batch:
+            invoice_id = str(inv.get("Id"))
+            invoice_ids.append(invoice_id)
+            customer = inv.get("CustomerRef") or {}
+            header_rows.append((
+                org_id,
+                invoice_id,
+                inv.get("DocNumber"),
+                customer.get("value"),
+                customer.get("name"),
+                inv.get("TxnDate"),
+                inv.get("TotalAmt"),
+                sync_time,
+            ))
+            for line in inv.get("Line") or []:
+                detail = line.get("SalesItemLineDetail")
+                if not detail:
+                    # Skip subtotal / tax / discount lines without sales-item detail.
+                    skipped_no_detail += 1
+                    continue
+                item = detail.get("ItemRef") or {}
+                line_rows.append((
+                    org_id,
+                    invoice_id,
+                    line.get("LineNum"),
+                    item.get("name"),
+                    line.get("Description"),
+                    detail.get("Qty"),
+                    line.get("Amount"),
+                    detail.get("ServiceDate"),
+                ))
+
         with get_pg_conn() as conn:
             with conn.cursor() as cur:
-                for inv in batch:
-                    invoice_id = str(inv.get("Id"))
-                    customer = inv.get("CustomerRef") or {}
-                    cur.execute(
+                # 1. Bulk UPSERT headers.
+                execute_values(
+                    cur,
+                    """
+                    INSERT INTO edi_qb_invoice
+                      (org_id, id, invoice_number, customer_id, customer_name,
+                       invoice_date, total_amount, synced_at)
+                    VALUES %s
+                    ON CONFLICT (org_id, id) DO UPDATE SET
+                        invoice_number = EXCLUDED.invoice_number,
+                        customer_id    = EXCLUDED.customer_id,
+                        customer_name  = EXCLUDED.customer_name,
+                        invoice_date   = EXCLUDED.invoice_date,
+                        total_amount   = EXCLUDED.total_amount,
+                        synced_at      = EXCLUDED.synced_at
+                    """,
+                    header_rows,
+                    page_size=UPSERT_BATCH_SIZE,
+                )
+                # 2. Bulk DELETE old lines for these invoices.
+                cur.execute(
+                    "DELETE FROM edi_qb_invoice_line "
+                    "WHERE org_id = %s AND invoice_id = ANY(%s)",
+                    (org_id, invoice_ids),
+                )
+                # 3. Bulk INSERT new lines.
+                if line_rows:
+                    execute_values(
+                        cur,
                         """
-                        INSERT INTO edi_qb_invoice
-                          (org_id, id, invoice_number, customer_id, customer_name,
-                           invoice_date, total_amount, synced_at)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, now())
-                        ON CONFLICT (org_id, id) DO UPDATE SET
-                            invoice_number = EXCLUDED.invoice_number,
-                            customer_id    = EXCLUDED.customer_id,
-                            customer_name  = EXCLUDED.customer_name,
-                            invoice_date   = EXCLUDED.invoice_date,
-                            total_amount   = EXCLUDED.total_amount,
-                            synced_at      = now()
+                        INSERT INTO edi_qb_invoice_line
+                          (org_id, invoice_id, line_num, item_name,
+                           description, cases, amount, service_date)
+                        VALUES %s
                         """,
-                        (
-                            org_id,
-                            invoice_id,
-                            inv.get("DocNumber"),
-                            customer.get("value"),
-                            customer.get("name"),
-                            inv.get("TxnDate"),
-                            inv.get("TotalAmt"),
-                        ),
+                        line_rows,
+                        page_size=1000,
                     )
-                    inv_count += 1
-
-                    # Wipe + reinsert lines so removed/edited lines drop out cleanly.
-                    cur.execute(
-                        "DELETE FROM edi_qb_invoice_line WHERE org_id = %s AND invoice_id = %s",
-                        (org_id, invoice_id),
-                    )
-                    for line in inv.get("Line") or []:
-                        detail = line.get("SalesItemLineDetail")
-                        if not detail:
-                            skipped_no_detail += 1
-                            continue
-                        item = detail.get("ItemRef") or {}
-                        cur.execute(
-                            """
-                            INSERT INTO edi_qb_invoice_line
-                              (org_id, invoice_id, line_num, item_name,
-                               description, cases, amount, service_date)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                            """,
-                            (
-                                org_id,
-                                invoice_id,
-                                line.get("LineNum"),
-                                item.get("name"),
-                                line.get("Description"),
-                                detail.get("Qty"),
-                                line.get("Amount"),
-                                detail.get("ServiceDate"),
-                            ),
-                        )
-                        line_count += 1
             conn.commit()
+
+        inv_count += len(header_rows)
+        line_count += len(line_rows)
         if (batch_start // UPSERT_BATCH_SIZE) % 5 == 0:
             print(f"  upserted {inv_count}/{total} invoices...")
+
     return inv_count, line_count, skipped_no_detail
 
 
