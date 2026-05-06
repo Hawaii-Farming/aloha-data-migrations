@@ -10208,16 +10208,6 @@ export type Database = {
       }
     }
     Views: {
-      audit_pre_check: {
-        Row: {
-          check_id: number | null
-          row_count: number | null
-          source: string | null
-          target: string | null
-          title: string | null
-        }
-        Relationships: []
-      }
       edi_crodeon_weather_dli: {
         Row: {
           atmospheric_pressure: number | null
