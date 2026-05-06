@@ -1,5 +1,5 @@
 """
-Pull Crodeon weather-station readings into grow_weather_reading.
+Pull Crodeon weather-station readings into edi_crodeon_weather.
 =================================================================
 
 Direct port of the legacy `fetchNewWeatherData()` Apps Script. Replaces
@@ -40,9 +40,11 @@ Environment:
     CRODEON_API_KEY   -- key from Crodeon developer portal
 """
 import argparse
+import http.client
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -118,20 +120,39 @@ INSERT_COLUMNS = ["org_id", "reading_at"] + list(dict.fromkeys(COLUMN_MAP.values
 # Crodeon HTTP
 # ---------------------------------------------------------------------------
 
-def _crodeon_get(path):
+def _crodeon_get(path, attempts=5):
+    """Authenticated GET against the Crodeon API with retry on transient
+    network errors (chunked-read drops, 5xx, timeouts). The historical
+    /measurements endpoint occasionally truncates large responses
+    mid-flight; one retry usually clears it."""
     if not CRODEON_API_KEY:
         raise SystemExit("ERROR: CRODEON_API_KEY must be set in env")
     url = f"{CRODEON_BASE}{path}"
-    req = urllib.request.Request(
-        url,
-        headers={"Accept": "application/json", "X-API-KEY": CRODEON_API_KEY},
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=60) as r:
-            return json.loads(r.read().decode())
-    except urllib.error.HTTPError as e:
-        body = e.read().decode(errors="replace")[:500]
-        raise SystemExit(f"Crodeon HTTP {e.code} on {path}: {body}")
+    delay = 2.0
+    last_err = None
+    for i in range(attempts):
+        try:
+            req = urllib.request.Request(
+                url,
+                headers={"Accept": "application/json", "X-API-KEY": CRODEON_API_KEY},
+            )
+            with urllib.request.urlopen(req, timeout=120) as r:
+                return json.loads(r.read().decode())
+        except urllib.error.HTTPError as e:
+            # Retry 5xx/429; surface 4xx immediately.
+            if e.code not in (429, 500, 502, 503, 504):
+                body = e.read().decode(errors="replace")[:500]
+                raise SystemExit(f"Crodeon HTTP {e.code} on {path}: {body}")
+            last_err = e
+        except (http.client.IncompleteRead, urllib.error.URLError, TimeoutError) as e:
+            # Retry truncated reads, connection resets, timeouts.
+            last_err = e
+        if i == attempts - 1:
+            break
+        print(f"  Crodeon transient error on {path[:60]} -- retry in {delay:.0f}s ({i+1}/{attempts-1}): {type(last_err).__name__}: {str(last_err)[:80]}")
+        time.sleep(delay)
+        delay *= 2
+    raise SystemExit(f"Crodeon failed after {attempts} attempts: {last_err}")
 
 
 def fetch_sensor_index():
@@ -209,7 +230,7 @@ def convert(data_type, raw_value, exponent):
 
 def build_readings(measurements, sensor_index):
     """Group raw measurements by timestamp and turn each timestamp into a
-    grow_weather_reading row tuple in INSERT_COLUMNS order."""
+    edi_crodeon_weather row tuple in INSERT_COLUMNS order."""
     by_ts = defaultdict(dict)
     for m in measurements:
         device_id = m["device_id"]["id"]
@@ -249,7 +270,7 @@ def bulk_upsert(rows):
         return 0
     col_list = ", ".join(INSERT_COLUMNS)
     sql = (
-        f"INSERT INTO grow_weather_reading ({col_list}) VALUES %s "
+        f"INSERT INTO edi_crodeon_weather ({col_list}) VALUES %s "
         "ON CONFLICT (org_id, reading_at) DO NOTHING"
     )
     with get_pg_conn() as conn:

@@ -39,6 +39,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      edi_crodeon_weather: {
+        Row: {
+          atmospheric_pressure: number | null
+          inside_humidity: number | null
+          inside_par: number | null
+          inside_temperature: number | null
+          org_id: string
+          outside_dew_point_temperature: number | null
+          outside_humidity: number | null
+          outside_rain: number | null
+          outside_temperature: number | null
+          outside_wet_bulb_temperature: number | null
+          outside_wind_average_max_speed: number | null
+          outside_wind_average_speed: number | null
+          outside_wind_direction: string | null
+          power_supply: string | null
+          reading_at: string
+        }
+        Insert: {
+          atmospheric_pressure?: number | null
+          inside_humidity?: number | null
+          inside_par?: number | null
+          inside_temperature?: number | null
+          org_id: string
+          outside_dew_point_temperature?: number | null
+          outside_humidity?: number | null
+          outside_rain?: number | null
+          outside_temperature?: number | null
+          outside_wet_bulb_temperature?: number | null
+          outside_wind_average_max_speed?: number | null
+          outside_wind_average_speed?: number | null
+          outside_wind_direction?: string | null
+          power_supply?: string | null
+          reading_at: string
+        }
+        Update: {
+          atmospheric_pressure?: number | null
+          inside_humidity?: number | null
+          inside_par?: number | null
+          inside_temperature?: number | null
+          org_id?: string
+          outside_dew_point_temperature?: number | null
+          outside_humidity?: number | null
+          outside_rain?: number | null
+          outside_temperature?: number | null
+          outside_wet_bulb_temperature?: number | null
+          outside_wind_average_max_speed?: number | null
+          outside_wind_average_speed?: number | null
+          outside_wind_direction?: string | null
+          power_supply?: string | null
+          reading_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grow_weather_reading_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "org"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       edi_qb_expense: {
         Row: {
           account_name: string | null
@@ -3004,83 +3066,6 @@ export type Database = {
           },
           {
             foreignKeyName: "grow_variety_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "org"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      grow_weather_reading: {
-        Row: {
-          atmospheric_pressure: number | null
-          created_at: string
-          created_by: string | null
-          inside_humidity: number | null
-          inside_par: number | null
-          inside_temperature: number | null
-          is_deleted: boolean
-          org_id: string
-          outside_dew_point_temperature: number | null
-          outside_humidity: number | null
-          outside_rain: number | null
-          outside_temperature: number | null
-          outside_wet_bulb_temperature: number | null
-          outside_wind_average_max_speed: number | null
-          outside_wind_average_speed: number | null
-          outside_wind_direction: string | null
-          power_supply: string | null
-          reading_at: string
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          atmospheric_pressure?: number | null
-          created_at?: string
-          created_by?: string | null
-          inside_humidity?: number | null
-          inside_par?: number | null
-          inside_temperature?: number | null
-          is_deleted?: boolean
-          org_id: string
-          outside_dew_point_temperature?: number | null
-          outside_humidity?: number | null
-          outside_rain?: number | null
-          outside_temperature?: number | null
-          outside_wet_bulb_temperature?: number | null
-          outside_wind_average_max_speed?: number | null
-          outside_wind_average_speed?: number | null
-          outside_wind_direction?: string | null
-          power_supply?: string | null
-          reading_at: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          atmospheric_pressure?: number | null
-          created_at?: string
-          created_by?: string | null
-          inside_humidity?: number | null
-          inside_par?: number | null
-          inside_temperature?: number | null
-          is_deleted?: boolean
-          org_id?: string
-          outside_dew_point_temperature?: number | null
-          outside_humidity?: number | null
-          outside_rain?: number | null
-          outside_temperature?: number | null
-          outside_wet_bulb_temperature?: number | null
-          outside_wind_average_max_speed?: number | null
-          outside_wind_average_speed?: number | null
-          outside_wind_direction?: string | null
-          power_supply?: string | null
-          reading_at?: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "grow_weather_reading_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "org"
@@ -10233,6 +10218,35 @@ export type Database = {
         }
         Relationships: []
       }
+      edi_crodeon_weather_dli: {
+        Row: {
+          atmospheric_pressure: number | null
+          dli: number | null
+          inside_humidity: number | null
+          inside_par: number | null
+          inside_temperature: number | null
+          org_id: string | null
+          outside_dew_point_temperature: number | null
+          outside_humidity: number | null
+          outside_rain: number | null
+          outside_temperature: number | null
+          outside_wet_bulb_temperature: number | null
+          outside_wind_average_max_speed: number | null
+          outside_wind_average_speed: number | null
+          outside_wind_direction: string | null
+          power_supply: string | null
+          reading_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grow_weather_reading_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "org"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       edi_qb_expense_summary: {
         Row: {
           amount: number | null
@@ -10491,40 +10505,6 @@ export type Database = {
           start_time: string | null
         }
         Relationships: []
-      }
-      grow_weather_reading_dli: {
-        Row: {
-          atmospheric_pressure: number | null
-          created_at: string | null
-          created_by: string | null
-          dli: number | null
-          inside_humidity: number | null
-          inside_par: number | null
-          inside_temperature: number | null
-          is_deleted: boolean | null
-          org_id: string | null
-          outside_dew_point_temperature: number | null
-          outside_humidity: number | null
-          outside_rain: number | null
-          outside_temperature: number | null
-          outside_wet_bulb_temperature: number | null
-          outside_wind_average_max_speed: number | null
-          outside_wind_average_speed: number | null
-          outside_wind_direction: string | null
-          power_supply: string | null
-          reading_at: string | null
-          updated_at: string | null
-          updated_by: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "grow_weather_reading_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "org"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       hr_payroll_by_task: {
         Row: {
