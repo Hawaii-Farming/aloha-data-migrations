@@ -3016,7 +3016,6 @@ export type Database = {
           atmospheric_pressure: number | null
           created_at: string
           created_by: string | null
-          farm_id: string | null
           id: string
           inside_humidity: number | null
           inside_par: number | null
@@ -3040,7 +3039,6 @@ export type Database = {
           atmospheric_pressure?: number | null
           created_at?: string
           created_by?: string | null
-          farm_id?: string | null
           id?: string
           inside_humidity?: number | null
           inside_par?: number | null
@@ -3064,7 +3062,6 @@ export type Database = {
           atmospheric_pressure?: number | null
           created_at?: string
           created_by?: string | null
-          farm_id?: string | null
           id?: string
           inside_humidity?: number | null
           inside_par?: number | null
@@ -3085,13 +3082,6 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "grow_weather_reading_farm_fkey"
-            columns: ["org_id", "farm_id"]
-            isOneToOne: false
-            referencedRelation: "org_farm"
-            referencedColumns: ["org_id", "id"]
-          },
           {
             foreignKeyName: "grow_weather_reading_org_id_fkey"
             columns: ["org_id"]
@@ -10511,7 +10501,6 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           dli: number | null
-          farm_id: string | null
           id: string | null
           inside_humidity: number | null
           inside_par: number | null
@@ -10532,13 +10521,6 @@ export type Database = {
           updated_by: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "grow_weather_reading_farm_fkey"
-            columns: ["org_id", "farm_id"]
-            isOneToOne: false
-            referencedRelation: "org_farm"
-            referencedColumns: ["org_id", "id"]
-          },
           {
             foreignKeyName: "grow_weather_reading_org_id_fkey"
             columns: ["org_id"]

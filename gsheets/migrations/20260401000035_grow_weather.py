@@ -172,7 +172,6 @@ def transform(r: dict) -> dict | None:
 
     return audit({
         "org_id":                          ORG_ID,
-        "farm_id":                         FARM_ID,
         "reading_at":                      reading_at.isoformat(),
         "outside_temperature":             parse_number(r.get("OutsideTemperature")),
         "outside_humidity":                parse_number(r.get("OutsideHumidity")),

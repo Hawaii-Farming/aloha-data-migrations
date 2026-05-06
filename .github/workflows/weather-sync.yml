@@ -1,0 +1,43 @@
+name: Weather Sync (Crodeon)
+
+# Pulls the latest reading from the Crodeon greenhouse weather station
+# every 10 minutes and inserts it into grow_weather_reading. Replaces
+# the old GAS-into-Sheet-into-Postgres flow with a direct API pull.
+#
+# GitHub Actions cron has up to a few minutes of jitter; this is fine
+# for a 10-min weather sample. The script ON CONFLICT DO NOTHING so
+# back-to-back firings without a fresh Crodeon reading are safe.
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'   # every 10 minutes
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    env:
+      SUPABASE_DB_URL:    ${{ secrets.SUPABASE_DB_URL }}
+      CRODEON_API_KEY:    ${{ secrets.CRODEON_API_KEY }}
+      MIGRATION_AUDIT_USER: ${{ vars.MIGRATION_AUDIT_USER }}
+      MIGRATION_ORG_ID:     ${{ vars.MIGRATION_ORG_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install psycopg2-binary
+
+      - name: Pull latest weather reading
+        run: python gsheets/migrations/_crodeon_weather_sync.py
