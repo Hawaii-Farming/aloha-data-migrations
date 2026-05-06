@@ -71,10 +71,11 @@ MASTER_ID = "724566542"
 # directly readable in reports without timezone math.
 HST = timezone(timedelta(hours=-10))
 
-# How far back the live (cron) mode looks. The cron fires every 10 min;
-# 12 min covers normal jitter and lets a missed cron tick recover on
-# the next fire.
-LIVE_LOOKBACK = timedelta(minutes=12)
+# How far back the live (cron) mode looks. GitHub Actions */10 cron is
+# heavily throttled in practice -- observed fires 90 min - 3 h apart
+# under load. A 6-hour lookback is wide enough to recover from several
+# missed cron ticks while still being cheap (ON CONFLICT skips dups).
+LIVE_LOOKBACK = timedelta(hours=6)
 
 # Backfill granularity. The Crodeon API page_size cap appears to be
 # around 10,000 items, and a single day produces ~18,700 items, so a
