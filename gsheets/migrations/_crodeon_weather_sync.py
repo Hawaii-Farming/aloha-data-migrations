@@ -144,8 +144,11 @@ def _crodeon_get(path, attempts=5):
                 body = e.read().decode(errors="replace")[:500]
                 raise SystemExit(f"Crodeon HTTP {e.code} on {path}: {body}")
             last_err = e
-        except (http.client.IncompleteRead, urllib.error.URLError, TimeoutError) as e:
+        except (http.client.IncompleteRead, urllib.error.URLError,
+                ConnectionError, TimeoutError) as e:
             # Retry truncated reads, connection resets, timeouts.
+            # ConnectionError covers ConnectionResetError + ConnectionAbortedError
+            # which can be raised mid-read after urlopen returned.
             last_err = e
         if i == attempts - 1:
             break
