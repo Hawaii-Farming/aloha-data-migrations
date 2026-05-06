@@ -1,0 +1,45 @@
+name: QB Invoice Midday Sync
+
+# Refreshes the edi_qb_invoice mirror tables once during the day so the
+# customer-facing dashboards see same-day invoices without waiting for
+# the full nightly run at midnight HST. Only runs migration 038
+# (edi_qb_invoice). Does NOT run _clear_transactional and does NOT touch
+# any other tables.
+
+on:
+  schedule:
+    # 22:00 UTC daily = 12:00 HST (Hawaii is UTC-10, no DST).
+    - cron: '0 22 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      MIGRATION_AUDIT_USER: ${{ vars.MIGRATION_AUDIT_USER }}
+      MIGRATION_ORG_ID: ${{ vars.MIGRATION_ORG_ID }}
+      INTUIT_CLIENT_ID: ${{ secrets.INTUIT_CLIENT_ID }}
+      INTUIT_CLIENT_SECRET: ${{ secrets.INTUIT_CLIENT_SECRET }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run 038 (edi_qb_invoice sync)
+        run: python gsheets/migrations/_run_nightly.py --only 038
