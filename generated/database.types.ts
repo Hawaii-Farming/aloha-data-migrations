@@ -39,6 +39,89 @@ export type Database = {
   }
   public: {
     Tables: {
+      edi_qb_expense: {
+        Row: {
+          account_name: string | null
+          id: string
+          is_credit: boolean
+          org_id: string
+          payee_name: string | null
+          synced_at: string
+          transaction_date: string | null
+        }
+        Insert: {
+          account_name?: string | null
+          id: string
+          is_credit?: boolean
+          org_id: string
+          payee_name?: string | null
+          synced_at?: string
+          transaction_date?: string | null
+        }
+        Update: {
+          account_name?: string | null
+          id?: string
+          is_credit?: boolean
+          org_id?: string
+          payee_name?: string | null
+          synced_at?: string
+          transaction_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edi_qb_expense_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "org"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      edi_qb_expense_line: {
+        Row: {
+          account_name: string | null
+          amount: number | null
+          class_name: string | null
+          description: string | null
+          expense_id: string
+          line_num: number
+          org_id: string
+        }
+        Insert: {
+          account_name?: string | null
+          amount?: number | null
+          class_name?: string | null
+          description?: string | null
+          expense_id: string
+          line_num: number
+          org_id: string
+        }
+        Update: {
+          account_name?: string | null
+          amount?: number | null
+          class_name?: string | null
+          description?: string | null
+          expense_id?: string
+          line_num?: number
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edi_qb_expense_line_org_id_expense_id_fkey"
+            columns: ["org_id", "expense_id"]
+            isOneToOne: false
+            referencedRelation: "edi_qb_expense"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "edi_qb_expense_line_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "org"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       edi_qb_invoice: {
         Row: {
           customer_id: string | null
@@ -10162,6 +10245,29 @@ export type Database = {
           title: string | null
         }
         Relationships: []
+      }
+      edi_qb_expense_summary: {
+        Row: {
+          amount: number | null
+          class_name: string | null
+          description: string | null
+          expense_account: string | null
+          funding_account: string | null
+          is_credit: boolean | null
+          line_num: number | null
+          org_id: string | null
+          payee_name: string | null
+          transaction_date: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edi_qb_expense_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "org"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       edi_qb_invoice_summary: {
         Row: {

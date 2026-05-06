@@ -64,6 +64,7 @@ DEFAULT_SET = [
     "036",  # business_rule
     "037",  # fin_expense + sales_invoice (nightly QB sheet sync, legacy)
     "038",  # edi_qb_invoice — direct QB API pull into edi_qb_invoice + edi_qb_invoice_line
+    "039",  # edi_qb_expense — direct QB API pull (Purchase entity) into edi_qb_expense + edi_qb_expense_line
 ]
 
 RETIRED = set()
