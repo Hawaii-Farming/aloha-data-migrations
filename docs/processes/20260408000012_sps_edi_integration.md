@@ -6,6 +6,63 @@ The schema additions for this integration live at migrations `20260401000112` th
 
 ---
 
+## 0. Implementation Status (as of 2026-05-06)
+
+Inbound 850 is partially built; outbound flows and the SFTP transport are still pending. What lives where:
+
+### Built and committed
+
+| Layer | File | Notes |
+|---|---|---|
+| Schema | `supabase/migrations/20260401000112…0132` | All seven EDI tables + `sales_po`/`sales_po_line` extensions are live in the dev DB |
+| 850 XML parser | `aloha-app/app/lib/edi/parse-850.server.ts` | Pure function — XML → typed `Parsed850Document` (header + lines + addresses keyed by ST/BT/VN) |
+| 850 applier | `aloha-app/app/lib/edi/apply-850.server.ts` | Upserts `sales_po` + replaces `sales_po_line` rows; idempotent on `(org_id, sales_trading_partner_id, po_number)`; pre-loads buyer-part lookups and fails atomically if any line is unmapped |
+| Inbound receiver | `aloha-app/app/lib/edi/inbound-850-receiver.server.ts` | Archives raw XML to `sales_edi_inbound_message`, resolves the trading partner, then runs parse + apply. Records `parse_error` on failure so the row stays available for replay. Caller passes `orgId` directly — no shared-secret auth |
+| Test fixtures | `aloha-app/app/lib/edi/__fixtures__/{safeway,costco}-850.xml` | Real PO payloads SPS sent during onboarding |
+
+The active branch is `dev-michael` on `aloha-app`. There is **no** public HTTP route in front of these modules — the SFTP poller will call them directly.
+
+### Pending
+
+| Item | Why blocking | Owner |
+|---|---|---|
+| SPS SFTP poller worker | Only entry point into the inbound flow. On each tick: (a) download new files from `SPS_SFTP_INBOUND_DIR`, (b) call `archiveInbound850()` for each, (c) sweep `sales_edi_inbound_message` for `parsed_at IS NULL` rows and retry — so master-data fixes auto-replay without human input | Engineering |
+| Master data: trading partners | Without these, every 850 arrives as `parse_error: No sales_trading_partner row found…` | Operations / data entry |
+| Master data: buyer-part mappings | Without these, the parse fails before any `sales_po` row is created | Operations / data entry |
+| Outbound 997 functional acknowledgement | Mandatory within 24h of receiving any document; SPS will escalate without it | Engineering, after poller |
+| Outbound 855 PO acknowledgement | Required only for partners with `acknowledgement_required = true` | Engineering, after 997 |
+| Outbound 856 ASN | Section 5 design is complete; nothing built | Engineering, after inbound is stable |
+| Outbound 810 invoice | Section 6 design is complete; nothing built | Engineering, after 856 |
+
+### Master data needed for the two onboarded buyers
+
+The `dev-michael` branch ships parser + applier but no seeded partners. Add these before the first poller run:
+
+| `sales_trading_partner.sps_partner_id` | Buyer | Buyer SKUs that need `sales_product_buyer_part` rows |
+|---|---|---|
+| `768ALLJTLFARMIN` | Safeway | `84360025`, `84360023` |
+| `065ALLHAWAIIFAR` | Costco | `1791845` |
+
+The applier reads `sales_product_buyer_part` by `(sales_customer_id, buyer_part_number)`, so each buyer SKU needs a row pointing at the matching `sales_product_id`.
+
+### Environment variables needed for the next step
+
+None of these exist yet — they get added when the SFTP poller is built:
+
+| Var | What it is |
+|---|---|
+| `SPS_SFTP_HOST` | hostname of the SPS SFTP mailbox |
+| `SPS_SFTP_PORT` | usually `22` |
+| `SPS_SFTP_USERNAME` | the account SPS assigned during onboarding |
+| `SPS_SFTP_PRIVATE_KEY` | SSH private key (PEM); we generate the keypair and upload the public key to SPS |
+| `SPS_SFTP_INBOUND_DIR` | remote folder SPS drops 850s into (typically `/in` or `/inbox`) |
+| `SPS_SFTP_OUTBOUND_DIR` | remote folder we drop 997s/856s/810s into (used later) |
+| `SPS_ORG_ID` | which `org` row in our DB this mailbox belongs to — passed to `archiveInbound850` as `orgId` |
+
+No HMAC secret, no webhook signing key — SFTP-pull is private by construction.
+
+---
+
 ## 1. Document Lifecycle
 
 End-to-end document exchange between buyer, SPS, and Aloha:
