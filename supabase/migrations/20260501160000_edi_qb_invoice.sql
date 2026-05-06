@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS public.edi_qb_invoice (
     customer_name   TEXT,                            -- CustomerRef.name (denormalized for fast filtering)
     invoice_date    DATE,                            -- TxnDate
     total_amount    NUMERIC(14, 2),                  -- TotalAmt -- full cents (named total_amount to disambiguate from line.amount)
+    sync_token      TEXT,                            -- Intuit's optimistic-concurrency version. Required when sending updates back to QB; QB rejects PUT without a current SyncToken.
     synced_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     PRIMARY KEY (org_id, id)
@@ -54,6 +55,7 @@ COMMENT ON TABLE  public.edi_qb_invoice IS 'Local mirror of QuickBooks Online In
 COMMENT ON COLUMN public.edi_qb_invoice.id              IS 'Intuit Invoice.Id (string). Unique within a QB company; primary key with org_id.';
 COMMENT ON COLUMN public.edi_qb_invoice.invoice_number  IS 'Human invoice number shown in QB UI (Invoice.DocNumber). Not unique on its own; can be missing on auto-numbered drafts.';
 COMMENT ON COLUMN public.edi_qb_invoice.customer_name   IS 'CustomerRef.name copied here for fast filtering; canonical name lives on the QB Customer entity.';
+COMMENT ON COLUMN public.edi_qb_invoice.sync_token      IS 'Intuit SyncToken -- optimistic-concurrency version. When pushing updates back to QB the request must include the current SyncToken; QB returns 400 "Stale Object Error" otherwise. Increments on every successful update; refreshed on every pull.';
 COMMENT ON COLUMN public.edi_qb_invoice.synced_at       IS 'Wall-clock time of the last successful upsert from the QB API.';
 
 CREATE INDEX idx_edi_qb_invoice_org_invoice_date ON public.edi_qb_invoice (org_id, invoice_date DESC);

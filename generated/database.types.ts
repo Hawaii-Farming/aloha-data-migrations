@@ -108,6 +108,7 @@ export type Database = {
           is_credit: boolean
           org_id: string
           payee_name: string | null
+          sync_token: string | null
           synced_at: string
           transaction_date: string | null
         }
@@ -117,6 +118,7 @@ export type Database = {
           is_credit?: boolean
           org_id: string
           payee_name?: string | null
+          sync_token?: string | null
           synced_at?: string
           transaction_date?: string | null
         }
@@ -126,6 +128,7 @@ export type Database = {
           is_credit?: boolean
           org_id?: string
           payee_name?: string | null
+          sync_token?: string | null
           synced_at?: string
           transaction_date?: string | null
         }
@@ -192,6 +195,7 @@ export type Database = {
           invoice_date: string | null
           invoice_number: string | null
           org_id: string
+          sync_token: string | null
           synced_at: string
           total_amount: number | null
         }
@@ -202,6 +206,7 @@ export type Database = {
           invoice_date?: string | null
           invoice_number?: string | null
           org_id: string
+          sync_token?: string | null
           synced_at?: string
           total_amount?: number | null
         }
@@ -212,6 +217,7 @@ export type Database = {
           invoice_date?: string | null
           invoice_number?: string | null
           org_id?: string
+          sync_token?: string | null
           synced_at?: string
           total_amount?: number | null
         }

@@ -238,6 +238,7 @@ def upsert_invoices(org_id, invoices):
                 customer.get("name"),
                 inv.get("TxnDate"),
                 inv.get("TotalAmt"),
+                inv.get("SyncToken"),
                 sync_time,
             ))
             for line in inv.get("Line") or []:
@@ -266,7 +267,7 @@ def upsert_invoices(org_id, invoices):
                     """
                     INSERT INTO edi_qb_invoice
                       (org_id, id, invoice_number, customer_id, customer_name,
-                       invoice_date, total_amount, synced_at)
+                       invoice_date, total_amount, sync_token, synced_at)
                     VALUES %s
                     ON CONFLICT (org_id, id) DO UPDATE SET
                         invoice_number = EXCLUDED.invoice_number,
@@ -274,6 +275,7 @@ def upsert_invoices(org_id, invoices):
                         customer_name  = EXCLUDED.customer_name,
                         invoice_date   = EXCLUDED.invoice_date,
                         total_amount   = EXCLUDED.total_amount,
+                        sync_token     = EXCLUDED.sync_token,
                         synced_at      = EXCLUDED.synced_at
                     """,
                     header_rows,

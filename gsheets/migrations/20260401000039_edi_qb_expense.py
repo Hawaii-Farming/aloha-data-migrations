@@ -228,6 +228,7 @@ def upsert_purchases(org_id, purchases):
                 account.get("name"),
                 bool(p.get("Credit", False)),
                 p.get("TxnDate"),
+                p.get("SyncToken"),
                 sync_time,
             ))
             # QB Purchase lines don't always include LineNum (especially
@@ -263,13 +264,14 @@ def upsert_purchases(org_id, purchases):
                     cur,
                     """
                     INSERT INTO edi_qb_expense
-                      (org_id, id, payee_name, account_name, is_credit, transaction_date, synced_at)
+                      (org_id, id, payee_name, account_name, is_credit, transaction_date, sync_token, synced_at)
                     VALUES %s
                     ON CONFLICT (org_id, id) DO UPDATE SET
                         payee_name       = EXCLUDED.payee_name,
                         account_name     = EXCLUDED.account_name,
                         is_credit        = EXCLUDED.is_credit,
                         transaction_date = EXCLUDED.transaction_date,
+                        sync_token       = EXCLUDED.sync_token,
                         synced_at        = EXCLUDED.synced_at
                     """,
                     header_rows,

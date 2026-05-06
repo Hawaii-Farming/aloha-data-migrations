@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS public.edi_qb_expense (
     account_name  TEXT,                            -- AccountRef.name (the bank / credit-card account paid from)
     is_credit     BOOLEAN NOT NULL DEFAULT false,  -- Purchase.Credit -- true means refund / credit memo
     transaction_date      DATE,                            -- TxnDate
+    sync_token    TEXT,                            -- Intuit's optimistic-concurrency version. Required when sending updates back to QB; QB rejects PUT without a current SyncToken.
     synced_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     PRIMARY KEY (org_id, id)
@@ -38,6 +39,7 @@ COMMENT ON TABLE  public.edi_qb_expense IS 'Local mirror of QuickBooks Online Pu
 COMMENT ON COLUMN public.edi_qb_expense.id           IS 'Intuit Purchase.Id (string). Unique within a QB company; primary key with org_id.';
 COMMENT ON COLUMN public.edi_qb_expense.account_name IS 'Bank / credit-card account the purchase was paid FROM (Purchase.AccountRef.name). Distinct from edi_qb_expense_line.account_name which is the line-level categorization account.';
 COMMENT ON COLUMN public.edi_qb_expense.is_credit    IS 'Purchase.Credit. True = refund / vendor credit reducing AP balance. False = normal outflow.';
+COMMENT ON COLUMN public.edi_qb_expense.sync_token   IS 'Intuit SyncToken -- optimistic-concurrency version. When pushing updates back to QB the request must include the current SyncToken; QB returns 400 "Stale Object Error" otherwise. Increments on every successful update; refreshed on every pull.';
 COMMENT ON COLUMN public.edi_qb_expense.synced_at    IS 'Wall-clock time of the last successful upsert from the QB API.';
 
 CREATE INDEX idx_edi_qb_expense_org_transaction_date  ON public.edi_qb_expense (org_id, transaction_date DESC);
