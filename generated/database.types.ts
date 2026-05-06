@@ -3016,7 +3016,6 @@ export type Database = {
           atmospheric_pressure: number | null
           created_at: string
           created_by: string | null
-          id: string
           inside_humidity: number | null
           inside_par: number | null
           inside_temperature: number | null
@@ -3039,7 +3038,6 @@ export type Database = {
           atmospheric_pressure?: number | null
           created_at?: string
           created_by?: string | null
-          id?: string
           inside_humidity?: number | null
           inside_par?: number | null
           inside_temperature?: number | null
@@ -3062,7 +3060,6 @@ export type Database = {
           atmospheric_pressure?: number | null
           created_at?: string
           created_by?: string | null
-          id?: string
           inside_humidity?: number | null
           inside_par?: number | null
           inside_temperature?: number | null
@@ -10501,7 +10498,6 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           dli: number | null
-          id: string | null
           inside_humidity: number | null
           inside_par: number | null
           inside_temperature: number | null
