@@ -58,7 +58,8 @@ None of these exist in `.env` yet — they get added when the SFTP poller is bui
 | `SPS_SFTP_PRIVATE_KEY` | SSH private key (PEM) — alternative if SPS reissues the account with key auth. Mutually exclusive with `SPS_SFTP_PASSWORD` | — |
 | `SPS_SFTP_INBOUND_DIR` | remote folder SPS drops 850s into. **Named from SPS's perspective:** their "out" = outgoing-to-vendor = our inbound | `/u01/ftp/vendor/hawaiifarm/out` |
 | `SPS_SFTP_OUTBOUND_DIR` | remote folder we drop 997s/856s/810s into. SPS's "in" = incoming-from-vendor = our outbound | `/u01/ftp/vendor/hawaiifarm/in` |
-| `SPS_ORG_ID` | which `org` row in our DB this mailbox belongs to — passed to `archiveInbound850` as `orgId` | (org_id from `org` table) |
+
+The `org_id` `archiveInbound850()` requires is hardcoded as the constant `'hawaii_farming'` inside the poller — there is exactly one org in this deployment and the SPS mailbox is single-tenant. If a second org ever onboards with SPS we add the env var then; YAGNI today.
 
 **Naming gotcha:** the SPS-side directory names (`/in` and `/out`) read from their perspective, not ours. Our "inbound" maps to SPS's `out` directory and vice versa. The env-var names above use *our* perspective so the code reads naturally.
 
