@@ -10768,6 +10768,7 @@ export type Database = {
           discretionary_overtime_hours: number | null
           discretionary_overtime_pay: number | null
           discretionary_overtime_pay_delta: number | null
+          employee_full_name: string | null
           hours_delta: number | null
           hr_employee_id: string | null
           org_id: string | null
@@ -10787,6 +10788,7 @@ export type Database = {
       hr_payroll_task_comparison: {
         Row: {
           check_date: string | null
+          compensation_manager_alias: string | null
           compensation_manager_id: string | null
           discretionary_overtime_hours: number | null
           discretionary_overtime_pay: number | null

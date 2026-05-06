@@ -65,6 +65,7 @@ previous_p AS (
 SELECT
     COALESCE(c.org_id, pr.org_id)                                        AS org_id,
     COALESCE(c.hr_employee_id, pr.hr_employee_id)                        AS hr_employee_id,
+    TRIM(e.first_name || ' ' || e.last_name)                             AS employee_full_name,
     COALESCE(c.compensation_manager_id, pr.compensation_manager_id)      AS compensation_manager_id,
     COALESCE(c.task, pr.task)                                            AS task,
     COALESCE(c.status, pr.status)                                        AS status,
@@ -114,6 +115,9 @@ FROM current_p c
 FULL OUTER JOIN previous_p pr
     ON pr.hr_employee_id = c.hr_employee_id
    AND pr.task = c.task
+LEFT JOIN public.hr_employee e
+    ON e.org_id = COALESCE(c.org_id, pr.org_id)
+   AND e.id     = COALESCE(c.hr_employee_id, pr.hr_employee_id)
 WHERE
     public.auth_access_level(COALESCE(c.org_id, pr.org_id)) IN ('Owner', 'Admin', 'Team Lead')
     OR (
@@ -188,6 +192,7 @@ previous_p AS (
 SELECT
     COALESCE(c.org_id, pr.org_id)                                       AS org_id,
     COALESCE(c.compensation_manager_id, pr.compensation_manager_id)     AS compensation_manager_id,
+    m.preferred_name                                                    AS compensation_manager_alias,
     COALESCE(c.task, pr.task)                                           AS task,
     COALESCE(c.status, pr.status)                                       AS status,
     (SELECT periods.cur_date FROM periods)                              AS check_date,
@@ -237,6 +242,9 @@ FULL JOIN previous_p pr
    AND NOT pr.compensation_manager_id IS DISTINCT FROM c.compensation_manager_id
    AND pr.task = c.task
    AND pr.status = c.status
+LEFT JOIN public.hr_employee m
+    ON m.org_id = COALESCE(c.org_id, pr.org_id)
+   AND m.id     = COALESCE(c.compensation_manager_id, pr.compensation_manager_id)
 WHERE
     public.auth_access_level(COALESCE(c.org_id, pr.org_id)) IN ('Owner', 'Admin', 'Team Lead')
     OR (
