@@ -1267,16 +1267,16 @@ CREATE POLICY "grow_chemistry_result_read" ON public.grow_chemistry_result
 GRANT SELECT ON public.grow_chemistry_result TO authenticated;
 
 -- ============================================================
--- grow_weather_reading
+-- edi_crodeon_weather
 -- ============================================================
 
-ALTER TABLE public.grow_weather_reading ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.edi_crodeon_weather ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "grow_weather_reading_read" ON public.grow_weather_reading
+CREATE POLICY "edi_crodeon_weather_read" ON public.edi_crodeon_weather
   FOR SELECT TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT SELECT ON public.grow_weather_reading TO authenticated;
+GRANT SELECT ON public.edi_crodeon_weather TO authenticated;
 
 -- ============================================================
 -- sales_trading_partner
@@ -1401,7 +1401,7 @@ GRANT SELECT ON public.fin_expense_v                  TO authenticated;
 GRANT SELECT ON public.grow_cuke_harvest              TO authenticated;
 GRANT SELECT ON public.grow_lettuce_harvest           TO authenticated;
 GRANT SELECT ON public.grow_spray_restriction         TO authenticated;
-GRANT SELECT ON public.grow_weather_reading_dli       TO authenticated;
+GRANT SELECT ON public.edi_crodeon_weather_dli       TO authenticated;
 GRANT SELECT ON public.hr_payroll_by_task             TO authenticated;
 GRANT SELECT ON public.hr_payroll_employee_comparison TO authenticated;
 GRANT SELECT ON public.hr_payroll_task_comparison     TO authenticated;
@@ -1747,20 +1747,20 @@ CREATE POLICY "grow_chemistry_result_delete" ON public.grow_chemistry_result
 
 GRANT INSERT, UPDATE, DELETE ON public.grow_chemistry_result TO authenticated;
 
-CREATE POLICY "grow_weather_reading_insert" ON public.grow_weather_reading
+CREATE POLICY "edi_crodeon_weather_insert" ON public.edi_crodeon_weather
   FOR INSERT TO authenticated
   WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
 
-CREATE POLICY "grow_weather_reading_update" ON public.grow_weather_reading
+CREATE POLICY "edi_crodeon_weather_update" ON public.edi_crodeon_weather
   FOR UPDATE TO authenticated
   USING      (org_id IN (SELECT public.get_user_org_ids()))
   WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
 
-CREATE POLICY "grow_weather_reading_delete" ON public.grow_weather_reading
+CREATE POLICY "edi_crodeon_weather_delete" ON public.edi_crodeon_weather
   FOR DELETE TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT INSERT, UPDATE, DELETE ON public.grow_weather_reading TO authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.edi_crodeon_weather TO authenticated;
 
 CREATE POLICY "grow_lettuce_seed_batch_insert" ON public.grow_lettuce_seed_batch
   FOR INSERT TO authenticated
