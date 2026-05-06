@@ -33,7 +33,7 @@ import os
 import sys
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -48,6 +48,11 @@ ORG_ID = os.environ.get("MIGRATION_ORG_ID", "hawaii_farming")
 CRODEON_API_KEY = os.environ.get("CRODEON_API_KEY")
 CRODEON_BASE = "https://api.crodeon.com/api/v2"
 MASTER_ID = "724566542"
+
+# Hawaii is fixed at UTC-10 year round (no DST). Crodeon timestamps come
+# back UTC; we convert to HST wall-clock before storing so the column is
+# directly readable in reports without timezone math.
+HST = timezone(timedelta(hours=-10))
 
 CONNECTOR_LABELS = {
     "CONNECTOR_1": "Outside",
@@ -189,9 +194,11 @@ def collect_reading():
 def upsert_reading(reading_at_iso, columns):
     """Insert one weather reading. ON CONFLICT do nothing -- if the same
     timestamp already exists we silently skip (Crodeon hasn't moved on)."""
-    # Crodeon timestamps are ISO-8601 UTC ("...Z"); psycopg2 + TIMESTAMPTZ
-    # will store them correctly. Convert to a Python datetime for clarity.
-    reading_at = datetime.fromisoformat(reading_at_iso.replace("Z", "+00:00"))
+    # Crodeon timestamps are ISO-8601 UTC ("...Z"). reading_at is a plain
+    # TIMESTAMP holding HST wall-clock, so convert UTC -> HST and drop the
+    # tzinfo before inserting.
+    reading_at_utc = datetime.fromisoformat(reading_at_iso.replace("Z", "+00:00"))
+    reading_at = reading_at_utc.astimezone(HST).replace(tzinfo=None)
 
     cols = ["org_id", "reading_at"] + list(columns.keys())
     vals = [ORG_ID, reading_at] + list(columns.values())
