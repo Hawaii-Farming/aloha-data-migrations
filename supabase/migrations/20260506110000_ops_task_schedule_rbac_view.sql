@@ -14,7 +14,11 @@
 -- security_invoker = true is preserved — base-table org RLS still
 -- applies (org_id IN get_user_org_ids()).
 
-CREATE OR REPLACE VIEW public.ops_task_weekly_schedule
+-- DROP first to allow column-order changes (live view has stale ordering
+-- from earlier in-place edits; CREATE OR REPLACE rejects column renames).
+DROP VIEW IF EXISTS public.ops_task_weekly_schedule;
+
+CREATE VIEW public.ops_task_weekly_schedule
 WITH (security_invoker = true) AS
 WITH schedule_base AS (
     SELECT
