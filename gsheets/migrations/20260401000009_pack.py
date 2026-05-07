@@ -297,7 +297,6 @@ def migrate_sales_product(supabase, gc):
             "case_width": parse_fraction(sysco.get("packaging_width")),
             "case_height": parse_fraction(sysco.get("packaging_height")),
             "manufacturer_storage_method": proper_case(sysco.get("manufacturer_storage_method", "")) or None,
-            "temperature_uom": map_uom(sysco.get("temperature_unit_of_measure")),
             "minimum_storage_temperature": safe_numeric(sysco.get("minimum_storage_temperature"), default=None),
             "maximum_storage_temperature": safe_numeric(sysco.get("maximum_storage_temperature"), default=None),
             "shelf_life_days": safe_int(sysco.get("product_shelf_life_days") or spec.get("ShelfLifeDays")),

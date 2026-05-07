@@ -28,7 +28,6 @@ CREATE TABLE IF NOT EXISTS sales_product (
 
     -- Storage & shelf life
     manufacturer_storage_method TEXT,
-    temperature_uom            TEXT REFERENCES sys_uom(id),
     minimum_storage_temperature NUMERIC,
     maximum_storage_temperature NUMERIC,
     shelf_life_days            INT,
@@ -49,7 +48,6 @@ CREATE TABLE IF NOT EXISTS sales_product (
 
     photos                     JSONB NOT NULL DEFAULT '[]',
     display_order              INTEGER NOT NULL DEFAULT 0,
-    is_active                  BOOLEAN NOT NULL DEFAULT true,
 
     created_at                 TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by                 TEXT,
@@ -73,7 +71,6 @@ COMMENT ON COLUMN sales_product.pack_per_case IS 'Number of pack units per case'
 COMMENT ON COLUMN sales_product.maximum_case_per_pallet IS 'Maximum number of cases that fit on a pallet';
 COMMENT ON COLUMN sales_product.weight_uom IS 'Unit for all net weight fields (e.g. lb, kg)';
 COMMENT ON COLUMN sales_product.dimension_uom IS 'Unit for all case dimension fields (e.g. in, cm)';
-COMMENT ON COLUMN sales_product.temperature_uom IS 'Unit for storage temperature fields (e.g. °F, °C)';
 COMMENT ON COLUMN sales_product.shelf_life_days IS 'Expected shelf life in days from pack date; used to auto-calculate best_by_date on pack_lot_item';
 COMMENT ON COLUMN sales_product.pallet_ti IS 'Pallet tier — number of cases per layer on pallet';
 COMMENT ON COLUMN sales_product.pallet_hi IS 'Pallet high — number of layers stacked on pallet';
