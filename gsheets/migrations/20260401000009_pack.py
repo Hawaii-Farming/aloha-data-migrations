@@ -288,7 +288,6 @@ def migrate_sales_product(supabase, gc):
             "item_per_pack": safe_numeric(meas.get("product_item_per_pack_unit"), default=None),
             "pack_per_case": safe_numeric(meas.get("pack_per_sale_unit"), default=None),
             "maximum_case_per_pallet": safe_int(base.get("MaxCasesForFullPallets")),
-            "weight_uom": map_uom(sysco.get("weight_unit_of_measure")) or "Pound",
             "pack_net_weight": safe_numeric(meas.get("pack_unit_gross_weight"), default=None),
             "case_net_weight": case_net_weight,
             "pallet_net_weight": pallet_net_weight,
