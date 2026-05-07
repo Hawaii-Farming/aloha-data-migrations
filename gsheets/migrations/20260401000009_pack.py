@@ -921,8 +921,8 @@ def migrate_pack_dryer_result(supabase, gc):
             notes = f"[{seed_name}] {notes}" if notes else f"[{seed_name}]"
 
         # Parse moisture percentages (strip % sign)
-        moisture_before = str(r.get("moisture_loss_before_dryer", "")).strip().replace("%", "")
-        moisture_after = str(r.get("moisture_loss_after_dryer", "")).strip().replace("%", "")
+        moisture_before = str(r.get("moisture_before_dryer", "")).strip().replace("%", "")
+        moisture_after = str(r.get("moisture_after_dryer", "")).strip().replace("%", "")
 
         reported_by = str(r.get("created_by", "")).strip().lower() or AUDIT_USER
 
@@ -932,12 +932,10 @@ def migrate_pack_dryer_result(supabase, gc):
             "site_id": site_id,
             "invnt_item_id": invnt_item_id,
             "check_at": check_at,
-            "temperature_uom": "Fahrenheit",
             "dryer_temperature": safe_numeric(r.get("dryer_temperature"), default=None),
             "greenhouse_temperature": safe_numeric(r.get("greenhouse_temperature"), default=None),
             "packhouse_temperature": safe_numeric(r.get("packhouse_temperature"), default=None),
             "pre_packing_leaf_temperature": safe_numeric(r.get("pre_packing_leaf_temperature"), default=None),
-            "moisture_uom": "Percent",
             "moisture_before_dryer": safe_numeric(moisture_before, default=None),
             "moisture_after_dryer": safe_numeric(moisture_after, default=None),
             "belt_speed": safe_numeric(r.get("belt_speed"), default=None),
