@@ -7,12 +7,10 @@ CREATE TABLE IF NOT EXISTS pack_dryer_result (
     invnt_item_id                   TEXT REFERENCES invnt_item(id),
 
     check_at                        TIMESTAMPTZ NOT NULL,
-    temperature_uom                 TEXT NOT NULL REFERENCES sys_uom(id),
     dryer_temperature               NUMERIC,
     greenhouse_temperature          NUMERIC,
     packhouse_temperature           NUMERIC,
     pre_packing_leaf_temperature    NUMERIC,
-    moisture_uom                    TEXT NOT NULL REFERENCES sys_uom(id),
     moisture_before_dryer           NUMERIC,
     moisture_after_dryer            NUMERIC,
     belt_speed                      NUMERIC,
