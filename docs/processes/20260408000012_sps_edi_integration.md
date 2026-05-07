@@ -67,6 +67,43 @@ The `org_id` `archiveInbound850()` requires is hardcoded as the constant `'hawai
 
 No HMAC secret, no webhook signing key — SFTP-pull is private by construction.
 
+### Schema fields needed before outbound 856 / 810 can be built
+
+The 856 (ASN) and 810 (invoice) we send back to Costco / Safeway carry data that the current schema doesn't yet capture. Audit + migration work needed before we generate either document. Costco and Safeway both accept SPS XML on the way out (SPS converts to X12 v4010/v5010 before forwarding), so the *format* is the same shape as the inbound 850 XML — but the *fields* below need to exist somewhere we can pull from.
+
+**Identifiers (one-time master-data setup):**
+
+| Field | Where it goes | Why required |
+|---|---|---|
+| `gln` (GS1 Global Location Number, 13 digits) | `org`, `org_farm`, `org_site` | Safeway 856 N1 segments require GLN for shipper / growing area / packing facility — FSMA 204 traceability rule |
+| `duns_number` (9-digit) + `duns_suffix` (4-digit) | `org`, `sales_customer` | Costco 856 N1 vendor segment uses DUNS+4; Safeway 856 uses DUNS+4 with qualifier `9` |
+| `usda_establishment_number` | `org_site` (slaughter / pack facility) | Required on 856 for meat / poultry only — not load-bearing for Hawaii Farming today, but cheap to add now |
+
+**Lot tracking (per-shipment data, FSMA 204 mandatory for produce):**
+
+| Field | Where it goes | Why required |
+|---|---|---|
+| `lot_number` | `sales_po_asn_carton` | FSMA 204 Food Traceability List covers cucumbers, leafy greens, melons, peppers, tomatoes, fresh herbs, fresh-cut fruit — all in scope for Hawaii Farming. Safeway will reject the ASN without it. |
+| `pack_date` | `sales_po_asn_carton` | Required by Safeway DTM*510 for Food Traceability List items |
+| `expiration_date` | `sales_po_asn_carton` | Required by Safeway DTM*208 for FTL items, optional otherwise |
+| `harvest_date` | `sales_po_asn_carton` (or upstream from a harvest record) | Required by Safeway DTM*906 for produce — Aloha already has harvest events; need to thread the FK through |
+| `growing_area_gln` | `sales_po_asn_carton` (snapshot from `org_farm.gln` at pack time) | Safeway N1 segment with entity code `ZZ` — identifies the field where the lot was grown |
+
+**Catch-weight (already partially modeled):**
+
+| Field | Where it goes | Status |
+|---|---|---|
+| `actual_net_weight` + `weight_uom` | `sales_po_asn_carton` | Already in schema, gated by `sales_product.is_catch_weight` — confirmed sufficient |
+
+**Source documents we need from SPS before writing the generators:**
+
+- Sample 856 XML in SPS XML format for the Safeway profile (FSMA 204 fields populated)
+- Sample 856 XML in SPS XML format for the Costco profile
+- Sample 810 XML in SPS XML format for both
+- Sample 997 XML (inbound functional acknowledgement)
+
+These are the canonical templates — request them from SPS support at the same time we set up the SFTP credentials. Without them we are guessing at SPS's field names, which is wasted work.
+
 ---
 
 ## 1. Document Lifecycle
