@@ -75,7 +75,7 @@ SELECT
     -- Hours (always visible) -- rounded to whole hours for display.
     ROUND(COALESCE(c.scheduled_hours, 0))                                AS scheduled_hours,
     ROUND(COALESCE(c.total_hours, 0))                                    AS total_hours,
-    ROUND(COALESCE(c.scheduled_hours, 0) - COALESCE(c.total_hours, 0))   AS unworked_hours,
+    ROUND(COALESCE(c.scheduled_hours, 0) - COALESCE(c.total_hours, 0))   AS hours_variance,
     ROUND(COALESCE(c.discretionary_overtime_hours, 0))                   AS discretionary_overtime_hours,
     ROUND(COALESCE(c.total_hours, 0) - COALESCE(pr.total_hours, 0))      AS hours_delta,
 
@@ -201,7 +201,7 @@ SELECT
     -- Hours (always visible) -- rounded to whole hours for display.
     ROUND(COALESCE(c.scheduled_hours, 0::numeric))                      AS scheduled_hours,
     ROUND(COALESCE(c.total_hours, 0::numeric))                          AS total_hours,
-    ROUND(COALESCE(c.scheduled_hours, 0::numeric) - COALESCE(c.total_hours, 0::numeric)) AS unworked_hours,
+    ROUND(COALESCE(c.scheduled_hours, 0::numeric) - COALESCE(c.total_hours, 0::numeric)) AS hours_variance,
     ROUND(COALESCE(c.discretionary_overtime_hours, 0::numeric))         AS discretionary_overtime_hours,
     ROUND(COALESCE(c.total_hours, 0::numeric) - COALESCE(pr.total_hours, 0::numeric)) AS hours_delta,
 
