@@ -243,8 +243,18 @@ def _resolve_or_create_employee(supabase, full_name: str, emp_by_name: dict) -> 
     if not emp_id:
         return None
 
+    # If a row with this id already exists (e.g. the lookup missed due to a
+    # format quirk -- whitespace, case, ordering -- but the canonical id
+    # collides), DO NOT upsert. Upsert would overwrite is_deleted=True onto
+    # an active employee. Just register the lookup and return.
+    existing = supabase.table("hr_employee").select("id").eq("id", emp_id).limit(1).execute()
+    if existing.data:
+        emp_by_name[full_name] = emp_id
+        emp_by_name[last.upper()] = emp_id
+        return emp_id
+
     try:
-        supabase.table("hr_employee").upsert({
+        supabase.table("hr_employee").insert({
             "id": emp_id,
             "org_id": ORG_ID,
             "first_name": first,

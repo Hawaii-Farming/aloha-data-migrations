@@ -157,7 +157,7 @@ def ensure_missing_employees(supabase, data, emp_by_pid, emp_by_name):
         return
 
     # Parse names: "LASTNAME FIRSTNAME" or "LASTNAME FIRSTNAME MIDDLE"
-    rows = []
+    candidate_rows = []
     for name, info in sorted(missing.items()):
         parts = name.split()
         if len(parts) >= 2:
@@ -168,7 +168,7 @@ def ensure_missing_employees(supabase, data, emp_by_pid, emp_by_name):
             first = "Unknown"
 
         emp_id = to_id(name)
-        rows.append(audit({
+        candidate_rows.append(audit({
             "id": emp_id,
             "org_id": ORG_ID,
             "first_name": first,
@@ -182,8 +182,24 @@ def ensure_missing_employees(supabase, data, emp_by_pid, emp_by_name):
             "is_deleted": True,
         }))
 
-    insert_rows(supabase, "hr_employee", rows, upsert=True)
-    print(f"  Auto-created {len(rows)} inactive former employees")
+    # Filter out candidates whose canonical id already exists -- the lookup
+    # by name missed (e.g. format/whitespace mismatch) but the id collides.
+    # Upsert would clobber is_deleted=True onto an active employee.
+    candidate_ids = [r["id"] for r in candidate_rows]
+    if candidate_ids:
+        existing = supabase.table("hr_employee").select("id").in_("id", candidate_ids).execute()
+        existing_ids = {e["id"] for e in existing.data}
+        rows = [r for r in candidate_rows if r["id"] not in existing_ids]
+        if existing_ids:
+            print(f"  Skipped {len(existing_ids)} candidates -- already exist (lookup format mismatch)")
+    else:
+        rows = []
+
+    if rows:
+        insert_rows(supabase, "hr_employee", rows, upsert=False)
+        print(f"  Auto-created {len(rows)} inactive former employees")
+    else:
+        print("  No genuinely-new employees to auto-create")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -276,6 +292,20 @@ def migrate_payroll(supabase, gc):
             # didn't catch (e.g. names with parsing edge cases).
             new_id = to_id(name)
             if new_id:
+                # Existence check: if the canonical id already exists,
+                # the by-name lookup just had a format quirk. Fetch the
+                # row and use it -- DO NOT upsert with is_deleted=True
+                # which would clobber an active employee.
+                existing = supabase.table("hr_employee").select(
+                    "id, first_name, last_name, payroll_id, hr_department_id, "
+                    "hr_work_authorization_id, wc, pay_structure, overtime_threshold"
+                ).eq("id", new_id).limit(1).execute()
+                if existing.data:
+                    emp = existing.data[0]
+                    emp_by_name[name] = emp
+                    if emp.get("payroll_id"):
+                        emp_by_pid[emp["payroll_id"]] = emp
+                    continue  # don't auto-create; fall through to next row
                 parts = name.split()
                 last = proper_case(parts[0]) if parts else proper_case(name)
                 first = proper_case(" ".join(parts[1:])) if len(parts) >= 2 else "Unknown"
@@ -292,7 +322,7 @@ def migrate_payroll(supabase, gc):
                     "updated_by": AUDIT_USER,
                 }
                 try:
-                    supabase.table("hr_employee").upsert(stub).execute()
+                    supabase.table("hr_employee").insert(stub).execute()
                     emp = stub
                     emp_by_name[name] = stub
                     if eid:
