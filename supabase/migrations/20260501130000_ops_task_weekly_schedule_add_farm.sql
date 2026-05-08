@@ -4,8 +4,13 @@
 -- renderer can show the farm (e.g. "Cuke", "Lettuce") instead of the
 -- ops_task identifier (e.g. "CUKE PH", "Lettuce PH").
 --
--- CREATE OR REPLACE VIEW only allows appending columns at the end of
--- the SELECT list — farm_name is added as the final column.
+-- This rewrite changes column ORDER (adds profile_photo_url,
+-- hr_department_id, department_name, hr_work_authorization_id,
+-- work_authorization_name in the middle of the column list, plus
+-- farm_name at the end). CREATE OR REPLACE VIEW only allows appending
+-- columns at the end, so we DROP and recreate.
+
+DROP VIEW IF EXISTS public.ops_task_weekly_schedule CASCADE;
 
 CREATE OR REPLACE VIEW public.ops_task_weekly_schedule
 WITH (security_invoker = true) AS
