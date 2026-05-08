@@ -13,8 +13,8 @@ This document describes how PO fulfillments are physically arranged into pallets
 | `sales_pallet` | Physical pallet. One row per pallet, scoped per `(farm_id, target_invoice_date)`. Carries `pallet_type`, `capacity_utilization`, `is_locked`, `is_spillover`. |
 | `sales_pallet_allocation` | Line items on a pallet. Each row = a slice of a `sales_po_fulfillment` riding on a pallet, with `allocated_quantity`. |
 | `sales_po_fulfillment` | Upstream — which production lots fulfill which order lines. Pallet allocations FK to this. |
-| `sales_shipment` | The booking/voyage (e.g. one Young Brothers booking with one master BOL). |
-| `sales_shipment_container` | Each physical container on the booking. The cucumber reefer and the lettuce reefer are separate rows under the same booking. |
+| `sales_sps_shipment` | The booking/voyage (e.g. one Young Brothers booking with one master BOL). |
+| `sales_sps_shipment_container` | Each physical container on the booking. The cucumber reefer and the lettuce reefer are separate rows under the same booking. |
 | `sales_container_type` | Lookup — declares `maximum_spaces` per container family (cucumber=18, lettuce=18, box=10). |
 | `sales_product` | Referenced for `maximum_case_per_pallet` (max), `full_pallet` (labeling threshold). |
 
@@ -24,8 +24,8 @@ The pallet/container chain at runtime:
 sales_po_fulfillment
   └─ sales_pallet_allocation
        └─ sales_pallet
-            └─ sales_shipment_container
-                 └─ sales_shipment
+            └─ sales_sps_shipment_container
+                 └─ sales_sps_shipment
 ```
 
 ---
@@ -47,7 +47,7 @@ Expand fulfillments into pallets. Scoped per `(farm_id, target_invoice_date)`.
   - `Stackable` for Costco / Sam's groups (partials get stacked vertically)
   - `Shareable` for other customers' partials (multiple PO lines for the same customer can share)
 - **Number** with prefix per container family: `CP01..CPnn` (cucumber), `LP01..LPnn` (lettuce), `BP01..BPnn` (box-truck). Shareables use `{customer}_01..{customer}_10` so the user can drag allocations between a customer's shareable pallets in the UI.
-- **Container hint:** infer the preferred container from product farm (`Cuke` → cucumber container) or FOB (HNL/Kawaihae and 119 Maui/640 Kauai → box-truck). Stored as `sales_shipment_container_id` if a container is already provisioned for the run; otherwise filled at step 3.
+- **Container hint:** infer the preferred container from product farm (`Cuke` → cucumber container) or FOB (HNL/Kawaihae and 119 Maui/640 Kauai → box-truck). Stored as `sales_sps_shipment_container_id` if a container is already provisioned for the run; otherwise filled at step 3.
 
 Writes: `sales_pallet` rows + `sales_pallet_allocation` rows.
 
@@ -65,11 +65,11 @@ Writes: `sales_pallet.container_space_number`.
 
 Finalize container assignments and handle spillover.
 
-- **Default:** each pallet's `sales_shipment_container_id` is the container matching its product family (cucumber pallets → cucumber container, etc.).
+- **Default:** each pallet's `sales_sps_shipment_container_id` is the container matching its product family (cucumber pallets → cucumber container, etc.).
 - **Spillover** when a container exceeds capacity: the highest-numbered cucumber spaces overflow into the lettuce container, then into the box-truck container if lettuce is also full. Pallets that follow are marked `is_spillover = true` so the operator sees they're out of their preferred container.
 - **Atomic moves:** all pallets sharing a `pallet_number` move together — splitting a pallet's allocations across two containers would mean physically packing the same product in two trucks.
 
-Writes: `sales_pallet.sales_shipment_container_id`, `sales_pallet.is_spillover`, may renumber `container_space_number` under the new container.
+Writes: `sales_pallet.sales_sps_shipment_container_id`, `sales_pallet.is_spillover`, may renumber `container_space_number` under the new container.
 
 ### 4. Lock
 
@@ -139,7 +139,7 @@ flowchart TD
     F --> G[Operator restacks\nStackables if needed]
     G --> H[Click 'Containerize']
     H --> I{Over container\ncapacity?}
-    I -->|No| K[Set sales_shipment_container_id\nper preferred family]
+    I -->|No| K[Set sales_sps_shipment_container_id\nper preferred family]
     I -->|Yes| J[Spillover into\nadjacent container,\nmark is_spillover]
     J --> K
     K --> L[Operator reviews,\nadjusts spillover targets]

@@ -1279,64 +1279,64 @@ CREATE POLICY "edi_crodeon_weather_read" ON public.edi_crodeon_weather
 GRANT SELECT ON public.edi_crodeon_weather TO authenticated;
 
 -- ============================================================
--- sales_trading_partner
+-- sales_sps_trading_partner
 -- ============================================================
 
-ALTER TABLE public.sales_trading_partner ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sales_sps_trading_partner ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "sales_trading_partner_read" ON public.sales_trading_partner
+CREATE POLICY "sales_trading_partner_read" ON public.sales_sps_trading_partner
   FOR SELECT TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT SELECT ON public.sales_trading_partner TO authenticated;
+GRANT SELECT ON public.sales_sps_trading_partner TO authenticated;
 
 -- ============================================================
--- sales_product_buyer_part
+-- sales_sps_product_buyer_part
 -- ============================================================
 
-ALTER TABLE public.sales_product_buyer_part ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sales_sps_product_buyer_part ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "sales_product_buyer_part_read" ON public.sales_product_buyer_part
+CREATE POLICY "sales_product_buyer_part_read" ON public.sales_sps_product_buyer_part
   FOR SELECT TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT SELECT ON public.sales_product_buyer_part TO authenticated;
+GRANT SELECT ON public.sales_sps_product_buyer_part TO authenticated;
 
 -- ============================================================
--- sales_edi_inbound_message
+-- sales_sps_edi_inbound_message
 -- ============================================================
 
-ALTER TABLE public.sales_edi_inbound_message ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sales_sps_edi_inbound_message ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "sales_edi_inbound_message_read" ON public.sales_edi_inbound_message
+CREATE POLICY "sales_edi_inbound_message_read" ON public.sales_sps_edi_inbound_message
   FOR SELECT TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT SELECT ON public.sales_edi_inbound_message TO authenticated;
+GRANT SELECT ON public.sales_sps_edi_inbound_message TO authenticated;
 
 -- ============================================================
--- sales_shipment
+-- sales_sps_shipment
 -- ============================================================
 
-ALTER TABLE public.sales_shipment ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sales_sps_shipment ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "sales_shipment_read" ON public.sales_shipment
+CREATE POLICY "sales_shipment_read" ON public.sales_sps_shipment
   FOR SELECT TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT SELECT ON public.sales_shipment TO authenticated;
+GRANT SELECT ON public.sales_sps_shipment TO authenticated;
 
 -- ============================================================
--- sales_shipment_container
+-- sales_sps_shipment_container
 -- ============================================================
 
-ALTER TABLE public.sales_shipment_container ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sales_sps_shipment_container ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "sales_shipment_container_read" ON public.sales_shipment_container
+CREATE POLICY "sales_shipment_container_read" ON public.sales_sps_shipment_container
   FOR SELECT TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT SELECT ON public.sales_shipment_container TO authenticated;
+GRANT SELECT ON public.sales_sps_shipment_container TO authenticated;
 
 -- ============================================================
 -- sales_pallet
@@ -1363,28 +1363,28 @@ CREATE POLICY "sales_pallet_allocation_read" ON public.sales_pallet_allocation
 GRANT SELECT ON public.sales_pallet_allocation TO authenticated;
 
 -- ============================================================
--- sales_po_asn
+-- sales_sps_po_asn
 -- ============================================================
 
-ALTER TABLE public.sales_po_asn ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sales_sps_po_asn ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "sales_po_asn_read" ON public.sales_po_asn
+CREATE POLICY "sales_po_asn_read" ON public.sales_sps_po_asn
   FOR SELECT TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT SELECT ON public.sales_po_asn TO authenticated;
+GRANT SELECT ON public.sales_sps_po_asn TO authenticated;
 
 -- ============================================================
--- sales_po_asn_carton
+-- sales_sps_po_asn_carton
 -- ============================================================
 
-ALTER TABLE public.sales_po_asn_carton ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sales_sps_po_asn_carton ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "sales_po_asn_carton_read" ON public.sales_po_asn_carton
+CREATE POLICY "sales_po_asn_carton_read" ON public.sales_sps_po_asn_carton
   FOR SELECT TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT SELECT ON public.sales_po_asn_carton TO authenticated;
+GRANT SELECT ON public.sales_sps_po_asn_carton TO authenticated;
 
 -- ============================================================
 -- Views
@@ -1422,7 +1422,7 @@ GRANT SELECT ON public.sales_invoice_v                TO authenticated;
 --
 -- Tables NOT listed here remain service-role-only -- reference data
 -- (sys_*, org_module, sales_fob, grow_grade, etc.), tables only written
--- by server workers (sales_edi_inbound_message), or admin-controlled
+-- by server workers (sales_sps_edi_inbound_message), or admin-controlled
 -- tables (hr_module_access, hr_department, hr_work_authorization,
 -- ops_task / ops_template definitions).
 
@@ -2362,65 +2362,65 @@ CREATE POLICY "sales_crm_store_visit_result_delete" ON public.sales_crm_store_vi
 
 GRANT INSERT, UPDATE, DELETE ON public.sales_crm_store_visit_result TO authenticated;
 
-CREATE POLICY "sales_trading_partner_insert" ON public.sales_trading_partner
+CREATE POLICY "sales_trading_partner_insert" ON public.sales_sps_trading_partner
   FOR INSERT TO authenticated
   WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
 
-CREATE POLICY "sales_trading_partner_update" ON public.sales_trading_partner
+CREATE POLICY "sales_trading_partner_update" ON public.sales_sps_trading_partner
   FOR UPDATE TO authenticated
   USING      (org_id IN (SELECT public.get_user_org_ids()))
   WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
 
-CREATE POLICY "sales_trading_partner_delete" ON public.sales_trading_partner
+CREATE POLICY "sales_trading_partner_delete" ON public.sales_sps_trading_partner
   FOR DELETE TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT INSERT, UPDATE, DELETE ON public.sales_trading_partner TO authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.sales_sps_trading_partner TO authenticated;
 
-CREATE POLICY "sales_product_buyer_part_insert" ON public.sales_product_buyer_part
+CREATE POLICY "sales_product_buyer_part_insert" ON public.sales_sps_product_buyer_part
   FOR INSERT TO authenticated
   WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
 
-CREATE POLICY "sales_product_buyer_part_update" ON public.sales_product_buyer_part
+CREATE POLICY "sales_product_buyer_part_update" ON public.sales_sps_product_buyer_part
   FOR UPDATE TO authenticated
   USING      (org_id IN (SELECT public.get_user_org_ids()))
   WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
 
-CREATE POLICY "sales_product_buyer_part_delete" ON public.sales_product_buyer_part
+CREATE POLICY "sales_product_buyer_part_delete" ON public.sales_sps_product_buyer_part
   FOR DELETE TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT INSERT, UPDATE, DELETE ON public.sales_product_buyer_part TO authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.sales_sps_product_buyer_part TO authenticated;
 
-CREATE POLICY "sales_shipment_insert" ON public.sales_shipment
+CREATE POLICY "sales_shipment_insert" ON public.sales_sps_shipment
   FOR INSERT TO authenticated
   WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
 
-CREATE POLICY "sales_shipment_update" ON public.sales_shipment
+CREATE POLICY "sales_shipment_update" ON public.sales_sps_shipment
   FOR UPDATE TO authenticated
   USING      (org_id IN (SELECT public.get_user_org_ids()))
   WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
 
-CREATE POLICY "sales_shipment_delete" ON public.sales_shipment
+CREATE POLICY "sales_shipment_delete" ON public.sales_sps_shipment
   FOR DELETE TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT INSERT, UPDATE, DELETE ON public.sales_shipment TO authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.sales_sps_shipment TO authenticated;
 
-CREATE POLICY "sales_shipment_container_insert" ON public.sales_shipment_container
+CREATE POLICY "sales_shipment_container_insert" ON public.sales_sps_shipment_container
   FOR INSERT TO authenticated
   WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
 
-CREATE POLICY "sales_shipment_container_update" ON public.sales_shipment_container
+CREATE POLICY "sales_shipment_container_update" ON public.sales_sps_shipment_container
   FOR UPDATE TO authenticated
   USING      (org_id IN (SELECT public.get_user_org_ids()))
   WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
 
-CREATE POLICY "sales_shipment_container_delete" ON public.sales_shipment_container
+CREATE POLICY "sales_shipment_container_delete" ON public.sales_sps_shipment_container
   FOR DELETE TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT INSERT, UPDATE, DELETE ON public.sales_shipment_container TO authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.sales_sps_shipment_container TO authenticated;
 
 CREATE POLICY "sales_pallet_insert" ON public.sales_pallet
   FOR INSERT TO authenticated
@@ -2452,35 +2452,35 @@ CREATE POLICY "sales_pallet_allocation_delete" ON public.sales_pallet_allocation
 
 GRANT INSERT, UPDATE, DELETE ON public.sales_pallet_allocation TO authenticated;
 
-CREATE POLICY "sales_po_asn_insert" ON public.sales_po_asn
+CREATE POLICY "sales_po_asn_insert" ON public.sales_sps_po_asn
   FOR INSERT TO authenticated
   WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
 
-CREATE POLICY "sales_po_asn_update" ON public.sales_po_asn
+CREATE POLICY "sales_po_asn_update" ON public.sales_sps_po_asn
   FOR UPDATE TO authenticated
   USING      (org_id IN (SELECT public.get_user_org_ids()))
   WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
 
-CREATE POLICY "sales_po_asn_delete" ON public.sales_po_asn
+CREATE POLICY "sales_po_asn_delete" ON public.sales_sps_po_asn
   FOR DELETE TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT INSERT, UPDATE, DELETE ON public.sales_po_asn TO authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.sales_sps_po_asn TO authenticated;
 
-CREATE POLICY "sales_po_asn_carton_insert" ON public.sales_po_asn_carton
+CREATE POLICY "sales_po_asn_carton_insert" ON public.sales_sps_po_asn_carton
   FOR INSERT TO authenticated
   WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
 
-CREATE POLICY "sales_po_asn_carton_update" ON public.sales_po_asn_carton
+CREATE POLICY "sales_po_asn_carton_update" ON public.sales_sps_po_asn_carton
   FOR UPDATE TO authenticated
   USING      (org_id IN (SELECT public.get_user_org_ids()))
   WITH CHECK (org_id IN (SELECT public.get_user_org_ids()));
 
-CREATE POLICY "sales_po_asn_carton_delete" ON public.sales_po_asn_carton
+CREATE POLICY "sales_po_asn_carton_delete" ON public.sales_sps_po_asn_carton
   FOR DELETE TO authenticated
   USING (org_id IN (SELECT public.get_user_org_ids()));
 
-GRANT INSERT, UPDATE, DELETE ON public.sales_po_asn_carton TO authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.sales_sps_po_asn_carton TO authenticated;
 
 
 -- ===== Human Resources =====

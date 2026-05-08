@@ -10,8 +10,8 @@
 -- The link chain is:
 --   sales_po_line -> sales_po_fulfillment -> sales_pallet_allocation
 --                                                 -> sales_pallet
---                                                    -> sales_shipment_container
---                                                       -> sales_shipment
+--                                                    -> sales_sps_shipment_container
+--                                                       -> sales_sps_shipment
 --
 -- ON DELETE CASCADE on sales_pallet_id so wiping a pallet during a
 -- regeneration cleans up its allocations atomically.

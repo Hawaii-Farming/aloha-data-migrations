@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS sales_po (
     -- PO arrived via SPS Commerce 850. The EDI fields below are populated
     -- from the 850 segments and are SPS-only — they remain NULL for
     -- manual orders.
-    sales_trading_partner_id        TEXT REFERENCES sales_trading_partner(id),
+    sales_sps_trading_partner_id        TEXT REFERENCES sales_sps_trading_partner(id),
 
     -- For manual orders this is the customer's PO number. For EDI orders
     -- this is the buyer's PO number from 850 BEG, echoed back on 856 BSN
@@ -93,9 +93,9 @@ COMMENT ON TABLE sales_po IS 'Customer order header. One row per order. Tracks c
 CREATE INDEX idx_sales_po_org_id          ON sales_po (org_id);
 CREATE INDEX idx_sales_po_customer        ON sales_po (sales_customer_id);
 CREATE INDEX idx_sales_po_status          ON sales_po (org_id, status);
-CREATE INDEX idx_sales_po_trading_partner ON sales_po (sales_trading_partner_id);
+CREATE INDEX idx_sales_po_trading_partner ON sales_po (sales_sps_trading_partner_id);
 
-COMMENT ON COLUMN sales_po.sales_trading_partner_id IS 'EDI-only. Set when this PO arrived via SPS Commerce 850. NULL for orders entered manually in the app.';
+COMMENT ON COLUMN sales_po.sales_sps_trading_partner_id IS 'EDI-only. Set when this PO arrived via SPS Commerce 850. NULL for orders entered manually in the app.';
 COMMENT ON COLUMN sales_po.recurring_frequency IS 'weekly, biweekly, monthly; null means not recurring; auto-creates a new order after status is marked fulfilled';
 COMMENT ON COLUMN sales_po.status IS 'Lifecycle state. Manual orders flow Draft -> Approved -> Fulfilled/Unfulfilled (or Past Due). EDI orders flow Received -> Acknowledged -> Approved -> Shipped -> Invoiced.';
 COMMENT ON COLUMN sales_po.sales_customer_group_id IS 'Auto-set from sales_customer.sales_customer_group_id; read-only';

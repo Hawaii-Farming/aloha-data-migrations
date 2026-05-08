@@ -1,7 +1,7 @@
 -- sales_pallet
 -- ============
 -- Physical pallet assembled for shipment. Sits between sales_po_fulfillment
--- (which lots fulfill which order lines) and sales_shipment_container
+-- (which lots fulfill which order lines) and sales_sps_shipment_container
 -- (the box the goods are loaded into). One row per pallet; line items
 -- on the pallet live on sales_pallet_allocation.
 --
@@ -12,7 +12,7 @@
 --                     the cucumber container).
 --   2. Stack        — assign container_space_number for non-Full pallets.
 --                     Multiple Stackable pallets may share a space number.
---   3. Containerize — finalize sales_shipment_container_id, mark is_spillover
+--   3. Containerize — finalize sales_sps_shipment_container_id, mark is_spillover
 --                     where cucumber overflowed into lettuce/box.
 --
 -- After the run is finalized, operators bulk-set is_locked = true; subsequent
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS sales_pallet (
     capacity_utilization        NUMERIC NOT NULL DEFAULT 0 CHECK (capacity_utilization BETWEEN 0 AND 1),
 
     -- Container assignment — NULL until Containerize runs.
-    sales_shipment_container_id UUID REFERENCES sales_shipment_container(id),
+    sales_sps_shipment_container_id UUID REFERENCES sales_sps_shipment_container(id),
 
     -- Position within the container. NULL until Stack runs. Multiple
     -- Stackable pallets may share the same number when stacked. Bounded
@@ -74,7 +74,7 @@ COMMENT ON TABLE sales_pallet IS 'Physical pallet assembled for shipment. Genera
 
 CREATE INDEX idx_sales_pallet_org           ON sales_pallet (org_id);
 CREATE INDEX idx_sales_pallet_farm_date     ON sales_pallet (farm_id, target_invoice_date);
-CREATE INDEX idx_sales_pallet_container     ON sales_pallet (sales_shipment_container_id);
+CREATE INDEX idx_sales_pallet_container     ON sales_pallet (sales_sps_shipment_container_id);
 CREATE INDEX idx_sales_pallet_unlocked_scope ON sales_pallet (org_id, farm_id, target_invoice_date)
     WHERE is_locked = false;
 
@@ -82,7 +82,7 @@ COMMENT ON COLUMN sales_pallet.target_invoice_date IS 'Invoice date the pallet w
 COMMENT ON COLUMN sales_pallet.pallet_number IS 'CP01..CPnn (cucumber container), LP01..LPnn (lettuce container), BP01..BPnn (box truck), or {customer}_01..{customer}_10 for Shareable pallets.';
 COMMENT ON COLUMN sales_pallet.pallet_type IS 'Full = at or above the product full_pallet threshold (no further allocations accepted). Shareable = mixed by customer; user can drag allocations between shareable pallets in the UI. Stackable = partial pallet that can be vertically stacked with another partial in one container space.';
 COMMENT ON COLUMN sales_pallet.capacity_utilization IS 'Fraction 0..1 of product max_pallet used by the allocations on this pallet. Display as percentage in the UI.';
-COMMENT ON COLUMN sales_pallet.sales_shipment_container_id IS 'Container the pallet ships in. NULL until Containerize runs. May not match the pallet''s preferred container when is_spillover=true.';
+COMMENT ON COLUMN sales_pallet.sales_sps_shipment_container_id IS 'Container the pallet ships in. NULL until Containerize runs. May not match the pallet''s preferred container when is_spillover=true.';
 COMMENT ON COLUMN sales_pallet.container_space_number IS 'Position 1..N inside the container, where N = sales_container_type.maximum_spaces of the container''s type. Multiple Stackable pallets share a number when stacked.';
 COMMENT ON COLUMN sales_pallet.is_spillover IS 'Pallet was overflowed out of its preferred container (e.g. cucumber pallet now in the lettuce container). Operator-visible flag.';
 COMMENT ON COLUMN sales_pallet.is_locked IS 'When true, regeneration skips this pallet and its allocations. Operators bulk-lock after a run is finalized so subsequent runs preserve manual edits.';

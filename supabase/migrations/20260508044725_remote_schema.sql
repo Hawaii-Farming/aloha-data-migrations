@@ -1846,23 +1846,23 @@ revoke trigger on table "public"."sales_customer_group" from "service_role";
 
 revoke truncate on table "public"."sales_customer_group" from "service_role";
 
-revoke references on table "public"."sales_edi_inbound_message" from "anon";
+revoke references on table "public"."sales_sps_edi_inbound_message" from "anon";
 
-revoke trigger on table "public"."sales_edi_inbound_message" from "anon";
+revoke trigger on table "public"."sales_sps_edi_inbound_message" from "anon";
 
-revoke truncate on table "public"."sales_edi_inbound_message" from "anon";
+revoke truncate on table "public"."sales_sps_edi_inbound_message" from "anon";
 
-revoke references on table "public"."sales_edi_inbound_message" from "authenticated";
+revoke references on table "public"."sales_sps_edi_inbound_message" from "authenticated";
 
-revoke trigger on table "public"."sales_edi_inbound_message" from "authenticated";
+revoke trigger on table "public"."sales_sps_edi_inbound_message" from "authenticated";
 
-revoke truncate on table "public"."sales_edi_inbound_message" from "authenticated";
+revoke truncate on table "public"."sales_sps_edi_inbound_message" from "authenticated";
 
-revoke references on table "public"."sales_edi_inbound_message" from "service_role";
+revoke references on table "public"."sales_sps_edi_inbound_message" from "service_role";
 
-revoke trigger on table "public"."sales_edi_inbound_message" from "service_role";
+revoke trigger on table "public"."sales_sps_edi_inbound_message" from "service_role";
 
-revoke truncate on table "public"."sales_edi_inbound_message" from "service_role";
+revoke truncate on table "public"."sales_sps_edi_inbound_message" from "service_role";
 
 revoke references on table "public"."sales_fob" from "anon";
 
@@ -1954,41 +1954,41 @@ revoke trigger on table "public"."sales_po" from "service_role";
 
 revoke truncate on table "public"."sales_po" from "service_role";
 
-revoke references on table "public"."sales_po_asn" from "anon";
+revoke references on table "public"."sales_sps_po_asn" from "anon";
 
-revoke trigger on table "public"."sales_po_asn" from "anon";
+revoke trigger on table "public"."sales_sps_po_asn" from "anon";
 
-revoke truncate on table "public"."sales_po_asn" from "anon";
+revoke truncate on table "public"."sales_sps_po_asn" from "anon";
 
-revoke references on table "public"."sales_po_asn" from "authenticated";
+revoke references on table "public"."sales_sps_po_asn" from "authenticated";
 
-revoke trigger on table "public"."sales_po_asn" from "authenticated";
+revoke trigger on table "public"."sales_sps_po_asn" from "authenticated";
 
-revoke truncate on table "public"."sales_po_asn" from "authenticated";
+revoke truncate on table "public"."sales_sps_po_asn" from "authenticated";
 
-revoke references on table "public"."sales_po_asn" from "service_role";
+revoke references on table "public"."sales_sps_po_asn" from "service_role";
 
-revoke trigger on table "public"."sales_po_asn" from "service_role";
+revoke trigger on table "public"."sales_sps_po_asn" from "service_role";
 
-revoke truncate on table "public"."sales_po_asn" from "service_role";
+revoke truncate on table "public"."sales_sps_po_asn" from "service_role";
 
-revoke references on table "public"."sales_po_asn_carton" from "anon";
+revoke references on table "public"."sales_sps_po_asn_carton" from "anon";
 
-revoke trigger on table "public"."sales_po_asn_carton" from "anon";
+revoke trigger on table "public"."sales_sps_po_asn_carton" from "anon";
 
-revoke truncate on table "public"."sales_po_asn_carton" from "anon";
+revoke truncate on table "public"."sales_sps_po_asn_carton" from "anon";
 
-revoke references on table "public"."sales_po_asn_carton" from "authenticated";
+revoke references on table "public"."sales_sps_po_asn_carton" from "authenticated";
 
-revoke trigger on table "public"."sales_po_asn_carton" from "authenticated";
+revoke trigger on table "public"."sales_sps_po_asn_carton" from "authenticated";
 
-revoke truncate on table "public"."sales_po_asn_carton" from "authenticated";
+revoke truncate on table "public"."sales_sps_po_asn_carton" from "authenticated";
 
-revoke references on table "public"."sales_po_asn_carton" from "service_role";
+revoke references on table "public"."sales_sps_po_asn_carton" from "service_role";
 
-revoke trigger on table "public"."sales_po_asn_carton" from "service_role";
+revoke trigger on table "public"."sales_sps_po_asn_carton" from "service_role";
 
-revoke truncate on table "public"."sales_po_asn_carton" from "service_role";
+revoke truncate on table "public"."sales_sps_po_asn_carton" from "service_role";
 
 revoke references on table "public"."sales_po_fulfillment" from "anon";
 
@@ -2044,23 +2044,23 @@ revoke trigger on table "public"."sales_product" from "service_role";
 
 revoke truncate on table "public"."sales_product" from "service_role";
 
-revoke references on table "public"."sales_product_buyer_part" from "anon";
+revoke references on table "public"."sales_sps_product_buyer_part" from "anon";
 
-revoke trigger on table "public"."sales_product_buyer_part" from "anon";
+revoke trigger on table "public"."sales_sps_product_buyer_part" from "anon";
 
-revoke truncate on table "public"."sales_product_buyer_part" from "anon";
+revoke truncate on table "public"."sales_sps_product_buyer_part" from "anon";
 
-revoke references on table "public"."sales_product_buyer_part" from "authenticated";
+revoke references on table "public"."sales_sps_product_buyer_part" from "authenticated";
 
-revoke trigger on table "public"."sales_product_buyer_part" from "authenticated";
+revoke trigger on table "public"."sales_sps_product_buyer_part" from "authenticated";
 
-revoke truncate on table "public"."sales_product_buyer_part" from "authenticated";
+revoke truncate on table "public"."sales_sps_product_buyer_part" from "authenticated";
 
-revoke references on table "public"."sales_product_buyer_part" from "service_role";
+revoke references on table "public"."sales_sps_product_buyer_part" from "service_role";
 
-revoke trigger on table "public"."sales_product_buyer_part" from "service_role";
+revoke trigger on table "public"."sales_sps_product_buyer_part" from "service_role";
 
-revoke truncate on table "public"."sales_product_buyer_part" from "service_role";
+revoke truncate on table "public"."sales_sps_product_buyer_part" from "service_role";
 
 revoke references on table "public"."sales_product_price" from "anon";
 
@@ -2080,59 +2080,59 @@ revoke trigger on table "public"."sales_product_price" from "service_role";
 
 revoke truncate on table "public"."sales_product_price" from "service_role";
 
-revoke references on table "public"."sales_shipment" from "anon";
+revoke references on table "public"."sales_sps_shipment" from "anon";
 
-revoke trigger on table "public"."sales_shipment" from "anon";
+revoke trigger on table "public"."sales_sps_shipment" from "anon";
 
-revoke truncate on table "public"."sales_shipment" from "anon";
+revoke truncate on table "public"."sales_sps_shipment" from "anon";
 
-revoke references on table "public"."sales_shipment" from "authenticated";
+revoke references on table "public"."sales_sps_shipment" from "authenticated";
 
-revoke trigger on table "public"."sales_shipment" from "authenticated";
+revoke trigger on table "public"."sales_sps_shipment" from "authenticated";
 
-revoke truncate on table "public"."sales_shipment" from "authenticated";
+revoke truncate on table "public"."sales_sps_shipment" from "authenticated";
 
-revoke references on table "public"."sales_shipment" from "service_role";
+revoke references on table "public"."sales_sps_shipment" from "service_role";
 
-revoke trigger on table "public"."sales_shipment" from "service_role";
+revoke trigger on table "public"."sales_sps_shipment" from "service_role";
 
-revoke truncate on table "public"."sales_shipment" from "service_role";
+revoke truncate on table "public"."sales_sps_shipment" from "service_role";
 
-revoke references on table "public"."sales_shipment_container" from "anon";
+revoke references on table "public"."sales_sps_shipment_container" from "anon";
 
-revoke trigger on table "public"."sales_shipment_container" from "anon";
+revoke trigger on table "public"."sales_sps_shipment_container" from "anon";
 
-revoke truncate on table "public"."sales_shipment_container" from "anon";
+revoke truncate on table "public"."sales_sps_shipment_container" from "anon";
 
-revoke references on table "public"."sales_shipment_container" from "authenticated";
+revoke references on table "public"."sales_sps_shipment_container" from "authenticated";
 
-revoke trigger on table "public"."sales_shipment_container" from "authenticated";
+revoke trigger on table "public"."sales_sps_shipment_container" from "authenticated";
 
-revoke truncate on table "public"."sales_shipment_container" from "authenticated";
+revoke truncate on table "public"."sales_sps_shipment_container" from "authenticated";
 
-revoke references on table "public"."sales_shipment_container" from "service_role";
+revoke references on table "public"."sales_sps_shipment_container" from "service_role";
 
-revoke trigger on table "public"."sales_shipment_container" from "service_role";
+revoke trigger on table "public"."sales_sps_shipment_container" from "service_role";
 
-revoke truncate on table "public"."sales_shipment_container" from "service_role";
+revoke truncate on table "public"."sales_sps_shipment_container" from "service_role";
 
-revoke references on table "public"."sales_trading_partner" from "anon";
+revoke references on table "public"."sales_sps_trading_partner" from "anon";
 
-revoke trigger on table "public"."sales_trading_partner" from "anon";
+revoke trigger on table "public"."sales_sps_trading_partner" from "anon";
 
-revoke truncate on table "public"."sales_trading_partner" from "anon";
+revoke truncate on table "public"."sales_sps_trading_partner" from "anon";
 
-revoke references on table "public"."sales_trading_partner" from "authenticated";
+revoke references on table "public"."sales_sps_trading_partner" from "authenticated";
 
-revoke trigger on table "public"."sales_trading_partner" from "authenticated";
+revoke trigger on table "public"."sales_sps_trading_partner" from "authenticated";
 
-revoke truncate on table "public"."sales_trading_partner" from "authenticated";
+revoke truncate on table "public"."sales_sps_trading_partner" from "authenticated";
 
-revoke references on table "public"."sales_trading_partner" from "service_role";
+revoke references on table "public"."sales_sps_trading_partner" from "service_role";
 
-revoke trigger on table "public"."sales_trading_partner" from "service_role";
+revoke trigger on table "public"."sales_sps_trading_partner" from "service_role";
 
-revoke truncate on table "public"."sales_trading_partner" from "service_role";
+revoke truncate on table "public"."sales_sps_trading_partner" from "service_role";
 
 revoke references on table "public"."sys_access_level" from "anon";
 
