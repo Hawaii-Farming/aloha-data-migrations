@@ -67,6 +67,9 @@ def insert_rows(supabase, table: str, rows: list):
     print(f"\n--- {table} ---")
     all_data = []
     if rows:
+        # Drop None values so column DEFAULTs (e.g. created_at = now())
+        # apply instead of being overridden by explicit NULLs.
+        rows = [{k: v for k, v in r.items() if v is not None} for r in rows]
         for i in range(0, len(rows), 100):
             batch = rows[i:i + 100]
             result = supabase.table(table).insert(batch).execute()
@@ -312,12 +315,15 @@ def migrate_invnt_item(supabase, gc):
         "unit": "Unit", "lid": "Lid", "quart": "Quart",
         "ounce": "Ounce", "gram": "Gram", "blade": "Blade",
         "impression": "Impression", "count": "Count",
-        "cubes": "Cubes",
+        "cubes": "Cubes", "foot": "Feet", "meter": "Meter",
     }
 
     def map_uom(val):
         v = str(val).strip().lower()
-        return UOM_MAP.get(v, v) if v else None
+        # Fall back to None (not the raw lowercase value) so a missing
+        # mapping fails noisily on insert with a clear FK violation
+        # rather than corrupting data with a non-canonical UOM id.
+        return UOM_MAP.get(v) if v else None
 
     rows = []
     seen = set()
@@ -493,11 +499,12 @@ def migrate_invnt_po(supabase, gc):
         "unit": "Unit", "lid": "Lid", "quart": "Quart",
         "ounce": "Ounce", "gram": "Gram", "blade": "Blade",
         "impression": "Impression", "count": "Count",
+        "foot": "Feet", "meter": "Meter",
     }
 
     def map_uom(val):
         v = str(val).strip().lower()
-        return UOM_MAP.get(v, v) if v else None
+        return UOM_MAP.get(v) if v else None
 
     # ========================================
     # PART 1: Historical POs from invnt_item_po
@@ -507,9 +514,11 @@ def migrate_invnt_po(supabase, gc):
     po_records = ws_po.get_all_records()
 
     # Status mapping
+    # Schema: invnt_po.status CHECK constraint is Title-Case
     STATUS_MAP = {
-        "received": "received", "ordered": "ordered", "cancelled": "cancelled",
-        "partial": "partial", "approved": "approved", "requested": "requested",
+        "received": "Received", "ordered": "Ordered", "cancelled": "Cancelled",
+        "partial": "Partial", "approved": "Approved", "requested": "Requested",
+        "rejected": "Rejected",
     }
 
     po_rows = []
@@ -635,13 +644,16 @@ def migrate_invnt_po(supabase, gc):
     proc_ws = gc.open_by_key("1EFgT0XyBlUe10ENVkm4-_bb4uSPyd9hPbCIzD-RKNRA").worksheet("proc_requests")
     proc_records = proc_ws.get_all_records()
 
+    # Schema: invnt_po.urgency_level CHECK constraint requires
+    # Title-Case display values ('Today', '2 Days', '7 Days', 'Not Urgent').
     URGENCY_MAP = {
-        "today": "today", "2 days": "2_days", "1 week": "7_days",
-        "2 weeks": "not_urgent", "month": "not_urgent",
+        "today": "Today", "2 days": "2 Days", "1 week": "7 Days",
+        "2 weeks": "Not Urgent", "month": "Not Urgent",
     }
 
+    # Schema: invnt_po.status CHECK constraint is Title-Case
     PROC_STATUS_MAP = {
-        "requested": "requested", "ordered": "ordered", "completed": "received",
+        "requested": "Requested", "ordered": "Ordered", "completed": "Received",
     }
 
     for r in proc_records:
@@ -649,11 +661,11 @@ def migrate_invnt_po(supabase, gc):
         if req_type == "Travel":
             continue  # Handled in HR migration
 
-        # Map request type
+        # Map request type -- schema CHECK is Title-Case
         if req_type == "Inventory Item":
-            mapped_type = "inventory_item"
+            mapped_type = "Inventory Item"
         else:
-            mapped_type = "non_inventory_item"
+            mapped_type = "Non Inventory Item"
 
         # Item name
         item_name = proper_case(r.get("item_name", "")) or proper_case(r.get("general_item_name", ""))
@@ -661,8 +673,8 @@ def migrate_invnt_po(supabase, gc):
             continue
 
         # Resolve item for inventory items
-        item = item_by_name.get(item_name.lower(), {}) if mapped_type == "inventory_item" else {}
-        item_id = item.get("name") if mapped_type == "inventory_item" else None
+        item = item_by_name.get(item_name.lower(), {}) if mapped_type == "Inventory Item" else {}
+        item_id = item.get("name") if mapped_type == "Inventory Item" else None
 
         # Vendor
         vendor_name = str(r.get("manufacturer_vendor", "")).strip()
@@ -689,7 +701,7 @@ def migrate_invnt_po(supabase, gc):
                 photos.append(p)
 
         # UOMs: non-inventory items use "Each", inventory items use item UOMs
-        if mapped_type == "non_inventory_item":
+        if mapped_type == "Non Inventory Item":
             po_burn_uom = "Each"
             po_order_uom = "Each"
             po_burn_per_order = 1
@@ -796,11 +808,12 @@ def migrate_invnt_onhand(supabase, gc):
         "impression": "Impression", "count": "Count", "each": "Each",
         "lb": "Pound", "oz": "Ounce", "g": "Gram", "kg": "Kilogram",
         "ft": "Feet", "fl oz": "Fluid Ounce",
+        "foot": "Feet", "meter": "Meter",
     }
 
     def map_uom(val):
         v = str(val).strip().lower()
-        return UOM_MAP.get(v, v) if v else None
+        return UOM_MAP.get(v) if v else None
 
     rows = []
     skipped = 0
@@ -968,8 +981,10 @@ def migrate_grow_spray_compliance(supabase, gc):
         rei_hours = int(safe_numeric(rei_raw)) if rei_raw else 0
 
         # Audit
+        from datetime import datetime, timezone
         updated_by_email = str(r.get("LastUpdateBy", "")).strip().lower()
-        updated_at = parse_timestamp(r.get("LastUpdateDateTime", ""))
+        updated_at = parse_timestamp(r.get("LastUpdateDateTime", "")) \
+                  or datetime.now(timezone.utc).isoformat()
 
         row = {
             "org_id": ORG_ID,

@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS invnt_po (
     farm_id                TEXT,
 
     -- Request classification
-    request_type           TEXT NOT NULL DEFAULT 'inventory_item' CHECK (request_type IN ('Non Inventory Item', 'Inventory Item')),
+    request_type           TEXT NOT NULL DEFAULT 'Inventory Item' CHECK (request_type IN ('Non Inventory Item', 'Inventory Item')),
     urgency_level          TEXT CHECK (urgency_level IN ('Today', '2 Days', '7 Days', 'Not Urgent')),
 
     -- Item identification
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS invnt_po (
     request_photos         JSONB NOT NULL DEFAULT '[]',
 
     -- Status & audit
-    status                 TEXT NOT NULL DEFAULT 'requested' CHECK (status IN ('Requested', 'Approved', 'Rejected', 'Ordered', 'Partial', 'Received', 'Cancelled')),
+    status                 TEXT NOT NULL DEFAULT 'Requested' CHECK (status IN ('Requested', 'Approved', 'Rejected', 'Ordered', 'Partial', 'Received', 'Cancelled')),
     requested_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
     requested_by           TEXT NOT NULL,
     reviewed_at            TIMESTAMPTZ,
