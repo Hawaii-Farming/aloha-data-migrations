@@ -1,0 +1,108 @@
+name: Sync Dev Schema to Prod
+
+# Captures any schema changes made directly on aloha-dev (Studio SQL
+# editor, psycopg2, etc.) as a new migration file, commits it to main,
+# then applies the new file to aloha-prod.
+#
+# When to run: any time someone has made schema-affecting changes on
+# dev that aren't yet in the migration files (e.g. a new column added
+# via Studio, a view tweaked in the SQL editor). Run this and prod
+# catches up.
+#
+# How it works:
+#   1. supabase link to dev
+#   2. supabase db pull -- diffs dev's schema against local migration
+#      files; writes any drift as a new migration file
+#   3. If new files appeared, commit + push them to main
+#   4. supabase link to prod
+#   5. supabase db push -- applies the new migration to prod
+#
+# Idempotent: if there's no drift, db pull writes nothing, the commit
+# step is a no-op, and prod push reports "Remote database is up to date".
+#
+# Auto-runs once per day at 11:00 UTC (1 hour after the nightly data
+# load) so any drift accumulated during the day flows to prod overnight.
+
+on:
+  schedule:
+    - cron: '0 11 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      DEV_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      DEV_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      PROD_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF_PROD }}
+      PROD_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD_PROD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Configure git for commits
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Link dev project
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.DEV_DB_PASSWORD }}
+        run: supabase link --project-ref "$DEV_PROJECT_REF"
+
+      - name: Capture dev drift as new migration file
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.DEV_DB_PASSWORD }}
+        run: |
+          set -e
+          before_count=$(ls -1 supabase/migrations/*.sql 2>/dev/null | wc -l)
+          supabase db pull --schema public
+          after_count=$(ls -1 supabase/migrations/*.sql 2>/dev/null | wc -l)
+          if [ "$after_count" -gt "$before_count" ]; then
+            echo "drift_captured=true" >> "$GITHUB_ENV"
+            new_files=$(git status --short supabase/migrations/ | grep '^??' | awk '{print $2}')
+            echo "Captured drift in:"
+            printf '  %s\n' $new_files
+          else
+            echo "No drift detected -- dev is in sync with the migration files."
+            echo "drift_captured=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Commit and push drift migration
+        if: env.drift_captured == 'true'
+        run: |
+          git add supabase/migrations/
+          git commit -m "$(cat <<'EOF'
+          chore(schema): auto-capture dev drift via sync workflow
+
+          Captured by .github/workflows/sync-dev-to-prod.yml --
+          any schema changes made on aloha-dev that weren't yet in
+          migration files have been pulled in. Reviewing the diff
+          is recommended; revert if the change was unintentional.
+          EOF
+          )"
+          git push origin main
+
+      - name: Link prod project
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.PROD_DB_PASSWORD }}
+        run: supabase link --project-ref "$PROD_PROJECT_REF"
+
+      - name: Push migrations to prod
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.PROD_DB_PASSWORD }}
+        run: supabase db push --include-all

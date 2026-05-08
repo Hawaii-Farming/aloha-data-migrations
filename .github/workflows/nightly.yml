@@ -1,10 +1,7 @@
 name: Nightly Data Migration
 
-# Schedule (cron) runs against DEV only -- prod is opt-in via manual
-# dispatch with target=prod or target=both. This keeps the legacy-sheet
-# nightly load from automatically replicating to prod while we
-# stabilize. Flip the schedule to target both envs once we trust the
-# pipeline (probably after 1-2 weeks of clean dev runs).
+# Schedule (cron) runs against BOTH dev and prod. Manual dispatch can
+# override via the target input (dev / prod / both).
 
 on:
   schedule:
@@ -104,9 +101,7 @@ jobs:
         run: rm -f credentials.json
 
   migrate-prod:
-    # Manual dispatch only -- the schedule trigger does NOT include prod
-    # by design. Flip when prod has stabilized.
-    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.target == 'prod' || inputs.target == 'both') }}
+    if: ${{ github.event_name == 'schedule' || inputs.target == 'prod' || inputs.target == 'both' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
 
