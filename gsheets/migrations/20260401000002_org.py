@@ -224,12 +224,13 @@ def migrate_org_module(supabase):
         rows.append(audit({
             "org_id": ORG_ID,
             "sys_module_id": mod["id"],
-            "id": mod["id"],
             "is_enabled": mod["id"] in ENABLED_MODULES,
             "display_order": mod["display_order"],
         }))
 
-    insert_rows(supabase, "org_module", rows, upsert=True)
+    # org_module PK is (org_id, sys_module_id) -- no id column. Pre-clear
+    # in main() empties the table so plain insert is fine.
+    insert_rows(supabase, "org_module", rows)
 
 
 def migrate_org_sub_module(supabase):
@@ -260,15 +261,17 @@ def migrate_org_sub_module(supabase):
             "sys_module_id": sub["sys_module_id"],
             "sys_sub_module_id": sub["id"],
             "sys_access_level_id": sub["sys_access_level_id"],
-            "id": sub["id"],
             "is_enabled": sub["id"] in ENABLED_SUB_MODULES,
             "display_order": sub["display_order"],
         }))
 
-    insert_rows(supabase, "org_sub_module", rows, upsert=True)
+    # org_sub_module PK is (org_id, sys_module_id, sys_sub_module_id) --
+    # no id column. Pre-clear in main() empties the table so plain
+    # insert is fine.
+    insert_rows(supabase, "org_sub_module", rows)
 
 
-def migrate_org_site(supabase):
+def migrate_org_site(supabase, gc):
     """Migrate org sites with parent-child hierarchy from legacy Google Sheet."""
 
     # -- CUKE FARM: Parent sites --
@@ -585,7 +588,7 @@ def main():
     migrate_org(supabase)
     migrate_org_farm(supabase, gc)
     migrate_org_site_category(supabase)
-    migrate_org_site(supabase)
+    migrate_org_site(supabase, gc)
     migrate_org_module(supabase)
     migrate_org_sub_module(supabase)
     migrate_ops_task(supabase)
