@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS hr_payroll (
 
     -- Employee snapshot at time of processing
     employee_name               TEXT NOT NULL,
-    hr_department_id            TEXT REFERENCES hr_department(id),
-    hr_work_authorization_id    TEXT REFERENCES hr_work_authorization(id),
+    hr_department_id            TEXT,
+    hr_work_authorization_id    TEXT,
     wc                          TEXT,
     pay_structure               TEXT,
     hourly_rate                 NUMERIC,
@@ -77,7 +77,9 @@ CREATE TABLE IF NOT EXISTS hr_payroll (
     updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_by                  TEXT,
     is_deleted                  BOOLEAN NOT NULL DEFAULT false,
-    CONSTRAINT hr_payroll_hr_employee_id_emp_fkey FOREIGN KEY (org_id, hr_employee_id) REFERENCES hr_employee(org_id, id)
+    CONSTRAINT hr_payroll_hr_employee_id_emp_fkey FOREIGN KEY (org_id, hr_employee_id) REFERENCES hr_employee(org_id, id),
+    CONSTRAINT hr_payroll_hr_department_fkey FOREIGN KEY (org_id, hr_department_id) REFERENCES hr_department(org_id, id),
+    CONSTRAINT hr_payroll_hr_work_authorization_fkey FOREIGN KEY (org_id, hr_work_authorization_id) REFERENCES hr_work_authorization(org_id, id)
 );
 
 COMMENT ON TABLE hr_payroll IS 'Merged payroll data imported from external payroll processor. One row per employee per check date. Employee fields are snapshotted at time of processing to preserve historical accuracy.';

@@ -67,14 +67,4 @@ COMMENT ON COLUMN edi_crodeon_weather.atmospheric_pressure         IS 'Station-l
 CREATE INDEX idx_edi_crodeon_weather_org_at ON edi_crodeon_weather (org_id, reading_at DESC);
 CREATE INDEX idx_edi_crodeon_weather_at     ON edi_crodeon_weather (reading_at DESC);
 
--- ============================================================
--- RLS -- org-scoped read for authenticated users.
--- ============================================================
-
-ALTER TABLE edi_crodeon_weather ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "edi_crodeon_weather_read" ON edi_crodeon_weather
-  FOR SELECT TO authenticated
-  USING (org_id IN (SELECT public.get_user_org_ids()));
-
-GRANT SELECT ON edi_crodeon_weather TO authenticated;
+-- RLS lives in 20260401000200_sys_rls_policies.sql (project convention).

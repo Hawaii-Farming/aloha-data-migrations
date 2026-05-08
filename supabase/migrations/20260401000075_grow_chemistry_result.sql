@@ -43,15 +43,4 @@ CREATE INDEX idx_grow_chemistry_result_org_date ON grow_chemistry_result (org_id
 CREATE INDEX idx_grow_chemistry_result_site     ON grow_chemistry_result (site_id);
 CREATE INDEX idx_grow_chemistry_result_nutrient ON grow_chemistry_result (nutrient);
 
--- ============================================================
--- RLS — org-scoped read for authenticated users.
--- Mirrors the central convention from sys_rls_policies.sql.
--- ============================================================
-
-ALTER TABLE grow_chemistry_result ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "grow_chemistry_result_read" ON grow_chemistry_result
-  FOR SELECT TO authenticated
-  USING (org_id IN (SELECT public.get_user_org_ids()));
-
-GRANT SELECT ON grow_chemistry_result TO authenticated;
+-- RLS lives in 20260401000200_sys_rls_policies.sql (project convention).
