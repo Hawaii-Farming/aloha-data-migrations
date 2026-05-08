@@ -60,9 +60,8 @@ DEFAULT_SET = [
     "032",  # grow_spray_pre_check
     "033",  # grow_monitoring
     "034",  # grow_chemistry — external lab pond/water readings
-    # 035 (grow_weather Sheet -> DB) retired in favour of the every-10-min
-    # _crodeon_weather_sync.py running off its own workflow. Left on disk
-    # for one-off Sheet imports if needed.
+    # 035 (grow_weather Sheet -> DB) deleted -- replaced by the every-10-min
+    # _crodeon_weather_sync.py running off its own workflow.
     "036",  # business_rule
     "037",  # fin_expense + sales_invoice (nightly QB sheet sync, legacy)
     "038",  # edi_qb_invoice — direct QB API pull into edi_qb_invoice + edi_qb_invoice_line
