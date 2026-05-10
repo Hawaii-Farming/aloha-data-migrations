@@ -342,3 +342,49 @@ def _install_postgrest_retry():
 
 
 _install_postgrest_retry()
+
+
+# ---------------------------------------------------------------------------
+# Transient-error retry for gspread (Google Sheets) reads
+# ---------------------------------------------------------------------------
+# A single Google Sheets 503 used to bubble up as gspread.exceptions.APIError
+# and kill the entire nightly run via fail-fast (e.g. 2026-05-10 stopped at
+# 007/maint, taking out 008-039 with it). Mounting a urllib3 Retry adapter on
+# the gspread client's underlying requests Session lets every API call retry
+# transparently on 429/5xx without per-callsite wrappers.
+
+def _install_gspread_retry():
+    import functools
+
+    try:
+        import gspread
+        from requests.adapters import HTTPAdapter
+        from urllib3.util.retry import Retry
+    except ImportError:
+        return
+
+    retry = Retry(
+        total=5,
+        backoff_factor=2.0,  # 2s, 4s, 8s, 16s, 32s between retries
+        status_forcelist=(429, 500, 502, 503, 504),
+        allowed_methods=("GET", "POST", "PUT"),
+        respect_retry_after_header=True,
+    )
+
+    _original_authorize = gspread.authorize
+
+    @functools.wraps(_original_authorize)
+    def authorize_with_retry(*args, **kwargs):
+        client = _original_authorize(*args, **kwargs)
+        # gspread 6+ exposes the requests Session at client.http_client.session.
+        session = getattr(getattr(client, "http_client", None), "session", None)
+        if session is not None:
+            adapter = HTTPAdapter(max_retries=retry)
+            session.mount("https://", adapter)
+            session.mount("http://", adapter)
+        return client
+
+    gspread.authorize = authorize_with_retry
+
+
+_install_gspread_retry()
