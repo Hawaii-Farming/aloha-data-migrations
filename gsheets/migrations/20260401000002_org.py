@@ -237,8 +237,8 @@ def migrate_org_sub_module(supabase):
     """Copy sys_sub_module records into org_sub_module for this org.
 
     Only the HR sub-modules currently in use are enabled: register, scheduler,
-    time_off, payroll_comp, payroll_data, employee_review, housing. Everything
-    else is provisioned but disabled until its work is ready to roll out.
+    time_off, payroll_comp, payroll_data, housing. Everything else is
+    provisioned but disabled until its work is ready to roll out.
     """
     ENABLED_SUB_MODULES = {
         "Register",
@@ -246,7 +246,6 @@ def migrate_org_sub_module(supabase):
         "Time Off",
         "Payroll Comp",
         "Payroll Data",
-        "Employee Review",
         "Housing",
     }
 
