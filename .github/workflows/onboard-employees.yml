@@ -1,0 +1,53 @@
+name: Onboard Employees (one-shot)
+
+# Creates auth.users for the hardcoded employee list in
+# scripts/onboard_employees.py and links the matching hr_employee row
+# via user_id. Idempotent — re-running is safe.
+#
+# Heads-up: the password is taken as a workflow_dispatch input. Inputs
+# are NOT auto-masked in workflow logs, so anyone with repo access will
+# see it in this run's UI. Use a throwaway initial password and tell
+# employees to change it on first login.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Which Supabase project to onboard against'
+        required: true
+        default: 'dev'
+        type: choice
+        options: [dev, prod, both]
+      password:
+        description: 'Initial password for all new accounts'
+        required: true
+        type: string
+
+jobs:
+  onboard-dev:
+    if: ${{ inputs.target == 'dev' || inputs.target == 'both' }}
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      INITIAL_PASSWORD: ${{ inputs.password }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: python scripts/onboard_employees.py
+
+  onboard-prod:
+    if: ${{ inputs.target == 'prod' || inputs.target == 'both' }}
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL_PROD }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_KEY_PROD }}
+      INITIAL_PASSWORD: ${{ inputs.password }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: python scripts/onboard_employees.py
