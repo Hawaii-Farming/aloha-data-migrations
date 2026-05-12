@@ -166,82 +166,40 @@ def seed_modules(supabase):
 
 
 def seed_sub_modules(supabase, gc):
+    """Seed sys_sub_module from a hardcoded list.
+
+    The legacy global_menu_icons_sub Google Sheet was retired with
+    20260512184640_purge_inactive_sub_modules.sql -- the old system
+    carried ~50 sub-modules we won't be rebuilding. From here on,
+    sub-modules are added to ACTIVE_SUB_MODULES below as features ship,
+    keeping the codebase as the single source of truth. The `gc` arg is
+    retained for signature compatibility but no longer used.
     """
-    Seed sub-modules from the legacy Google Sheet global_menu_icons_sub.
-    name is the PK; FK columns carry the display-name values.
-    """
-    sheet = gc.open_by_key(SHEET_ID)
-    ws = sheet.worksheet("global_menu_icons_sub")
-    records = ws.get_all_records()
+    # (id, sys_module_id, sys_access_level_id, display_order)
+    ACTIVE_SUB_MODULES = [
+        ("Packlot",        "Pack",            "Employee",  1),
+        ("Packing",        "Pack",            "Employee",  2),
+        ("Products",       "Pack",            "Employee",  3),
+        ("Customers",      "Sales",           "Employee",  4),
+        ("FOB",            "Sales",           "Employee",  5),
+        ("Product Prices", "Sales",           "Employee",  6),
+        ("Register",       "Human Resources", "Manager",  22),
+        ("Scheduler",      "Human Resources", "Manager",  23),
+        ("Time Off",       "Human Resources", "Manager",  24),
+        ("Payroll Comp",   "Human Resources", "Manager",  26),
+        ("Payroll Data",   "Human Resources", "Admin",    28),
+        ("Housing",        "Human Resources", "Manager",  29),
+    ]
 
-    # Map legacy sheet level (1/2/3) to sys_access_level.name display value
-    level_map = {
-        "1": "Employee",
-        "2": "Manager",
-        "3": "Admin",
-        1:   "Employee",
-        2:   "Manager",
-        3:   "Admin",
-    }
-
-    # Map legacy sheet main-menu labels to sys_module.name display value
-    module_map = {
-        "grow":            "Grow",
-        "pack":            "Pack",
-        "food safety":     "Food Safety",
-        "maintenance":     "Maintenance",
-        "inventory":       "Inventory",
-        "human resources": "Human Resources",
-        "sales":           "Sales",
-        "execute":         "Operations",
-        "global":          "Operations",
-    }
-
-    # Only seed the sub-modules that are live today. The legacy sheet
-    # carries every sub-module from the old system (≈50 entries); most
-    # won't be rebuilt and were hard-deleted by migration
-    # 20260512184640_purge_inactive_sub_modules.sql. New sub-modules
-    # should be added to this allowlist as features ship.
-    ACTIVE_SUB_MODULES = {
-        "Register",
-        "Scheduler",
-        "Time Off",
-        "Payroll Comp",
-        "Payroll Data",
-        "Housing",
-    }
-
-    rows = []
-    seen = set()
-
-    for i, record in enumerate(records):
-        sub_name = proper_case(record.get("SubMenuName", ""))
-        if sub_name not in ACTIVE_SUB_MODULES:
-            continue
-        main_name = record.get("MainMenuName", "").strip()
-        level = record.get("Level", "1")
-
-        if not sub_name or not main_name:
-            continue
-
-        sys_module_id = module_map.get(main_name.lower())
-        if not sys_module_id:
-            print(f"  SKIP: Unknown module '{main_name}' for sub '{sub_name}'")
-            continue
-
-        sys_access_level_id = level_map.get(level, "Employee")
-
-        # Deduplicate by display name (the PK)
-        if sub_name in seen:
-            continue
-        seen.add(sub_name)
-
-        rows.append(audit({
-            "sys_module_id": sys_module_id,
-            "id": sub_name,
-            "sys_access_level_id": sys_access_level_id,
-            "display_order": len(rows) + 1,
-        }))
+    rows = [
+        audit({
+            "id": sub_id,
+            "sys_module_id": mod_id,
+            "sys_access_level_id": lvl,
+            "display_order": order,
+        })
+        for sub_id, mod_id, lvl, order in ACTIVE_SUB_MODULES
+    ]
 
     insert_rows(supabase, "sys_sub_module", rows)
 

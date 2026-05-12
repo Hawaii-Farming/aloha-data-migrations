@@ -212,10 +212,10 @@ def migrate_org_site_category(supabase):
 def migrate_org_module(supabase):
     """Copy sys_module records into org_module for this org.
 
-    Only `human_resources` is enabled for now; all other modules are
-    provisioned but disabled until they are ready to roll out.
+    Human Resources, Pack, and Sales are enabled today; the rest are
+    provisioned but disabled until they're ready to roll out.
     """
-    ENABLED_MODULES = {"Human Resources"}
+    ENABLED_MODULES = {"Human Resources", "Pack", "Sales"}
 
     result = supabase.table("sys_module").select("id, display_order").order("display_order").execute()
 
@@ -236,17 +236,26 @@ def migrate_org_module(supabase):
 def migrate_org_sub_module(supabase):
     """Copy sys_sub_module records into org_sub_module for this org.
 
-    Only the HR sub-modules currently in use are enabled: register, scheduler,
-    time_off, payroll_comp, payroll_data, housing. Everything else is
-    provisioned but disabled until its work is ready to roll out.
+    The HR, Pack, and Sales sub-modules currently in use are enabled.
+    Everything else is provisioned but disabled until its work is ready
+    to roll out.
     """
     ENABLED_SUB_MODULES = {
+        # HR
         "Register",
         "Scheduler",
         "Time Off",
         "Payroll Comp",
         "Payroll Data",
         "Housing",
+        # Pack
+        "Packlot",
+        "Packing",
+        "Products",
+        # Sales
+        "Customers",
+        "FOB",
+        "Product Prices",
     }
 
     result = supabase.table("sys_sub_module").select(
