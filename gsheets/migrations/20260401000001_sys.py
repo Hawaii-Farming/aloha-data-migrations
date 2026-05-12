@@ -197,11 +197,27 @@ def seed_sub_modules(supabase, gc):
         "global":          "Operations",
     }
 
+    # Only seed the sub-modules that are live today. The legacy sheet
+    # carries every sub-module from the old system (≈50 entries); most
+    # won't be rebuilt and were hard-deleted by migration
+    # 20260512184640_purge_inactive_sub_modules.sql. New sub-modules
+    # should be added to this allowlist as features ship.
+    ACTIVE_SUB_MODULES = {
+        "Register",
+        "Scheduler",
+        "Time Off",
+        "Payroll Comp",
+        "Payroll Data",
+        "Housing",
+    }
+
     rows = []
     seen = set()
 
     for i, record in enumerate(records):
         sub_name = proper_case(record.get("SubMenuName", ""))
+        if sub_name not in ACTIVE_SUB_MODULES:
+            continue
         main_name = record.get("MainMenuName", "").strip()
         level = record.get("Level", "1")
 
