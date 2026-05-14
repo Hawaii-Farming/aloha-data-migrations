@@ -53,21 +53,44 @@ periods AS (
     FROM ranked_dates
 ),
 current_p AS (
-    SELECT v.*
+    SELECT
+        v.org_id,
+        v.hr_employee_id,
+        MAX(v.compensation_manager_id)     AS compensation_manager_id,
+        MAX(v.status)                      AS status,
+        MAX(v.workers_compensation_code)   AS workers_compensation_code,
+        SUM(v.scheduled_hours)             AS scheduled_hours,
+        SUM(v.total_hours)                 AS total_hours,
+        SUM(v.total_cost)                  AS total_cost,
+        SUM(v.regular_pay)                 AS regular_pay,
+        SUM(v.discretionary_overtime_hours) AS discretionary_overtime_hours,
+        SUM(v.discretionary_overtime_pay)  AS discretionary_overtime_pay
     FROM hr_payroll_by_task v, periods p
     WHERE v.check_date = p.cur_date
+    GROUP BY v.org_id, v.hr_employee_id
 ),
 previous_p AS (
-    SELECT v.*
+    SELECT
+        v.org_id,
+        v.hr_employee_id,
+        MAX(v.compensation_manager_id)     AS compensation_manager_id,
+        MAX(v.status)                      AS status,
+        MAX(v.workers_compensation_code)   AS workers_compensation_code,
+        SUM(v.scheduled_hours)             AS scheduled_hours,
+        SUM(v.total_hours)                 AS total_hours,
+        SUM(v.total_cost)                  AS total_cost,
+        SUM(v.regular_pay)                 AS regular_pay,
+        SUM(v.discretionary_overtime_hours) AS discretionary_overtime_hours,
+        SUM(v.discretionary_overtime_pay)  AS discretionary_overtime_pay
     FROM hr_payroll_by_task v, periods p
     WHERE v.check_date = p.prev_date
+    GROUP BY v.org_id, v.hr_employee_id
 )
 SELECT
     COALESCE(c.org_id, pr.org_id)                                        AS org_id,
     COALESCE(c.hr_employee_id, pr.hr_employee_id)                        AS hr_employee_id,
     TRIM(e.first_name || ' ' || e.last_name)                             AS employee_full_name,
     COALESCE(c.compensation_manager_id, pr.compensation_manager_id)      AS compensation_manager_id,
-    COALESCE(c.task, pr.task)                                            AS task,
     COALESCE(c.status, pr.status)                                        AS status,
     COALESCE(c.workers_compensation_code, pr.workers_compensation_code)  AS workers_compensation_code,
     (SELECT cur_date FROM periods)                                       AS check_date,
@@ -114,8 +137,8 @@ SELECT
     END AS other_pay_delta
 FROM current_p c
 FULL OUTER JOIN previous_p pr
-    ON pr.hr_employee_id = c.hr_employee_id
-   AND pr.task = c.task
+    ON pr.org_id         = c.org_id
+   AND pr.hr_employee_id = c.hr_employee_id
 LEFT JOIN public.hr_employee e
     ON e.org_id = COALESCE(c.org_id, pr.org_id)
    AND e.id     = COALESCE(c.hr_employee_id, pr.hr_employee_id)
@@ -133,7 +156,7 @@ WHERE
 
 GRANT SELECT ON hr_payroll_employee_comparison TO authenticated;
 
-COMMENT ON VIEW hr_payroll_employee_comparison IS 'Per-employee per-task snapshot for the most recent is_standard=TRUE HRB check_date with deltas vs the prior is_standard=TRUE check_date. RBAC-gated: Owner/Admin/Team Lead see all rows; Manager sees direct reports + self; Team Lead has $ columns NULL-masked. Org isolation via security_invoker.';
+COMMENT ON VIEW hr_payroll_employee_comparison IS 'Per-employee snapshot (one row per employee, aggregated across tasks) for the most recent is_standard=TRUE HRB check_date with deltas vs the prior is_standard=TRUE check_date. RBAC-gated: Owner/Admin/Team Lead see all rows; Manager sees direct reports + self; Team Lead has $ columns NULL-masked. Org isolation via security_invoker.';
 
 ----------------------------------------------------------------------
 -- 2. hr_payroll_task_comparison
