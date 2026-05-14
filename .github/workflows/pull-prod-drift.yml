@@ -1,0 +1,83 @@
+name: Pull Prod Drift (one-shot)
+
+# Manual-trigger sibling of sync-dev-to-prod.yml. Runs `supabase db pull`
+# against PROD and commits any captured migration files to main. Used
+# when prod has migration versions in schema_migrations that aren't in
+# this repo (typically because someone ran `supabase db push` locally
+# from a checkout that wasn't committed) and the daily sync workflow
+# starts failing.
+#
+# Does NOT push back to either DB -- just captures what's on prod so
+# we can review the SQL before deciding to fold it in, revert it, or
+# adapt.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROD_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF_PROD }}
+      PROD_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD_PROD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Configure git for commits
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Link prod project
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.PROD_DB_PASSWORD }}
+        run: supabase link --project-ref "$PROD_PROJECT_REF"
+
+      - name: Capture prod drift as new migration files
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.PROD_DB_PASSWORD }}
+        run: |
+          set -e
+          before_count=$(ls -1 supabase/migrations/*.sql 2>/dev/null | wc -l)
+          supabase db pull --schema public
+          after_count=$(ls -1 supabase/migrations/*.sql 2>/dev/null | wc -l)
+          if [ "$after_count" -gt "$before_count" ]; then
+            echo "drift_captured=true" >> "$GITHUB_ENV"
+            new_files=$(git status --short supabase/migrations/ | grep '^??' | awk '{print $2}')
+            echo "Captured prod drift in:"
+            printf '  %s\n' $new_files
+          else
+            echo "No drift detected -- prod is in sync with the migration files."
+            echo "drift_captured=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Commit and push drift migrations
+        if: env.drift_captured == 'true'
+        run: |
+          git add supabase/migrations/
+          git commit -m "$(cat <<'EOF'
+          chore(schema): auto-capture PROD drift via one-shot pull workflow
+
+          Captured by .github/workflows/pull-prod-drift.yml. Someone ran
+          `supabase db push` against prod from a local checkout without
+          committing the migration files; this workflow runs `supabase
+          db pull` to recover them so the repo stays in sync. Review the
+          diff before further deploys.
+          EOF
+          )"
+          git push origin main
