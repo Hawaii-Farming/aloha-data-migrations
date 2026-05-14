@@ -371,9 +371,14 @@ def migrate_payroll(supabase, gc):
         wa_id = wa_by_name.get(status.lower()) or emp.get("hr_work_authorization_id")
 
         wc = str(r.get("workers_compensation_code", "")).strip() or emp.get("wc")
-        pay_structure = str(r.get("pay_structure", "")).strip().lower() or emp.get("pay_structure")
-        if pay_structure and pay_structure not in ("Hourly", "Salary"):
-            pay_structure = emp.get("pay_structure")
+        # pay_structure is migrated AS-IS from the legacy sheet. Historical
+        # rows must keep the pay structure that was in effect at the time; do
+        # NOT fall back to the employee's current pay_structure (that rewrote
+        # every historical "Hourly" row to "Salary" when someone moved from
+        # hourly to salary). Blank/unrecognized -> NULL.
+        pay_structure = proper_case(r.get("pay_structure", "")) or None
+        if pay_structure not in ("Hourly", "Salary"):
+            pay_structure = None
 
         source = str(r.get("source", "")).strip() or "HRB"
         hourly_rate = safe_numeric(r.get("hourly_rate"), default=None)

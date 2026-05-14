@@ -252,10 +252,24 @@ def migrate_hr_employee(supabase, records, app_users):
         raw_short = str(r.get("ShortName", "")).strip()
         short = raw_short if raw_short.isalpha() and raw_short.isupper() else proper_case(raw_short)
 
-        # Map name for team_lead/compensation_manager resolution
-        if short:
-            name_to_id[short] = emp_id
-        name_to_id[first] = emp_id
+        # Map name for team_lead/compensation_manager resolution. Only active
+        # employees are eligible team_leads — former employees with overlapping
+        # first names (e.g. an old "Eric" who left) used to clobber the active
+        # manager's entry and route team_lead_id to the wrong UUID. Skip them
+        # here and warn loudly if the remaining set still collides so we don't
+        # silently pick the wrong active manager either.
+        is_active = parse_bool(r.get("IsActive", True))
+        if is_active:
+            for key in filter(None, (short, first)):
+                prior = name_to_id.get(key)
+                if prior is not None and prior != emp_id:
+                    print(
+                        f"  WARN: name collision on '{key}': already mapped to "
+                        f"{prior}, now also {emp_id}. team_lead/comp_manager "
+                        f"lookups for '{key}' will resolve to {emp_id} (last "
+                        f"writer wins). Disambiguate via ShortName in the sheet."
+                    )
+                name_to_id[key] = emp_id
 
         # Get access level from app_users
         app_user = user_lookup.get(email, {})
