@@ -1,15 +1,21 @@
 name: Pull Prod Drift (one-shot)
 
-# Manual-trigger sibling of sync-dev-to-prod.yml. Runs `supabase db pull`
-# against PROD and commits any captured migration files to main. Used
-# when prod has migration versions in schema_migrations that aren't in
-# this repo (typically because someone ran `supabase db push` locally
-# from a checkout that wasn't committed) and the daily sync workflow
-# starts failing.
+# Manual-trigger sibling of sync-dev-to-prod.yml. Reads prod's
+# supabase_migrations.schema_migrations directly via psycopg2 and writes
+# the SOURCE SQL of any prod-only migration version to a
+# `<version>_recovered_from_prod_<name>.sql` file in supabase/migrations/.
 #
-# Does NOT push back to either DB -- just captures what's on prod so
-# we can review the SQL before deciding to fold it in, revert it, or
-# adapt.
+# Why this shape rather than `supabase db pull`:
+#   * db pull refuses to run when local and remote migration histories
+#     diverge (catch-22 with the original problem).
+#   * It also only captures schema state, not the original statements --
+#     if someone ran an INSERT/UPDATE via Studio, db pull misses it.
+#   * The recovery script reads schema_migrations.statements directly,
+#     preserving exact SQL.
+#
+# After this workflow runs, review the recovered files, rename them to
+# something descriptive, and edit if needed. Then a normal deploy-schema
+# run unblocks because prod's schema_migrations matches the repo.
 
 on:
   workflow_dispatch:
@@ -23,9 +29,7 @@ jobs:
     timeout-minutes: 20
 
     env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      PROD_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF_PROD }}
-      PROD_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD_PROD }}
+      PROD_DB_URL: ${{ secrets.SUPABASE_DB_URL_PROD }}
 
     steps:
       - name: Checkout
@@ -33,51 +37,48 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Supabase CLI
-        uses: supabase/setup-cli@v1
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          version: latest
+          python-version: '3.13'
 
-      - name: Configure git for commits
+      - name: Install psycopg2
+        run: pip install psycopg2-binary
+
+      - name: Configure git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Link prod project
-        env:
-          SUPABASE_DB_PASSWORD: ${{ env.PROD_DB_PASSWORD }}
-        run: supabase link --project-ref "$PROD_PROJECT_REF"
+      - name: Recover prod-only migration files
+        run: python scripts/recover_prod_migrations.py
 
-      - name: Capture prod drift as new migration files
-        env:
-          SUPABASE_DB_PASSWORD: ${{ env.PROD_DB_PASSWORD }}
+      - name: Show captured files
         run: |
-          set -e
-          before_count=$(ls -1 supabase/migrations/*.sql 2>/dev/null | wc -l)
-          supabase db pull --schema public
-          after_count=$(ls -1 supabase/migrations/*.sql 2>/dev/null | wc -l)
-          if [ "$after_count" -gt "$before_count" ]; then
-            echo "drift_captured=true" >> "$GITHUB_ENV"
-            new_files=$(git status --short supabase/migrations/ | grep '^??' | awk '{print $2}')
-            echo "Captured prod drift in:"
-            printf '  %s\n' $new_files
-          else
-            echo "No drift detected -- prod is in sync with the migration files."
-            echo "drift_captured=false" >> "$GITHUB_ENV"
+          echo "=== Captured files ==="
+          ls -la supabase/migrations/*_recovered_from_prod_*.sql 2>/dev/null || echo "(none)"
+          echo
+          echo "=== Diff summary ==="
+          git status --short supabase/migrations/
+
+      - name: Commit recovered files
+        run: |
+          if [ -z "$(git status --short supabase/migrations/)" ]; then
+            echo "Nothing to commit."
+            exit 0
           fi
-
-      - name: Commit and push drift migrations
-        if: env.drift_captured == 'true'
-        run: |
-          git add supabase/migrations/
+          git add supabase/migrations/*_recovered_from_prod_*.sql
           git commit -m "$(cat <<'EOF'
-          chore(schema): auto-capture PROD drift via one-shot pull workflow
+          chore(schema): recover prod-only migration files via pull-prod-drift
 
-          Captured by .github/workflows/pull-prod-drift.yml. Someone ran
-          `supabase db push` against prod from a local checkout without
-          committing the migration files; this workflow runs `supabase
-          db pull` to recover them so the repo stays in sync. Review the
-          diff before further deploys.
+          Recovered the source SQL of any migration version present on
+          prod (in supabase_migrations.schema_migrations.statements) but
+          absent from this repo. Files are named *_recovered_from_prod_*
+          and should be reviewed, renamed, and edited as needed before
+          being treated as permanent.
+
+          Captured by .github/workflows/pull-prod-drift.yml +
+          scripts/recover_prod_migrations.py.
           EOF
           )"
           git push origin main
