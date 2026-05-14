@@ -45,7 +45,7 @@ jobs:
       - name: Link project (dev)
         run: supabase link --project-ref "$PROJECT_REF"
       - name: Push migrations (dev)
-        run: supabase db push
+        run: supabase db push --include-all
 
   deploy-prod:
     if: ${{ inputs.target == 'prod' || inputs.target == 'both' }}
@@ -65,4 +65,4 @@ jobs:
       - name: Link project (prod)
         run: supabase link --project-ref "$PROJECT_REF"
       - name: Push migrations (prod)
-        run: supabase db push
+        run: supabase db push --include-all
