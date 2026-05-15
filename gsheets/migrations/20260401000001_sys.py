@@ -22,10 +22,18 @@ Rerunnable: clears and reinserts all data on each run.
 
 import os
 import re
+import sys
+from pathlib import Path
+
 import gspread
 import psycopg2
 from google.oauth2.service_account import Credentials
 from supabase import create_client
+
+# Make sibling helper modules importable both when run via _run_nightly.py
+# (which preloads sys.path) and when invoked standalone for ad-hoc runs.
+sys.path.insert(0, str(Path(__file__).parent))
+from _qb_token_preserve import backup as backup_qb_token  # noqa: E402
 
 
 def _load_dotenv():
@@ -107,6 +115,12 @@ def truncate_all_public_tables():
 
     print("Discovering public tables...")
     with psycopg2.connect(SUPABASE_DB_URL) as conn:
+        # Preserve OAuth credentials across the TRUNCATE -- migration 003
+        # restores them after hr_employee is reseeded, so the composite FK
+        # (org_id, connected_by) -> hr_employee is satisfied at insert time.
+        # Anything we don't back up here is wiped permanently.
+        backup_qb_token(conn)
+
         with conn.cursor() as cur:
             cur.execute(
                 """

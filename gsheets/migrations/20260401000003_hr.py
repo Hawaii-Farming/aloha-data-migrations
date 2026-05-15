@@ -26,6 +26,7 @@ from supabase import create_client
 
 sys.path.insert(0, str(Path(__file__).parent))
 from gsheets.migrations._pg import get_pg_conn  # noqa: E402
+from _qb_token_preserve import restore as restore_qb_token  # noqa: E402
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://kfwqtaazdankxmdlqdak.supabase.co")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
@@ -616,6 +617,14 @@ def main():
     migrate_hr_work_authorization(supabase, records)
 
     employees, user_lookup, module_map = migrate_hr_employee(supabase, records, app_users)
+
+    # Restore org_quickbooks_token rows that migration 001's TRUNCATE wiped.
+    # Runs HERE (not in 002) because the composite FK
+    # (org_id, connected_by) -> hr_employee requires hr_employee to be
+    # reseeded first. No-op if 001 didn't run this invocation.
+    with get_pg_conn() as conn:
+        restore_qb_token(conn)
+
     migrate_hr_module_access(supabase, employees, user_lookup, module_map)
     migrate_hr_time_off_request(supabase, gc, records)
     migrate_hr_travel_request(supabase, gc, records)
