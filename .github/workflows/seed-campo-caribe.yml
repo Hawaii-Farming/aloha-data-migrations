@@ -1,0 +1,87 @@
+name: Seed Campo Caribe (one-shot)
+
+# Provisions / re-provisions the campo_caribe org from the source
+# Google Sheet by running gsheets/one_off/campo_caribe_hr.py.
+#
+# Idempotent: the script UPSERTs every row, so re-running just refreshes
+# the data. Safe to run after a destructive --all nightly that wiped
+# campo_caribe along with everything else (which is what happened
+# 2026-05-08).
+#
+# Not part of the nightly DEFAULT_SET because Campo Caribe HR data is
+# not on the same daily-refresh cadence as Hawaii Farming.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Which Supabase project to seed against'
+        required: true
+        default: 'both'
+        type: choice
+        options: [dev, prod, both]
+
+jobs:
+  seed-dev:
+    if: ${{ inputs.target == 'dev' || inputs.target == 'both' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Write Google service account credentials
+        env:
+          CREDS: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+        run: |
+          printf '%s' "$CREDS" > credentials.json
+          python -c "import json; json.load(open('credentials.json'))" && echo "credentials.json is valid JSON"
+      - name: Seed Campo Caribe
+        run: python gsheets/one_off/campo_caribe_hr.py
+      - name: Cleanup credentials
+        if: ${{ always() }}
+        run: rm -f credentials.json
+
+  seed-prod:
+    if: ${{ inputs.target == 'prod' || inputs.target == 'both' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL_PROD }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_KEY_PROD }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL_PROD }}
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Write Google service account credentials
+        env:
+          CREDS: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+        run: |
+          printf '%s' "$CREDS" > credentials.json
+          python -c "import json; json.load(open('credentials.json'))" && echo "credentials.json is valid JSON"
+      - name: Seed Campo Caribe
+        run: python gsheets/one_off/campo_caribe_hr.py
+      - name: Cleanup credentials
+        if: ${{ always() }}
+        run: rm -f credentials.json
