@@ -113,6 +113,64 @@ WHERE h.site_id = 'wa'
 GROUP BY b.seeding_date, b.invnt_item_id;
 ```
 
+## Alternative: fix at the sheet source (preferred long-term)
+
+The `CYCLE_CODE_REMAP` in 026 hard-codes 5 data corrections into the
+migration. That works but leaves the source-of-truth sheets carrying
+wrong/missing cycle codes forever. If you'd rather correct the sheets
+themselves and drop the remap, here's what to edit. After the sheet
+edits, **delete the `CYCLE_CODE_REMAP` block** from
+`20260401000026_grow_cuke_harvest.py`.
+
+### `grow_C_seeding` sheet
+
+Edit the `SeedingCycle` column (G) on these rows so it reflects the actual
+seed month:
+
+| Current `SeedingCycle` | New `SeedingCycle` | `SeedingDate` (col A) | Greenhouse (col F) |
+|---|---|---|---|
+| `250203` | `250303` | 2025-03-06 | 03 |
+| `250308` | `250208` | 2025-02-18 | 08 |
+| `250505` | `250705` | 2025-07-31 | 05 |
+| `250604` | `250704` | 2025-07-03 | 04 |
+
+(2508WA has no row in `grow_C_seeding` — nothing to edit there.)
+
+### `grow_C_harvest` sheet
+
+Edit `SeedingCycle` (col J) on every row matching these old codes:
+
+| Old code prefix | New code prefix | Approx rows |
+|---|---|--:|
+| `250203K`, `250203J` | `250303K`, `250303J` | 160 |
+| `250308K`, `250308J` | `250208K`, `250208J` | 208 |
+| `250505K`, `250505J` | `250705K`, `250705J` | 211 |
+| `250604K`, `250604J` | `250704K`, `250704J` | 208 |
+| `2508WAK`, `2508WAJ`, `2508WAE` | `2509WAK`, `2509WAJ`, `2509WAE` | 41 |
+
+A find-and-replace in the Sheets UI on column J works (use "Match
+entire cell contents" to avoid mangling longer codes that happen to
+contain these strings).
+
+### Delete S- rows from `grow_C_harvest` (optional)
+
+The 92 `S-*` cycle codes in `grow_C_harvest` are pre-seeding-sheet
+era data with no source of truth. The migration will skip them as
+unmatched after the stub cleanup, but if you want to declutter the
+sheet, filter `SeedingCycle starts with "S-"` and delete those rows
+(or move to an archive tab). Don't do this if you ever want to recover
+the 2019-2022 yield data — once the harvest sheet rows are gone, they
+can't be re-ingested.
+
+### After sheet edits
+
+1. Remove `CYCLE_CODE_REMAP` and its usage from
+   `20260401000026_grow_cuke_harvest.py`.
+2. Run `20260515000000_fix_cuke_stub_batches.py` (still needed — it
+   clears the existing stubs).
+3. Trigger a nightly run of 026.
+4. Verify with the queries below.
+
 ## Reference
 
 - Per-row stub audit: `audit/cuke_seed_batch_stubs.csv` in the dash repo
