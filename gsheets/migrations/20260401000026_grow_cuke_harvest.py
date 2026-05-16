@@ -86,6 +86,32 @@ VARIETY_MAP = {
     "E": "e",
 }
 
+# Cycle code corrections applied at harvest-sheet lookup time.
+#
+# The harvest sheet's SeedingCycle column uses a rotation-slot label (YYMM)
+# that does NOT always equal the actual seed month. When the actual seed
+# month drifted from the rotation slot, the derive_cycle_code() key built
+# from the real seed batch's seeding_date won't match what the harvest
+# sheet recorded, and the rows would otherwise be skipped as unmatched.
+#
+# This remap rewrites the cycle prefix (everything before the variety
+# letter) at lookup time so harvest rows land on the correct real seed
+# batch. Cycle codes left untouched in the source sheets.
+#
+# Entries verified against grow_C_seeding (Lenny + Michael, 2026-05-15):
+#   250203 -> 250303  (GH3, seed 2025-03-06, slot labeled Feb)
+#   250308 -> 250208  (GH8, seed 2025-02-18, slot labeled Mar)
+#   250505 -> 250705  (GH5, seed 2025-07-31, slot labeled May)
+#   250604 -> 250704  (GH4, seed 2025-07-03, slot labeled Jun)
+#   2508WA -> 2509WA  (Waimea, no Aug seeding; rows belong to 2509WA cycle)
+CYCLE_CODE_REMAP = {
+    "250203": "250303",
+    "250308": "250208",
+    "250505": "250705",
+    "250604": "250704",
+    "2508WA": "2509WA",
+}
+
 # Container ID = pallet_{variety_lower}{grade_number}
 # e.g. Variety=K, Grade=1 -> pallet_k1
 CONTAINERS = [
@@ -354,6 +380,13 @@ def build_harvest_row(sheet_row, batch_lookup, known_sites):
     # already matching the derive_cycle_code() shape used by build_batch_lookup.
     # Don't append variety — the sheet already carries it in the cycle string.
     lookup_code = cycle.upper()
+
+    # Apply known cycle-prefix corrections (see CYCLE_CODE_REMAP above).
+    # The variety letter is the last char; everything before is the prefix.
+    if len(lookup_code) > 1:
+        prefix, variety_letter = lookup_code[:-1], lookup_code[-1]
+        if prefix in CYCLE_CODE_REMAP:
+            lookup_code = CYCLE_CODE_REMAP[prefix] + variety_letter
     candidates = batch_lookup.get((lookup_code, is_trial), [])
     # Fall back: harvest 'S-' prefix is a label; the underlying seed batch
     # is keyed without it. Try the stripped form before giving up.
