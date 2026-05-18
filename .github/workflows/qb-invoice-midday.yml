@@ -1,10 +1,18 @@
-name: QB Invoice Midday Sync
+name: QB Sync (Midday)
 
-# Refreshes the edi_qb_invoice mirror tables once during the day so the
-# customer-facing dashboards see same-day invoices without waiting for
-# the full nightly run at midnight HST. Only runs migration 038
-# (edi_qb_invoice). Does NOT run _clear_transactional and does NOT touch
-# any other tables.
+# Refreshes edi_qb_invoice + edi_qb_expense once mid-day so the
+# customer-facing dashboards see same-day data without waiting for
+# the full nightly at midnight HST. Runs migrations 038 + 039 only;
+# does NOT run _clear_transactional and does NOT touch any other
+# tables.
+#
+# Schedule pairs with the midnight nightly so QB data refreshes
+# twice per day: 00:00 HST (nightly) and 12:00 HST (this).
+#
+# Mirrors the nightly.yml dual-job shape (migrate-dev + migrate-prod)
+# so whichever project has a populated org_quickbooks_token gets a
+# real pull; the other one cleanly no-ops with "No connected QB
+# orgs found".
 
 on:
   schedule:
@@ -13,7 +21,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  sync:
+  sync-dev:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -27,19 +35,40 @@ jobs:
       INTUIT_CLIENT_SECRET: ${{ secrets.INTUIT_CLIENT_SECRET }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
           cache: pip
-
       - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
+      - name: Run 038 + 039 (edi_qb_invoice + edi_qb_expense)
+        run: python gsheets/migrations/_run_nightly.py --only 038,039
 
-      - name: Run 038 (edi_qb_invoice sync)
-        run: python gsheets/migrations/_run_nightly.py --only 038
+  sync-prod:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL_PROD }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_KEY_PROD }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL_PROD }}
+      MIGRATION_AUDIT_USER: ${{ vars.MIGRATION_AUDIT_USER }}
+      MIGRATION_ORG_ID: ${{ vars.MIGRATION_ORG_ID }}
+      INTUIT_CLIENT_ID: ${{ secrets.INTUIT_CLIENT_ID }}
+      INTUIT_CLIENT_SECRET: ${{ secrets.INTUIT_CLIENT_SECRET }}
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run 038 + 039 (edi_qb_invoice + edi_qb_expense)
+        run: python gsheets/migrations/_run_nightly.py --only 038,039
