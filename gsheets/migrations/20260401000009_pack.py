@@ -325,28 +325,32 @@ def migrate_sales_product(supabase, gc):
 def migrate_pack_lettuce(supabase, gc, product_map):
     """Migrate pack_L_packlot → pack_lot + pack_lot_item for lettuce farm.
 
-    Rows with the same lot_number are merged — product quantities are summed.
+    Grouping key is (pack_date, harvest_date) to honour the new
+    uq_pack_lot_dates UNIQUE (org_id, farm_id, pack_date, harvest_date)
+    constraint introduced 2026-05-14. Source rows that legacy data left
+    under different PackLot values but with the same date pair get
+    merged into one lot; product quantities sum. lot_number is
+    generated deterministically from the dates per the new convention
+    (matches pack_lot_default_lot_number(p_pack_date, p_harvest_date)).
     """
     wb = gc.open_by_key(PACK_SHEET_ID)
     data = wb.worksheet("pack_L_packlot").get_all_records()
 
     print(f"\nProcessing {len(data)} lettuce pack lot rows...")
 
-    # Group rows by lot_number, merging product quantities
-    lots = {}  # lot_number → { meta + product totals }
+    # Group rows by (pack_date, harvest_date), merging product quantities.
+    lots = {}  # (pack_date, harvest_date) → { meta + product totals }
     for row in data:
         pack_date = parse_date(row.get("PackDate"))
         if not pack_date:
             continue
+        harvest_date = parse_date(row.get("HarvestDate"))
+        key = (pack_date, harvest_date)
 
-        lot_number = str(row.get("PackLot", "")).strip()
-        if not lot_number:
-            lot_number = pack_date.replace("-", "")
-
-        if lot_number not in lots:
-            lots[lot_number] = {
+        if key not in lots:
+            lots[key] = {
                 "pack_date": pack_date,
-                "harvest_date": parse_date(row.get("HarvestDate")),
+                "harvest_date": harvest_date,
                 "best_by": parse_date(row.get("BestByDate")),
                 "reported_by": str(row.get("ReportedBy", "")).strip().lower() or None,
                 "products": defaultdict(float),
@@ -355,15 +359,15 @@ def migrate_pack_lettuce(supabase, gc, product_map):
         for col, product_id in LETTUCE_PRODUCT_COLS.items():
             qty = safe_numeric(row.get(col))
             if qty > 0:
-                lots[lot_number]["products"][product_id] += qty
+                lots[key]["products"][product_id] += qty
 
-        # Use best_by / reported_by from whichever row has it
-        if not lots[lot_number]["best_by"]:
-            lots[lot_number]["best_by"] = parse_date(row.get("BestByDate"))
-        if not lots[lot_number]["reported_by"]:
-            lots[lot_number]["reported_by"] = str(row.get("ReportedBy", "")).strip().lower() or None
+        # Use best_by / reported_by from whichever row has it.
+        if not lots[key]["best_by"]:
+            lots[key]["best_by"] = parse_date(row.get("BestByDate"))
+        if not lots[key]["reported_by"]:
+            lots[key]["reported_by"] = str(row.get("ReportedBy", "")).strip().lower() or None
 
-    print(f"  Merged to {len(lots)} unique lots")
+    print(f"  Merged {len(data)} sheet rows to {len(lots)} unique (pack_date, harvest_date) lots")
 
     # Clear existing (farm-scoped)
     print("\nClearing pack_lot_item (lettuce)...")
@@ -378,10 +382,17 @@ def migrate_pack_lettuce(supabase, gc, product_map):
 
     # Insert lots
     lot_rows = []
-    sorted_lot_numbers = sorted(lots.keys())
-    for lot_number in sorted_lot_numbers:
-        info = lots[lot_number]
+    sorted_keys = sorted(lots.keys())  # (pack_date, harvest_date) tuples sort cleanly
+    for key in sorted_keys:
+        info = lots[key]
         reported_by = info["reported_by"] or AUDIT_USER
+        # lot_number = {pack YYYYMMDD}-{harvest YYYYMMDD}, or just
+        # {pack YYYYMMDD} when harvest_date is missing.
+        pack_compact = info["pack_date"].replace("-", "")
+        if info["harvest_date"]:
+            lot_number = f"{pack_compact}-{info['harvest_date'].replace('-', '')}"
+        else:
+            lot_number = pack_compact
         lot_rows.append({
             "org_id": ORG_ID,
             "farm_id": "Lettuce",
@@ -396,8 +407,8 @@ def migrate_pack_lettuce(supabase, gc, product_map):
 
     # Insert items
     item_rows = []
-    for idx, lot_number in enumerate(sorted_lot_numbers):
-        info = lots[lot_number]
+    for idx, key in enumerate(sorted_keys):
+        info = lots[key]
         lot_id = inserted_lots[idx]["id"]
         pack_date = info["pack_date"]
         best_by = info["best_by"]
