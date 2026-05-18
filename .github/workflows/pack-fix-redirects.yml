@@ -1,0 +1,103 @@
+name: Pack Fix Redirects (one-shot)
+
+# Follow-up to pack-module-rewrite that handles the two cross-module
+# "redirect" migrations the original rewrite missed:
+#   20260518120900_sales_po_fulfillment_redirect.sql
+#   20260518121000_sales_sps_carton_redirect.sql
+#
+# These reference pack_session and fail on prod (where pack_session
+# didn't exist when they tried to apply). Replaced by the idempotent
+# 20260518231000_sales_pack_session_fks.sql that runs AFTER the
+# consolidated pack migration.
+#
+# Steps:
+#   1. Repair-revert 20260518120900 + 20260518121000 on dev and prod
+#      so they no longer block db push.
+#   2. Delete the two redirect files from the repo.
+#   3. Commit + push (the new 20260518231000_sales_pack_session_fks.sql
+#      is already in the working tree).
+#   4. Run supabase db push --include-all on dev, then on prod.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      DEV_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      DEV_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      PROD_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF_PROD }}
+      PROD_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD_PROD }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Repair-revert redirects on DEV
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.DEV_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "$DEV_PROJECT_REF"
+          supabase migration repair --status reverted 20260518120900 20260518121000 || true
+
+      - name: Repair-revert redirects on PROD
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.PROD_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "$PROD_PROJECT_REF"
+          supabase migration repair --status reverted 20260518120900 20260518121000 || true
+
+      - name: Delete the two redirect files + commit
+        run: |
+          set -euo pipefail
+          git rm -f supabase/migrations/20260518120900_sales_po_fulfillment_redirect.sql || true
+          git rm -f supabase/migrations/20260518121000_sales_sps_carton_redirect.sql     || true
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+          else
+            git commit -m "$(cat <<'EOF'
+            chore(pack): delete redirect files, replaced by 20260518231000
+
+            The two sales-side "redirect" migrations referenced pack_session
+            and failed on prod (no pack_session there yet). They were
+            replaced by an idempotent successor that runs AFTER the
+            consolidated pack migration. Their versions have been
+            --status reverted on both dev and prod in this same workflow
+            run.
+            EOF
+            )"
+            git push origin main
+          fi
+
+      - name: Apply pending migrations on DEV
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.DEV_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "$DEV_PROJECT_REF"
+          supabase db push --include-all
+
+      - name: Apply pending migrations on PROD
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.PROD_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "$PROD_PROJECT_REF"
+          supabase db push --include-all

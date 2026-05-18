@@ -1418,18 +1418,6 @@ ALTER TABLE ONLY "public"."pack_shelf_life"
 
 
 
-ALTER TABLE ONLY "public"."sales_po_fulfillment"
-    ADD CONSTRAINT "sales_po_fulfillment_pack_session_id_fkey" FOREIGN KEY ("pack_session_id") REFERENCES "public"."pack_session"("id");
-
-
-
-
-ALTER TABLE ONLY "public"."sales_sps_po_asn_carton"
-    ADD CONSTRAINT "sales_sps_po_asn_carton_pack_session_id_fkey" FOREIGN KEY ("pack_session_id") REFERENCES "public"."pack_session"("id");
-
-
-
-
 ALTER TABLE "public"."pack_fail_category" ENABLE ROW LEVEL SECURITY;
 
 

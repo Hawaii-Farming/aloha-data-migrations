@@ -49,7 +49,22 @@ print(f"Parsed {len(statements)} statements from {SRC}")
 target_re = re.compile(r'"public"\."(pack_[a-z_]+)"')
 
 
+# Statements whose TARGET is a non-pack table (e.g. ALTER TABLE
+# sales_po_fulfillment ADD ... REFERENCES pack_session) get matched
+# by the generic regex below because pack_session appears somewhere
+# in the body. Explicitly exclude them -- cross-module FKs belong in
+# the OTHER module's migration, not the pack consolidated file.
+NON_PACK_TARGET_RE = re.compile(
+    r'^\s*ALTER TABLE(?:\s+ONLY)?\s+"public"\."(?!pack_)[a-z_]+"',
+    re.M | re.I,
+)
+
+
 def is_pack_target(stmt):
+    # Hard-exclude ALTER TABLE statements targeting non-pack tables.
+    if NON_PACK_TARGET_RE.search(stmt):
+        return False
+
     # CREATE FUNCTION public.pack_*  -> target is the function name.
     m = re.search(r'CREATE (?:OR REPLACE )?FUNCTION\s+"public"\."(pack_[a-z_]+)"', stmt, re.I)
     if m:
