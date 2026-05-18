@@ -55,41 +55,32 @@ jobs:
         run: |
           mkdir -p docs/schema
           # Use supabase db dump (bundles a server-version-matched
-          # pg_dump). --schema public dumps everything in public; we
-          # post-filter to pack_* with awk to keep output focused.
-          supabase db dump --linked --schema public > /tmp/full_public_dump.sql
+          # pg_dump). Save the full public-schema dump to the repo;
+          # the consolidation pass that follows reads pack_* sections
+          # out of this file.
+          supabase db dump --linked --schema public \
+            > docs/schema/dev_public_dump.sql
 
-          # Carve out only the pack_* sections. pg_dump groups blocks
-          # by object with `-- Name: <obj>; Type: ...` headers; awk on
-          # those headers, emit the block if the object name starts with
-          # "pack_".
-          awk '
-            /^-- Name: pack_/ { keep = 1; print; next }
-            /^-- Name: / { keep = 0 }
-            keep { print }
-          ' /tmp/full_public_dump.sql > docs/schema/pack_current_dump.sql
-
-          echo "=== dump byte count ==="
-          wc -c docs/schema/pack_current_dump.sql
-          echo "=== first 20 lines ==="
-          head -20 docs/schema/pack_current_dump.sql
-          echo "=== objects captured ==="
-          grep -c '^-- Name: pack_' docs/schema/pack_current_dump.sql || true
+          echo "=== total byte count ==="
+          wc -c docs/schema/dev_public_dump.sql
+          echo "=== first 30 lines ==="
+          head -30 docs/schema/dev_public_dump.sql
+          echo "=== pack_ mentions ==="
+          grep -c "pack_" docs/schema/dev_public_dump.sql || true
 
       - name: Commit dump
         run: |
-          if git diff --quiet docs/schema/pack_current_dump.sql; then
+          if git diff --quiet docs/schema/dev_public_dump.sql; then
             echo "No changes to commit."
             exit 0
           fi
-          git add docs/schema/pack_current_dump.sql
+          git add docs/schema/dev_public_dump.sql
           git commit -m "$(cat <<'EOF'
-          chore(schema): capture current dev pack schema for consolidation
+          chore(schema): capture current dev public-schema dump
 
-          pg_dump --schema-only of every public.pack_* table + the
-          pack_session_summary_v view, sourced from dev (which carries
-          the newest pack_session-model schema). Reference file for the
-          pack-module consolidation rewrite; not a migration.
+          Full supabase db dump --schema public from dev. Reference file
+          for the pack-module consolidation rewrite (pack_* sections
+          are carved out by hand in the rewrite); not a migration.
           EOF
           )"
           git push origin main
