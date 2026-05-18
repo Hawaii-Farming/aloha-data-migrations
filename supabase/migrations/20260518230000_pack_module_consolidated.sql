@@ -1,4 +1,4 @@
--- pack module — consolidated schema (2026-05-18)
+-- pack module â€” consolidated schema (2026-05-18)
 -- ==================================================================
 -- This file is the canonical definition of every pack-related object
 -- in the database. It REPLACES all prior pack_* migration files,

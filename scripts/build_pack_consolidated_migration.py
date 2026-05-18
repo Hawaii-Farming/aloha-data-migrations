@@ -183,7 +183,7 @@ def build():
 
 """
 
-    src_text = SRC.read_text()
+    src_text = SRC.read_text(encoding="utf-8")
     # Skip the carve script's leading comment header (first non-blank block).
     lines = src_text.splitlines(keepends=True)
     start = 0
@@ -195,7 +195,7 @@ def build():
     body = "".join(lines[start:])
 
     DST.parent.mkdir(parents=True, exist_ok=True)
-    DST.write_text(header + "".join(drops) + body_header + body)
+    DST.write_text(header + "".join(drops) + body_header + body, encoding="utf-8")
     print(f"Wrote {DST}")
     print(f"  {DST.stat().st_size} bytes, ~{sum(1 for _ in DST.read_text().splitlines())} lines")
 
