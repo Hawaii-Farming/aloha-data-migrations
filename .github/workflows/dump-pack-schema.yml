@@ -1,0 +1,96 @@
+name: Dump Pack Schema (one-shot)
+
+# pg_dump --schema-only of every public table whose name starts with
+# pack_, plus the pack_session_summary_v view. Writes the output to
+# docs/schema/pack_current_dump.sql and commits.
+#
+# Used as the reference for the pack-module consolidation rewrite --
+# several pack tables exist on dev but have no committed CREATE
+# migration (pack_moisture, pack_session_cases/fails/labor_hour,
+# pack_fail_category) so this dump is the source of truth.
+#
+# Reads dev (not prod) because dev has the newest pack_session-model
+# schema; prod is still on the older pack_lot/pack_productivity shape
+# and is the laggard.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      DEV_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install pg_dump (PostgreSQL 17 client)
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] \
+            https://apt.postgresql.org/pub/repos/apt/ $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: pg_dump pack_* schema from dev
+        run: |
+          mkdir -p docs/schema
+          # Dump every public.pack_* table (DDL only) + the summary view.
+          # --no-owner / --no-privileges keep ownership lines out of the
+          # output so it diffs cleanly across rebuilds.
+          pg_dump \
+            --schema-only \
+            --no-owner \
+            --no-privileges \
+            --schema=public \
+            --table='public.pack_*' \
+            "$DEV_DB_URL" \
+            > docs/schema/pack_current_dump.sql
+
+          # Append the summary view (pg_dump --table doesn't include views by
+          # default for the * pattern in older client versions; do it
+          # explicitly).
+          psql "$DEV_DB_URL" -tA -c \
+            "SELECT 'CREATE OR REPLACE VIEW public.' || c.relname || E' AS\n' || pg_get_viewdef(c.oid, true) || ';\n'
+             FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+             WHERE n.nspname = 'public' AND c.relkind = 'v' AND c.relname LIKE 'pack_%';" \
+            >> docs/schema/pack_current_dump.sql
+
+          echo "=== dump byte count ==="
+          wc -c docs/schema/pack_current_dump.sql
+          echo "=== first 20 lines ==="
+          head -20 docs/schema/pack_current_dump.sql
+
+      - name: Commit dump
+        run: |
+          if git diff --quiet docs/schema/pack_current_dump.sql; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git add docs/schema/pack_current_dump.sql
+          git commit -m "$(cat <<'EOF'
+          chore(schema): capture current dev pack schema for consolidation
+
+          pg_dump --schema-only of every public.pack_* table + the
+          pack_session_summary_v view, sourced from dev (which carries
+          the newest pack_session-model schema). Reference file for the
+          pack-module consolidation rewrite; not a migration.
+          EOF
+          )"
+          git push origin main
