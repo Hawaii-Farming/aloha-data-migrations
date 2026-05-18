@@ -70,11 +70,11 @@ jobs:
 
       - name: Commit dump
         run: |
-          if git diff --quiet docs/schema/dev_public_dump.sql; then
+          git add docs/schema/dev_public_dump.sql
+          if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
           fi
-          git add docs/schema/dev_public_dump.sql
           git commit -m "$(cat <<'EOF'
           chore(schema): capture current dev public-schema dump
 
