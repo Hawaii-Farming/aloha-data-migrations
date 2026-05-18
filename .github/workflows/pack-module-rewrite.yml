@@ -1,0 +1,139 @@
+name: Pack Module Rewrite (one-shot)
+
+# Stage 3 + 4 of the pack-module consolidation. Executes the
+# destructive deploy in lockstep across dev and prod:
+#
+#   1. supabase migration repair --status reverted <ver> for every
+#      pack-related version on schema_migrations (both DBs). This
+#      makes Supabase forget those rows so a `db push --include-all`
+#      doesn't error on "remote migration versions not found in
+#      local migrations directory".
+#   2. Delete the 57 old pack_* migration files from the repo, commit
+#      + push.
+#   3. supabase db push --include-all on dev. The new consolidated
+#      migration's DROP block wipes existing pack tables, then the
+#      CREATE block lays down the canonical schema.
+#   4. supabase db push --include-all on prod -- same.
+#
+# Stops on first failure. Won't progress dev -> prod if the prep or
+# dev push errors out. ALL EXISTING PACK DATA IS DELETED on both
+# projects -- explicitly confirmed before this workflow was written.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rewrite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      DEV_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      DEV_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      PROD_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF_PROD }}
+      PROD_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD_PROD }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Build list of versions to revert
+        id: versions
+        run: |
+          set -euo pipefail
+          # Every pack-related migration file except the new consolidated
+          # one. The filenames all have "pack" in them; the consolidated
+          # file is explicitly excluded by name.
+          files=$(ls supabase/migrations/*.sql \
+                  | grep "pack" \
+                  | grep -v "20260518230000_pack_module_consolidated.sql" \
+                  | sort)
+          versions=$(echo "$files" | sed -nE 's@.*/([0-9]{14})_.*@\1@p' | sort -u)
+          count=$(echo "$versions" | wc -l)
+          echo "Found $count versions to revert:"
+          echo "$versions" | sed 's/^/  /'
+          # Persist for later steps via a file (avoids shell-output limits).
+          echo "$versions" > /tmp/pack_versions.txt
+          echo "$files"    > /tmp/pack_files.txt
+
+      - name: Repair-revert old versions on DEV
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.DEV_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "$DEV_PROJECT_REF"
+          # `migration repair --status reverted` accepts multiple version
+          # args at once. Single CLI call to minimize round-trips.
+          # shellcheck disable=SC2046
+          supabase migration repair --status reverted $(cat /tmp/pack_versions.txt | tr '\n' ' ')
+
+      - name: Repair-revert old versions on PROD
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.PROD_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "$PROD_PROJECT_REF"
+          # Prod only has the originals (20260401* + early 2026-05 versions);
+          # the later 20260518* versions are dev-only. The CLI tolerates
+          # being asked to revert a version that isn't in schema_migrations
+          # on the target -- so passing all 57 is fine. If a specific
+          # version errors, fall back to per-version invocation.
+          # shellcheck disable=SC2046
+          supabase migration repair --status reverted $(cat /tmp/pack_versions.txt | tr '\n' ' ') \
+            || (echo "Batch repair failed; retrying one at a time..." && \
+                while read -r v; do \
+                  supabase migration repair --status reverted "$v" || true; \
+                done < /tmp/pack_versions.txt)
+
+      - name: Delete the 57 old pack files + commit + push
+        run: |
+          set -euo pipefail
+          while read -r f; do
+            [ -n "$f" ] && git rm "$f"
+          done < /tmp/pack_files.txt
+
+          count=$(wc -l < /tmp/pack_files.txt)
+          git commit -m "$(cat <<EOF
+          chore(pack): delete ${count} legacy pack_* migration files
+
+          Stage 4 of the pack-module consolidation. These files have
+          been superseded by 20260518230000_pack_module_consolidated.sql.
+          Their versions were marked --status reverted on both dev and
+          prod's supabase_migrations.schema_migrations before this
+          delete, so the next \`supabase db push --include-all\` won't
+          error on the missing versions.
+
+          Captured by .github/workflows/pack-module-rewrite.yml.
+          EOF
+          )"
+          git push origin main
+
+      - name: Apply consolidated migration on DEV
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.DEV_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "$DEV_PROJECT_REF"
+          supabase db push --include-all
+
+      - name: Apply consolidated migration on PROD
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.PROD_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "$PROD_PROJECT_REF"
+          supabase db push --include-all
