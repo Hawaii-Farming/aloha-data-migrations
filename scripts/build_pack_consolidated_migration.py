@@ -181,6 +181,13 @@ def build():
 -- Recreate from canonical state (sourced from dev dump 2026-05-18).
 -- ==================================================================
 
+-- check_function_bodies = false so the plpgsql validator doesn't fail
+-- when the function body references a pack_* table that hasn't been
+-- CREATEd yet in this same migration (pg_dump emits functions first,
+-- tables second). Without this, CREATE FUNCTION trips on
+-- `relation "public.pack_shelf_life_metric" does not exist`.
+SET check_function_bodies = false;
+
 """
 
     src_text = SRC.read_text(encoding="utf-8")

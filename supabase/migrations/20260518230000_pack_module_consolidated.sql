@@ -126,6 +126,13 @@ DROP FUNCTION IF EXISTS public.pack_session_product_run_ensure_lot() CASCADE;
 -- Recreate from canonical state (sourced from dev dump 2026-05-18).
 -- ==================================================================
 
+-- check_function_bodies = false so the plpgsql validator doesn't fail
+-- when the function body references a pack_* table that hasn't been
+-- CREATEd yet in this same migration (pg_dump emits functions first,
+-- tables second). Without this, CREATE FUNCTION trips on
+-- `relation "public.pack_shelf_life_metric" does not exist`.
+SET check_function_bodies = false;
+
 CREATE OR REPLACE FUNCTION "public"."pack_session_cases_guard_immutable"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     AS $$
