@@ -40,11 +40,40 @@ if buf:
 
 print(f"Parsed {len(statements)} statements from {SRC}")
 
-# Keep any statement that mentions a pack_ identifier (table, fn, etc.)
-# Anchor on word boundary so we don't pick up unrelated like
-# "backpack_" or attribute names.
-pack_re = re.compile(r"\bpack_[a-z_]+", re.I)
-pack_stmts = [s for s in statements if pack_re.search(s)]
+# Keep statements whose TARGET (the object being created/altered) is
+# a pack_* table/function/view. The pg_dump output qualifies object
+# names as "public"."<name>", and the FIRST such occurrence in a
+# statement is always the target. Anything later is a reference
+# (column, FK target, etc.) -- we don't want to pull in a sales_product
+# CREATE TABLE just because it has a `pack_per_case` column.
+target_re = re.compile(r'"public"\."(pack_[a-z_]+)"')
+
+
+def is_pack_target(stmt):
+    # CREATE FUNCTION public.pack_*  -> target is the function name.
+    m = re.search(r'CREATE (?:OR REPLACE )?FUNCTION\s+"public"\."(pack_[a-z_]+)"', stmt, re.I)
+    if m:
+        return True
+    # CREATE TRIGGER ... ON public.pack_*  -> the table after ON is the target.
+    m = re.search(r'CREATE TRIGGER\s+\S+\s+.*?\s+ON\s+"public"\."(pack_[a-z_]+)"', stmt, re.I | re.S)
+    if m:
+        return True
+    # CREATE POLICY ... ON public.pack_*  -> the table after ON is the target.
+    m = re.search(r'CREATE POLICY\s+\S+\s+ON\s+"public"\."(pack_[a-z_]+)"', stmt, re.I)
+    if m:
+        return True
+    # GRANT ... ON ... public.pack_*  -> the table after ON is the target.
+    m = re.search(r'(?:GRANT|REVOKE)\s+.*?\sON\s+(?:TABLE\s+)?"public"\."(pack_[a-z_]+)"', stmt, re.I | re.S)
+    if m:
+        return True
+    # Generic: first "public"."<name>" must start with pack_.
+    m = target_re.search(stmt)
+    if m and m.group(1).startswith("pack_"):
+        return True
+    return False
+
+
+pack_stmts = [s for s in statements if is_pack_target(s)]
 
 print(f"  {len(pack_stmts)} statements mention pack_*")
 
