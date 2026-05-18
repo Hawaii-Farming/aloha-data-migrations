@@ -18,12 +18,18 @@ Rerunnable: clears and reinserts all data on each run.
 
 import os
 import re
+import sys
 from collections import defaultdict
 from datetime import datetime
+from pathlib import Path
 
 import gspread
 from google.oauth2.service_account import Credentials
 from supabase import create_client
+
+# Sibling helper for the schema-cutover guard below.
+sys.path.insert(0, str(Path(__file__).parent))
+from _pg import get_pg_conn  # noqa: E402
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://kfwqtaazdankxmdlqdak.supabase.co")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
@@ -266,6 +272,30 @@ def migrate_fail_categories(supabase):
 # PRODUCTIVITY MIGRATION
 # ─────────────────────────────────────────────────────────────
 
+def _legacy_columns_present():
+    """Check whether pack_productivity_hour still has the legacy columns this
+    script writes to. The 20260514230400 schema cutover dropped cases_packed
+    + leftover_pounds + ops_task_tracker_id and added a required
+    pack_session_id FK -- once that's deployed, this whole loader is
+    structurally incompatible with the live schema and should be skipped
+    until rewritten against the new pack_session model.
+
+    Returns True when ALL three legacy columns exist (= safe to load),
+    False otherwise.
+    """
+    with get_pg_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """SELECT array_agg(column_name)
+                     FROM information_schema.columns
+                    WHERE table_schema = 'public'
+                      AND table_name   = 'pack_productivity_hour'
+                      AND column_name IN ('cases_packed', 'leftover_pounds', 'ops_task_tracker_id')"""
+            )
+            cols = cur.fetchone()[0] or []
+    return len(cols) == 3
+
+
 def migrate_pack_productivity(supabase, gc):
     """Migrate pack_L_prod → ops_task_tracker + pack_productivity_hour + pack_productivity_hour_fail.
 
@@ -276,7 +306,20 @@ def migrate_pack_productivity(supabase, gc):
     4. Creates one ops_task_tracker per product per day
     5. Creates pack_productivity_hour rows with delta cases, linked to the tracker
     6. Creates pack_productivity_hour_fail rows for non-zero fail counts
+
+    Skips entirely if the target DB has moved to the new pack_session model
+    (cases_packed / leftover_pounds / ops_task_tracker_id dropped from
+    pack_productivity_hour by 20260514230400). On those DBs the data
+    should be entered through the new pack_session app flow instead.
     """
+    if not _legacy_columns_present():
+        print(
+            "  SKIP: pack_productivity_hour has been migrated to the "
+            "pack_session model (legacy columns dropped). Skipping legacy "
+            "sheet load -- data flows in through the pack_session app now."
+        )
+        return
+
     wb = gc.open_by_key(PACK_SHEET_ID)
     data = wb.worksheet("pack_L_prod").get_all_records()
 
