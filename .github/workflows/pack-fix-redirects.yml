@@ -72,17 +72,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Nothing to commit."
           else
-            git commit -m "$(cat <<'EOF'
-            chore(pack): delete redirect files, replaced by 20260518231000
-
-            The two sales-side "redirect" migrations referenced pack_session
-            and failed on prod (no pack_session there yet). They were
-            replaced by an idempotent successor that runs AFTER the
-            consolidated pack migration. Their versions have been
-            --status reverted on both dev and prod in this same workflow
-            run.
-            EOF
-            )"
+            git commit -m "chore(pack): delete redirect files, replaced by 20260518231000_sales_pack_session_fks.sql; versions reverted on both DBs"
             git push origin main
           fi
 
