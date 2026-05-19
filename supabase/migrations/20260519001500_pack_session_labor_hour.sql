@@ -8,20 +8,19 @@ CREATE TABLE IF NOT EXISTS "public"."pack_session_labor_hour" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "org_id" "text" NOT NULL,
     "farm_id" "text" NOT NULL,
+    "pack_date" "date" NOT NULL,
     "pack_end_hour" timestamp with time zone NOT NULL,
     "catchers" integer DEFAULT 0 NOT NULL,
     "packers" integer DEFAULT 0 NOT NULL,
     "mixers" integer DEFAULT 0 NOT NULL,
     "boxers" integer DEFAULT 0 NOT NULL,
+    "fsafe_metal_detected" boolean DEFAULT false NOT NULL,
     "fsafe_metal_detected_at" timestamp with time zone,
-    "notes" "text",
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "created_by" "text",
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_by" "text",
-    "is_deleted" boolean DEFAULT false NOT NULL,
-    "fsafe_metal_detected" boolean DEFAULT false NOT NULL,
-    "pack_date" "date" NOT NULL
+    "is_deleted" boolean DEFAULT false NOT NULL
 );
 
 

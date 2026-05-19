@@ -1,0 +1,124 @@
+name: Pack Rerun With Column Reorder (one-shot)
+
+# Re-applies the pack migration files after a column reorder.
+#
+# PostgreSQL doesn't honor column-order changes on `CREATE TABLE IF
+# NOT EXISTS` against an existing table, so we drop + recreate.
+#
+# Pack data is wiped on both projects (confirmed up-front).
+#
+# Steps (in lockstep on dev then prod):
+#   1. DROP pack_session_summary_v + pack_session_cases / fails /
+#      labor_hour / leftover + pack_session  CASCADE. This also
+#      drops the cross-module FK constraints on sales_po_fulfillment
+#      and sales_sps_po_asn_carton.
+#   2. supabase migration repair --status reverted on the 6 pack
+#      versions (1200..1700) AND the old cross-module FK version
+#      20260518231000 (the file was renamed to 20260519002200 so it
+#      now runs after the pack files).
+#   3. supabase db push --include-all   re-applies in version order:
+#         20260519001200  pack_session
+#         20260519001300  pack_session_cases
+#         20260519001400  pack_session_fails
+#         20260519001500  pack_session_labor_hour
+#         20260519001600  pack_session_leftover
+#         20260519001700  pack_session_summary_v
+#         20260519002200  sales_pack_session_fks  (cross-module)
+#   4. Verify: db push --include-all reports "up to date" afterwards.
+
+on:
+  workflow_dispatch:
+
+env:
+  REVERT_VERSIONS: >-
+    20260518231000
+    20260519001200
+    20260519001300
+    20260519001400
+    20260519001500
+    20260519001600
+    20260519001700
+  DROP_SQL: |
+    DROP VIEW IF EXISTS public.pack_session_summary_v CASCADE;
+    DROP TABLE IF EXISTS public.pack_session_cases CASCADE;
+    DROP TABLE IF EXISTS public.pack_session_fails CASCADE;
+    DROP TABLE IF EXISTS public.pack_session_labor_hour CASCADE;
+    DROP TABLE IF EXISTS public.pack_session_leftover CASCADE;
+    DROP TABLE IF EXISTS public.pack_session CASCADE;
+
+jobs:
+  rerun:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      DEV_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      DEV_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      DEV_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      PROD_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF_PROD }}
+      PROD_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD_PROD }}
+      PROD_DB_URL: ${{ secrets.SUPABASE_DB_URL_PROD }}
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Install psycopg2 (for the DROP step)
+        run: pip install psycopg2-binary
+
+      - name: Drop pack_session tree on DEV
+        run: |
+          python - <<'PY'
+          import os, psycopg2
+          conn = psycopg2.connect(os.environ["DEV_DB_URL"])
+          conn.autocommit = True
+          with conn.cursor() as cur:
+              cur.execute("""${{ env.DROP_SQL }}""")
+          print("dev drops done")
+          PY
+
+      - name: Drop pack_session tree on PROD
+        run: |
+          python - <<'PY'
+          import os, psycopg2
+          conn = psycopg2.connect(os.environ["PROD_DB_URL"])
+          conn.autocommit = True
+          with conn.cursor() as cur:
+              cur.execute("""${{ env.DROP_SQL }}""")
+          print("prod drops done")
+          PY
+
+      - name: Revert versions on DEV
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.DEV_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "$DEV_PROJECT_REF"
+          supabase migration repair --status reverted $REVERT_VERSIONS
+
+      - name: Revert versions on PROD
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.PROD_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "$PROD_PROJECT_REF"
+          supabase migration repair --status reverted $REVERT_VERSIONS
+
+      - name: Re-apply on DEV
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.DEV_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "$DEV_PROJECT_REF"
+          supabase db push --include-all
+
+      - name: Re-apply on PROD
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.PROD_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "$PROD_PROJECT_REF"
+          supabase db push --include-all

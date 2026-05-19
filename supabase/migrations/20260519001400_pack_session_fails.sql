@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS "public"."pack_session_fails" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "org_id" "text" NOT NULL,
     "farm_id" "text" NOT NULL,
+    "pack_date" "date" NOT NULL,
+    "pack_end_hour" timestamp with time zone NOT NULL,
     "pack_fail_category_id" "text" NOT NULL,
     "fail_count" integer DEFAULT 0 NOT NULL,
     "notes" "text",
@@ -15,9 +17,7 @@ CREATE TABLE IF NOT EXISTS "public"."pack_session_fails" (
     "created_by" "text",
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_by" "text",
-    "is_deleted" boolean DEFAULT false NOT NULL,
-    "pack_date" "date" NOT NULL,
-    "pack_end_hour" timestamp with time zone NOT NULL
+    "is_deleted" boolean DEFAULT false NOT NULL
 );
 
 

@@ -8,16 +8,16 @@ CREATE TABLE IF NOT EXISTS "public"."pack_session_cases" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "org_id" "text" NOT NULL,
     "farm_id" "text" NOT NULL,
+    "pack_date" "date" NOT NULL,
+    "harvest_date" "date" NOT NULL,
+    "pack_end_hour" timestamp with time zone NOT NULL,
+    "sales_product_id" "text" NOT NULL,
     "cases_packed" integer DEFAULT 0 NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "created_by" "text",
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_by" "text",
-    "is_deleted" boolean DEFAULT false NOT NULL,
-    "pack_date" "date" NOT NULL,
-    "pack_end_hour" timestamp with time zone NOT NULL,
-    "sales_product_id" "text" NOT NULL,
-    "harvest_date" "date" NOT NULL
+    "is_deleted" boolean DEFAULT false NOT NULL
 );
 
 

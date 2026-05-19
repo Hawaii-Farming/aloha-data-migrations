@@ -8,15 +8,15 @@ CREATE TABLE IF NOT EXISTS "public"."pack_session_leftover" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "org_id" "text" NOT NULL,
     "farm_id" "text" NOT NULL,
+    "pack_date" "date" NOT NULL,
     "leftover_lettuce" numeric DEFAULT 0 NOT NULL,
+    "leftover_watercress" numeric DEFAULT 0 NOT NULL,
+    "leftover_arugula" numeric DEFAULT 0 NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "created_by" "text",
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_by" "text",
-    "is_deleted" boolean DEFAULT false NOT NULL,
-    "pack_date" "date" NOT NULL,
-    "leftover_watercress" numeric DEFAULT 0 NOT NULL,
-    "leftover_arugula" numeric DEFAULT 0 NOT NULL
+    "is_deleted" boolean DEFAULT false NOT NULL
 );
 
 
