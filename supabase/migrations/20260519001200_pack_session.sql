@@ -12,14 +12,14 @@ CREATE TABLE IF NOT EXISTS "public"."pack_session" (
     "pack_date" "date" NOT NULL,
     "harvest_date" "date" NOT NULL,
     "best_by_date" "date",
-    "pack_lot" "text" NOT NULL
+    "pack_lot" "text" NOT NULL,
     "started_at" timestamp with time zone,
     "stopped_at" timestamp with time zone,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "created_by" "text",
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_by" "text",
-    "is_deleted" boolean DEFAULT false NOT NULL,
+    "is_deleted" boolean DEFAULT false NOT NULL
 );
 
 
