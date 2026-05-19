@@ -1,0 +1,106 @@
+name: Pack Split Bookkeeping (one-shot)
+
+# Swaps the migration history bookkeeping so the 13 new per-table
+# pack files (20260519000000..20260519002100) replace the prior
+# consolidated migration (20260518230000) on both dev and prod.
+#
+# The actual DB schema is UNCHANGED -- the per-table files were
+# produced by splitting the consolidated migration, so the live
+# state already matches what the new files would create. We just
+# tell Supabase's schema_migrations:
+#   * forget about 20260518230000  (repair --status reverted)
+#   * pretend the 13 new versions have already been applied
+#     (repair --status applied -- no SQL runs)
+#
+# After this workflow runs, a `supabase db push --include-all` is a
+# no-op on both projects, and a fresh DB rebuilt from the migration
+# files will create the same canonical pack schema via the 13 files
+# in dependency order.
+#
+# Finally, deletes the consolidated file from the repo.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  OLD_VERSION: "20260518230000"
+  NEW_VERSIONS: >-
+    20260519000000
+    20260519001000
+    20260519001100
+    20260519001200
+    20260519001300
+    20260519001400
+    20260519001500
+    20260519001600
+    20260519001700
+    20260519001800
+    20260519001900
+    20260519002000
+    20260519002100
+
+jobs:
+  swap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      DEV_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      DEV_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      PROD_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF_PROD }}
+      PROD_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD_PROD }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bookkeeping swap on DEV
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.DEV_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "$DEV_PROJECT_REF"
+          supabase migration repair --status reverted "$OLD_VERSION" || true
+          supabase migration repair --status applied $NEW_VERSIONS
+
+      - name: Bookkeeping swap on PROD
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.PROD_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "$PROD_PROJECT_REF"
+          supabase migration repair --status reverted "$OLD_VERSION" || true
+          supabase migration repair --status applied $NEW_VERSIONS
+
+      - name: Delete the consolidated file + commit
+        run: |
+          set -euo pipefail
+          git rm -f supabase/migrations/20260518230000_pack_module_consolidated.sql || true
+          if git diff --cached --quiet; then
+            echo "Nothing to commit (consolidated already gone)."
+          else
+            git commit -m "chore(pack): delete consolidated file in favor of 13 per-table migrations (20260519000000..20260519002100)"
+            git push origin main
+          fi
+
+      - name: Verify zero drift on DEV
+        env:
+          SUPABASE_DB_PASSWORD: ${{ env.DEV_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "$DEV_PROJECT_REF"
+          # db push with --include-all should report "Remote database is up to date"
+          # since all 13 new versions are already marked applied.
+          supabase db push --include-all
