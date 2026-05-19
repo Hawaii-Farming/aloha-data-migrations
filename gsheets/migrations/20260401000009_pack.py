@@ -1,20 +1,24 @@
 """
 Migrate Pack Data
 ==================
-Migrates sales_product (from sales sheet) and pack_lot / pack_lot_item
-(from pack sheet) into Supabase.
+Migrates sales_product, cuke pack data, shelf-life, and dryer-result
+data from legacy Google Sheets into Supabase. Lettuce pack data is
+handled by 010 (pack_L_prod is the canonical hourly source).
+
+Pack model: pack_session + pack_session_cases (2026-05-19 rewrite —
+the prior pack_lot / pack_lot_item tables are gone).
 
 Sources:
   - sales_product: https://docs.google.com/spreadsheets/d/1lSWWLxyD0l83HfuiNI_iud6F9hopY4hoL0F_4P9nATc
       - sales_product (tab gid=0): base product info (code, name, farm, lbs/case)
-      - sales_product_specs (tab gid=2028451791): shelf life, UPC, images, description fields
-      - sales_product_measurements (tab gid=2087257901): packaging hierarchy (item_uom, pack_uom, etc.)
-      - sales_sysco_product_specs (tab gid=1855835306): case dims, temps, GTIN, TI/HI, flags
-  - pack_lot + pack_lot_item:
-      - Lettuce: https://docs.google.com/spreadsheets/d/1XEwjbU_NKNmoUED4w5iuaGV_ilovCJg4f2AkA9lB2cg
-          - pack_L_packlot: 451 rows → pack_lot (lettuce) + pack_lot_item per product column
-      - Cuke: same spreadsheet
-          - pack_C_prod: 10394 rows → pack_lot (cuke) summed by date + pack_lot_item per product column
+      - sales_product_specs: shelf life, UPC, images, description fields
+      - sales_product_measurements: packaging hierarchy (item_uom, pack_uom, etc.)
+      - sales_sysco_product_specs: case dims, temps, GTIN, TI/HI, flags
+  - Cuke pack: https://docs.google.com/spreadsheets/d/1XEwjbU_NKNmoUED4w5iuaGV_ilovCJg4f2AkA9lB2cg
+      - pack_C_prod: aggregated by PackDate → pack_session + pack_session_cases
+        (one row per pack_date × sales_product; pack_end_hour=23:59,
+         harvest_date=pack_date).
+  - Shelf life + dryer: same spreadsheet (lettuce farm tabs).
 
 Usage:
     python scripts/migrations/20260401000009_pack.py
@@ -25,7 +29,7 @@ Rerunnable: clears and reinserts all data on each run.
 import os
 import re
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import gspread
 from google.oauth2.service_account import Credentials
@@ -48,16 +52,6 @@ ORG_ID = "hawaii_farming"
 
 SALES_SHEET_ID = "1lSWWLxyD0l83HfuiNI_iud6F9hopY4hoL0F_4P9nATc"
 PACK_SHEET_ID = "1XEwjbU_NKNmoUED4w5iuaGV_ilovCJg4f2AkA9lB2cg"
-
-# Lettuce product columns → sales_product.id
-LETTUCE_PRODUCT_COLS = {
-    "LRCases": "LR",
-    "LWCases": "LW",
-    "WRCases": "WR",
-    "ARCases": "AR",
-    "LFCases": "LF",
-    "AFCases": "AF",
-}
 
 # Cuke product columns → sales_product.id
 CUKE_PRODUCT_COLS = {
@@ -250,15 +244,21 @@ def migrate_sales_product(supabase, gc):
             for c in codes:
                 name_overrides[c] = f"{name} ({c})"
 
-    # Clear dependent tables first (FK order: photos/results → shelf_life → sales_product)
+    # Clear dependent tables first.
+    # FK order: shelf_life children → shelf_life → pack_session tree → sales_product.
     print("\nClearing shelf life tables...")
     supabase.table("pack_shelf_life_photo").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
     supabase.table("pack_shelf_life_result").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
     supabase.table("pack_shelf_life").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
-    print("Clearing pack_lot_item...")
-    supabase.table("pack_lot_item").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
-    print("Clearing pack_lot...")
-    supabase.table("pack_lot").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
+    print("Clearing pack_session tree...")
+    for tbl in (
+        "pack_session_fails",
+        "pack_session_cases",
+        "pack_session_labor_hour",
+        "pack_session_leftover",
+        "pack_session",
+    ):
+        supabase.table(tbl).delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
     print("Clearing sales_product...")
     supabase.table("sales_product").delete().neq("id", "__none__").execute()
 
@@ -319,135 +319,18 @@ def migrate_sales_product(supabase, gc):
 
 
 # ─────────────────────────────────────────────────────────────
-# PACK LOT — LETTUCE (from pack_L_packlot)
-# ─────────────────────────────────────────────────────────────
-
-def migrate_pack_lettuce(supabase, gc, product_map):
-    """Migrate pack_L_packlot → pack_lot + pack_lot_item for lettuce farm.
-
-    Grouping key is (pack_date, harvest_date) to honour the new
-    uq_pack_lot_dates UNIQUE (org_id, farm_id, pack_date, harvest_date)
-    constraint introduced 2026-05-14. Source rows that legacy data left
-    under different PackLot values but with the same date pair get
-    merged into one lot; product quantities sum. lot_number is
-    generated deterministically from the dates per the new convention
-    (matches pack_lot_default_lot_number(p_pack_date, p_harvest_date)).
-    """
-    wb = gc.open_by_key(PACK_SHEET_ID)
-    data = wb.worksheet("pack_L_packlot").get_all_records()
-
-    print(f"\nProcessing {len(data)} lettuce pack lot rows...")
-
-    # Group rows by (pack_date, harvest_date), merging product quantities.
-    lots = {}  # (pack_date, harvest_date) → { meta + product totals }
-    for row in data:
-        pack_date = parse_date(row.get("PackDate"))
-        if not pack_date:
-            continue
-        harvest_date = parse_date(row.get("HarvestDate"))
-        key = (pack_date, harvest_date)
-
-        if key not in lots:
-            lots[key] = {
-                "pack_date": pack_date,
-                "harvest_date": harvest_date,
-                "best_by": parse_date(row.get("BestByDate")),
-                "reported_by": str(row.get("ReportedBy", "")).strip().lower() or None,
-                "products": defaultdict(float),
-            }
-
-        for col, product_id in LETTUCE_PRODUCT_COLS.items():
-            qty = safe_numeric(row.get(col))
-            if qty > 0:
-                lots[key]["products"][product_id] += qty
-
-        # Use best_by / reported_by from whichever row has it.
-        if not lots[key]["best_by"]:
-            lots[key]["best_by"] = parse_date(row.get("BestByDate"))
-        if not lots[key]["reported_by"]:
-            lots[key]["reported_by"] = str(row.get("ReportedBy", "")).strip().lower() or None
-
-    print(f"  Merged {len(data)} sheet rows to {len(lots)} unique (pack_date, harvest_date) lots")
-
-    # Clear existing (farm-scoped)
-    print("\nClearing pack_lot_item (lettuce)...")
-    existing_lots = supabase.table("pack_lot").select("id").eq("farm_id", "Lettuce").execute().data
-    if existing_lots:
-        lot_ids = [l["id"] for l in existing_lots]
-        for i in range(0, len(lot_ids), 100):
-            batch = lot_ids[i:i + 100]
-            supabase.table("pack_lot_item").delete().in_("pack_lot_id", batch).execute()
-    print("Clearing pack_lot (lettuce)...")
-    supabase.table("pack_lot").delete().eq("farm_id", "Lettuce").execute()
-
-    # Insert lots
-    lot_rows = []
-    sorted_keys = sorted(lots.keys())  # (pack_date, harvest_date) tuples sort cleanly
-    for key in sorted_keys:
-        info = lots[key]
-        reported_by = info["reported_by"] or AUDIT_USER
-        # lot_number = {pack YYYYMMDD}-{harvest YYYYMMDD}, or just
-        # {pack YYYYMMDD} when harvest_date is missing.
-        pack_compact = info["pack_date"].replace("-", "")
-        if info["harvest_date"]:
-            lot_number = f"{pack_compact}-{info['harvest_date'].replace('-', '')}"
-        else:
-            lot_number = pack_compact
-        lot_rows.append({
-            "org_id": ORG_ID,
-            "farm_id": "Lettuce",
-            "lot_number": lot_number,
-            "harvest_date": info["harvest_date"],
-            "pack_date": info["pack_date"],
-            "created_by": reported_by,
-            "updated_by": reported_by,
-        })
-
-    inserted_lots = insert_rows(supabase, "pack_lot", lot_rows)
-
-    # Insert items
-    item_rows = []
-    for idx, key in enumerate(sorted_keys):
-        info = lots[key]
-        lot_id = inserted_lots[idx]["id"]
-        pack_date = info["pack_date"]
-        best_by = info["best_by"]
-        reported_by = info["reported_by"] or AUDIT_USER
-
-        for product_id, qty in info["products"].items():
-            item_best_by = best_by
-            if not item_best_by:
-                product = product_map.get(product_id, {})
-                shelf_days = product.get("shelf_life_days")
-                if shelf_days and pack_date:
-                    dt = datetime.strptime(pack_date, "%Y-%m-%d") + timedelta(days=int(shelf_days))
-                    item_best_by = dt.strftime("%Y-%m-%d")
-            if not item_best_by:
-                item_best_by = pack_date
-
-            item_rows.append({
-                "org_id": ORG_ID,
-                "farm_id": "Lettuce",
-                "pack_lot_id": lot_id,
-                "sales_product_id": product_id,
-                "best_by_date": item_best_by,
-                "pack_quantity": qty,
-                "created_by": reported_by,
-                "updated_by": reported_by,
-            })
-
-    insert_rows(supabase, "pack_lot_item", item_rows)
-
-
-# ─────────────────────────────────────────────────────────────
-# PACK LOT — CUKE (from pack_C_prod, summed by date)
+# PACK SESSION — CUKE (from pack_C_prod, summed by date)
 # ─────────────────────────────────────────────────────────────
 
 def migrate_pack_cuke(supabase, gc, product_map):
-    """Migrate pack_C_prod → pack_lot + pack_lot_item for cuke farm.
+    """Migrate pack_C_prod → pack_session + pack_session_cases for cuke farm.
 
-    Sums quantities across all packers for each date to produce
-    one pack_lot per date with aggregated pack_lot_items.
+    pack_C_prod has no harvest_date or hourly cadence — each row is a
+    packer's daily total. We sum across packers per (pack_date, product)
+    and write one pack_session per (pack_date, sales_product) with
+    harvest_date = pack_date, plus one pack_session_cases row per
+    pair with pack_end_hour = pack_date + 23:59 (the schema's
+    designated bucket for non-hourly cuke totals).
     """
     wb = gc.open_by_key(PACK_SHEET_ID)
     data = wb.worksheet("pack_C_prod").get_all_records()
@@ -470,61 +353,50 @@ def migrate_pack_cuke(supabase, gc, product_map):
 
     print(f"  Aggregated to {len(date_totals)} unique pack dates")
 
-    # Clear existing (farm-scoped)
-    print("\nClearing pack_lot_item (cuke)...")
-    existing_lots = supabase.table("pack_lot").select("id").eq("farm_id", "Cuke").execute().data
-    if existing_lots:
-        lot_ids = [l["id"] for l in existing_lots]
-        for i in range(0, len(lot_ids), 100):
-            batch = lot_ids[i:i + 100]
-            supabase.table("pack_lot_item").delete().in_("pack_lot_id", batch).execute()
-    print("Clearing pack_lot (cuke)...")
-    supabase.table("pack_lot").delete().eq("farm_id", "Cuke").execute()
+    # Clear existing cuke data from the pack_session tree.
+    print("\nClearing pack_session model (cuke)...")
+    for tbl in (
+        "pack_session_fails",
+        "pack_session_cases",
+        "pack_session_labor_hour",
+        "pack_session_leftover",
+        "pack_session",
+    ):
+        supabase.table(tbl).delete().eq("farm_id", "Cuke").execute()
 
-    # Insert lots sorted by date
-    lot_rows = []
+    # Build pack_session + pack_session_cases rows.
+    session_rows = []
+    cases_rows = []
     sorted_dates = sorted(date_totals.keys())
     for pack_date in sorted_dates:
         reported_by = date_reporters.get(pack_date) or AUDIT_USER
-        lot_rows.append({
-            "org_id": ORG_ID,
-            "farm_id": "Cuke",
-            "lot_number": pack_date.replace("-", ""),
-            "pack_date": pack_date,
-            "created_by": reported_by,
-            "updated_by": reported_by,
-        })
+        pack_end_hour = f"{pack_date}T23:59:00"
+        harvest_date = pack_date
 
-    inserted_lots = insert_rows(supabase, "pack_lot", lot_rows)
-
-    # Insert items
-    item_rows = []
-    for idx, pack_date in enumerate(sorted_dates):
-        lot_id = inserted_lots[idx]["id"]
-        products = date_totals[pack_date]
-
-        for product_id, qty in products.items():
-            product = product_map.get(product_id, {})
-            shelf_days = product.get("shelf_life_days")
-            if shelf_days:
-                dt = datetime.strptime(pack_date, "%Y-%m-%d") + timedelta(days=int(shelf_days))
-                best_by = dt.strftime("%Y-%m-%d")
-            else:
-                best_by = pack_date
-
-            reported_by = date_reporters.get(pack_date) or AUDIT_USER
-            item_rows.append({
+        for product_id, qty in date_totals[pack_date].items():
+            session_rows.append({
                 "org_id": ORG_ID,
                 "farm_id": "Cuke",
-                "pack_lot_id": lot_id,
                 "sales_product_id": product_id,
-                "best_by_date": best_by,
-                "pack_quantity": qty,
+                "pack_date": pack_date,
+                "harvest_date": harvest_date,
+                "created_by": reported_by,
+                "updated_by": reported_by,
+            })
+            cases_rows.append({
+                "org_id": ORG_ID,
+                "farm_id": "Cuke",
+                "pack_date": pack_date,
+                "harvest_date": harvest_date,
+                "pack_end_hour": pack_end_hour,
+                "sales_product_id": product_id,
+                "cases_packed": int(round(qty)),
                 "created_by": reported_by,
                 "updated_by": reported_by,
             })
 
-    insert_rows(supabase, "pack_lot_item", item_rows)
+    insert_rows(supabase, "pack_session", session_rows)
+    insert_rows(supabase, "pack_session_cases", cases_rows)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -636,11 +508,22 @@ def migrate_shelf_life(supabase, gc):
     print(f"\nProcessing {len(slife_data)} shelf life trials...")
     print(f"  {len(obsv_data)} observations, {len(photo_data)} photos")
 
-    # --- Build pack_lot lookup by date ---
-    lots = supabase.table("pack_lot").select("id, pack_date").eq("farm_id", "Lettuce").execute()
-    lot_by_date = {}
-    for l in lots.data:
-        lot_by_date.setdefault(l["pack_date"], l["id"])
+    # --- Build pack_session lookup ---
+    # Pack model is now keyed by (pack_date, sales_product_id, harvest_date).
+    # Index by (pack_date, sales_product_id) so trials with a known product
+    # link to that specific session; trials without a product fall back to
+    # the first session on that date (legacy behaviour).
+    sessions = (
+        supabase.table("pack_session")
+        .select("id, pack_date, sales_product_id")
+        .eq("farm_id", "Lettuce")
+        .execute()
+    )
+    session_by_date_product = {}
+    session_by_date_only = {}
+    for s in sessions.data:
+        session_by_date_product.setdefault((s["pack_date"], s["sales_product_id"]), s["id"])
+        session_by_date_only.setdefault(s["pack_date"], s["id"])
 
     # --- Clear existing shelf life data (FK order) ---
     print("\nClearing shelf life tables...")
@@ -667,8 +550,14 @@ def migrate_shelf_life(supabase, gc):
         # Resolve sales_product_id (Trial -> null)
         sales_product_id = product_code if product_code and product_code != "Trial" else None
 
-        # Resolve pack_lot_id by date
-        pack_lot_id = lot_by_date.get(pack_date) if pack_date else None
+        # Resolve pack_session_id by (date, product) — fall back to first
+        # session on that date when the trial has no specific product.
+        pack_session_id = None
+        if pack_date:
+            if sales_product_id:
+                pack_session_id = session_by_date_product.get((pack_date, sales_product_id))
+            if not pack_session_id:
+                pack_session_id = session_by_date_only.get(pack_date)
 
         # Build notes — prepend packaging, unmatched date, trial product, data quality
         notes_parts = []
@@ -678,8 +567,8 @@ def migrate_shelf_life(supabase, gc):
             notes_parts.append(f"Trial product: {trial_product}")
         if data_quality and data_quality != "Good":
             notes_parts.append(f"Data quality: {data_quality}")
-        if pack_date and not pack_lot_id:
-            notes_parts.append(f"Pack date: {pack_date} (no matching lot)")
+        if pack_date and not pack_session_id:
+            notes_parts.append(f"Pack date: {pack_date} (no matching session)")
         if sheet_notes:
             notes_parts.append(sheet_notes)
         notes = "; ".join(notes_parts) if notes_parts else None
@@ -693,7 +582,7 @@ def migrate_shelf_life(supabase, gc):
         trial_rows.append({
             "org_id": ORG_ID,
             "farm_id": "Lettuce",
-            "pack_lot_id": pack_lot_id,
+            "pack_session_id": pack_session_id,
             "sales_product_id": sales_product_id,
             "trial_number": safe_int(trial_id),
             "trial_purpose": trial_purpose,
@@ -975,20 +864,22 @@ def main():
     print("PACK MIGRATION")
     print("=" * 60)
 
-    # Step 1: Seed sales_product (needed as FK for pack_lot_item)
+    # Step 1: Seed sales_product (needed as FK for pack_session.sales_product_id).
     product_map = migrate_sales_product(supabase, gc)
 
-    # Step 2: Lettuce pack lots from pack_L_packlot
-    migrate_pack_lettuce(supabase, gc, product_map)
-
-    # Step 3: Cuke pack lots from pack_C_prod (summed by date)
+    # Step 2: Cuke pack sessions from pack_C_prod (summed by date; lettuce
+    # pack data is loaded by 010 from the hourly pack_L_prod sheet).
     migrate_pack_cuke(supabase, gc, product_map)
 
-    # Step 4: Shelf life metrics, trials, observations, photos
+    # Step 3: Shelf life metrics + trials + observations + photos.
+    # Note: lettuce trials get pack_session_id=NULL on this pass because 010
+    # writes the lettuce pack_sessions afterwards. Cuke trials (if any) do
+    # link correctly because 009's migrate_pack_cuke (above) has already
+    # written their sessions.
     migrate_shelf_life_metrics(supabase)
     migrate_shelf_life(supabase, gc)
 
-    # Step 5: Dryer results from pack_L_moisture_checks
+    # Step 4: Dryer results from pack_L_moisture_checks.
     migrate_pack_dryer_result(supabase, gc)
 
     print("\n" + "=" * 60)

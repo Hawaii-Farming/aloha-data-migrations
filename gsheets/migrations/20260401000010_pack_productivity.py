@@ -1,35 +1,49 @@
 """
 Migrate Pack Productivity Data
 ================================
-Migrates pack_L_prod from legacy Google Sheets to Supabase.
+Migrates pack_L_prod from legacy Google Sheets into the pack_session
+model on Supabase. Replaces the prior ops_task_tracker +
+pack_productivity_hour + pack_productivity_hour_fail loader -- those
+tables are gone (2026-05-19 pack module rewrite).
 
-Converts cumulative case counts to hourly deltas and creates the full
-ops_task_tracker → pack_productivity_hour → pack_productivity_hour_fail
-chain for each product packed on each day.
+Mapping (one Google Sheet row per (pack_date, pack_hour)) →
+
+  pack_session            one per (pack_date, sales_product_id)
+                          with harvest_date = pack_date and
+                          started_at / stopped_at lifted from notes
+                          ("Start LR at 9:44") or defaulted to that
+                          product's first/last pack_end_hour.
+  pack_session_cases      one per (pack_date, pack_end_hour,
+                          sales_product_id, harvest_date) with
+                          cases_packed = hourly delta (cumulative
+                          → delta still done here).
+  pack_session_labor_hour one per (pack_date, pack_end_hour) -- crew
+                          counts + fsafe_metal_detected[_at].
+  pack_session_fails      one per (pack_date, pack_end_hour,
+                          fail_category) when fail_count > 0.
+  pack_session_leftover   one per pack_date -- LeftoverPounds →
+                          leftover_lettuce, wr_leftover_pounds →
+                          leftover_watercress, ar_leftover_pounds →
+                          leftover_arugula, summed across all hours.
 
 Source: https://docs.google.com/spreadsheets/d/1XEwjbU_NKNmoUED4w5iuaGV_ilovCJg4f2AkA9lB2cg
-  - pack_L_prod: 1907 rows → ops_task_tracker + pack_productivity_hour + pack_productivity_hour_fail
+  - pack_L_prod (lettuce farm, hourly cadence)
 
 Usage:
     python scripts/migrations/20260401000010_pack_productivity.py
 
-Rerunnable: clears and reinserts all data on each run.
+Rerunnable: clears lettuce data from all pack_session_* tables and
+the pack_fail_category lookup, then reinserts.
 """
 
 import os
 import re
-import sys
 from collections import defaultdict
 from datetime import datetime
-from pathlib import Path
 
 import gspread
 from google.oauth2.service_account import Credentials
 from supabase import create_client
-
-# Sibling helper for the schema-cutover guard below.
-sys.path.insert(0, str(Path(__file__).parent))
-from _pg import get_pg_conn  # noqa: E402
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://kfwqtaazdankxmdlqdak.supabase.co")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
@@ -45,10 +59,11 @@ if not SUPABASE_KEY:
 
 AUDIT_USER = "data@hawaiifarming.com"
 ORG_ID = "hawaii_farming"
+FARM_ID = "Lettuce"
 
 PACK_SHEET_ID = "1XEwjbU_NKNmoUED4w5iuaGV_ilovCJg4f2AkA9lB2cg"
 
-# Product case columns → sales_product_id (uppercase to match sales_product.id)
+# Product case columns → sales_product.id
 PRODUCT_COLS = {
     "LRCases": "LR",
     "LFCases": "LF",
@@ -59,20 +74,21 @@ PRODUCT_COLS = {
     "af_cases": "AF",
 }
 
-# Leftover columns → sales_product_id
+# Leftover columns → pack_session_leftover.<column>
+# LeftoverPounds (general) is treated as lettuce per the schema layout.
 LEFTOVER_COLS = {
-    "LeftoverPounds": None,         # general leftover (assigned to first active product)
-    "wr_leftover_pounds": "WR",
-    "ar_leftover_pounds": "AR",
+    "LeftoverPounds":      "leftover_lettuce",
+    "wr_leftover_pounds":  "leftover_watercress",
+    "ar_leftover_pounds":  "leftover_arugula",
 }
 
-# Fail columns → pack_productivity_fail_category.id (proper case)
+# Fail columns → pack_fail_category.id
 FAIL_COLS = {
-    "FilmFails": "Film",
-    "TrayFails": "Tray",
-    "PrinterFails": "Printer",
-    "LeavesFails": "Leaves",
-    "RidgesFails": "Ridges",
+    "FilmFails":        "Film",
+    "TrayFails":        "Tray",
+    "PrinterFails":     "Printer",
+    "LeavesFails":      "Leaves",
+    "RidgesFails":      "Ridges",
     "UnexplainedFails": "Unexplained",
 }
 
@@ -87,7 +103,7 @@ HOUR_MAP = {
 # Parse metal detection time from notes (e.g. "MD: 10:06", "MD 12:04", "MO: 5:04")
 MD_REGEX = re.compile(r"M[DO]:?\s*(\d{1,2}):(\d{2})", re.IGNORECASE)
 
-# Parse product start/finish times from notes
+# Parse product start/finish times from notes.
 # Patterns: "Start LR at 9:44", "LR Start at 9:30", "LR start at 10:45"
 #           "Finished LR at 11:23", "LR finish at 10:35", "Finished WR at 1:51"
 PRODUCT_CODES = {"LR", "LF", "LW", "WR", "WF", "AR", "AF"}
@@ -125,18 +141,16 @@ def parse_product_times(notes, pack_date):
         hour = m.group(2) or m.group(5)
         minute = m.group(3) or m.group(6)
         if code in PRODUCT_CODES and hour and minute:
-            pid = code  # already uppercased above; matches sales_product.id
-            times.setdefault(pid, {})
-            times[pid]["start"] = _to_timestamp(pack_date, hour, minute)
+            times.setdefault(code, {})
+            times[code]["start"] = _to_timestamp(pack_date, hour, minute)
 
     for m in FINISH_REGEX.finditer(notes):
         code = (m.group(1) or m.group(4) or "").upper()
         hour = m.group(2) or m.group(5)
         minute = m.group(3) or m.group(6)
         if code in PRODUCT_CODES and hour and minute:
-            pid = code  # already uppercased above; matches sales_product.id
-            times.setdefault(pid, {})
-            times[pid]["finish"] = _to_timestamp(pack_date, hour, minute)
+            times.setdefault(code, {})
+            times[code]["finish"] = _to_timestamp(pack_date, hour, minute)
 
     return times
 
@@ -150,7 +164,6 @@ def parse_md_time(notes, pack_date):
         return None
     hour = int(m.group(1))
     minute = int(m.group(2))
-    # Assume PM if hour < 7 (packing doesn't happen before 7 AM)
     if hour < 7:
         hour += 12
     return f"{pack_date}T{hour:02d}:{minute:02d}:00"
@@ -160,20 +173,7 @@ def parse_md_time(notes, pack_date):
 # STANDARD HELPERS
 # ─────────────────────────────────────────────────────────────
 
-def to_id(name: str) -> str:
-    """Convert a display name to a TEXT PK."""
-    return re.sub(r"[^a-z0-9_]+", "_", name.lower()).strip("_") if name else ""
-
-
-def proper_case(val):
-    """Normalize a string to title case, stripping extra whitespace."""
-    if not val or not str(val).strip():
-        return val
-    return str(val).strip().title()
-
-
 def audit(row: dict) -> dict:
-    """Add audit fields to a row."""
     row["created_by"] = AUDIT_USER
     row["updated_by"] = AUDIT_USER
     return row
@@ -193,7 +193,6 @@ def insert_rows(supabase, table: str, rows: list):
 
 
 def parse_date(date_str):
-    """Parse date string to YYYY-MM-DD or None."""
     if not date_str or not str(date_str).strip():
         return None
     for fmt in ("%m/%d/%Y", "%m/%d/%y", "%Y-%m-%d"):
@@ -205,7 +204,6 @@ def parse_date(date_str):
 
 
 def safe_numeric(val, default=0):
-    """Parse a numeric value, stripping commas and whitespace."""
     try:
         v = str(val).strip().replace(",", "")
         return float(v) if v else default
@@ -214,7 +212,6 @@ def safe_numeric(val, default=0):
 
 
 def safe_int(val, default=None):
-    """Parse an integer value or return default."""
     try:
         v = str(val).strip().replace(",", "")
         return int(float(v)) if v else default
@@ -223,109 +220,81 @@ def safe_int(val, default=None):
 
 
 def parse_bool(val):
-    """Parse a boolean value from sheet text."""
     return str(val).strip().upper() in ("TRUE", "YES", "1")
 
 
 def get_sheets():
-    """Connect to Google Sheets."""
     scopes = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
     creds = Credentials.from_service_account_file("credentials.json", scopes=scopes)
     return gspread.authorize(creds)
 
 
 # ─────────────────────────────────────────────────────────────
-# FAIL CATEGORIES
+# FAIL CATEGORIES (lookup table)
 # ─────────────────────────────────────────────────────────────
 
 def migrate_fail_categories(supabase):
-    """Seed the 6 fail categories for the lettuce farm."""
-    print("\nClearing pack_productivity_fail_category...")
-    supabase.table("pack_productivity_hour_fail").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
-    supabase.table("pack_productivity_fail_category").delete().neq("id", "__none__").execute()
+    """Seed the 7 pack_fail_category rows for the lettuce farm.
+
+    Renamed from pack_productivity_fail_category by the 2026-05-19 pack
+    module rewrite; same row set, same display_order semantics.
+    """
+    print("\nClearing pack_session_fails + pack_fail_category...")
+    supabase.table("pack_session_fails") \
+        .delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
+    supabase.table("pack_fail_category") \
+        .delete().neq("id", "__none__").execute()
 
     categories = [
-        ("Film", 1, False),
-        ("Tray", 2, False),
-        ("Printer", 3, False),
-        ("Leaves", 4, False),
-        ("Ridges", 5, False),
+        ("Film",        1, False),
+        ("Tray",        2, False),
+        ("Printer",     3, False),
+        ("Leaves",      4, False),
+        ("Ridges",      5, False),
         ("Unexplained", 6, False),
-        ("Total", 7, True),
+        ("Total",       7, True),
     ]
 
     rows = [
         audit({
             "id": name,
             "org_id": ORG_ID,
-            "farm_id": "Lettuce",
+            "farm_id": FARM_ID,
             "display_order": order,
             "is_active": active,
         })
         for name, order, active in categories
     ]
 
-    insert_rows(supabase, "pack_productivity_fail_category", rows)
+    insert_rows(supabase, "pack_fail_category", rows)
 
 
 # ─────────────────────────────────────────────────────────────
-# PRODUCTIVITY MIGRATION
+# PACK PRODUCTIVITY → pack_session model
 # ─────────────────────────────────────────────────────────────
-
-def _legacy_columns_present():
-    """Check whether pack_productivity_hour still has the legacy columns this
-    script writes to. The 20260514230400 schema cutover dropped cases_packed
-    + leftover_pounds + ops_task_tracker_id and added a required
-    pack_session_id FK -- once that's deployed, this whole loader is
-    structurally incompatible with the live schema and should be skipped
-    until rewritten against the new pack_session model.
-
-    Returns True when ALL three legacy columns exist (= safe to load),
-    False otherwise.
-    """
-    with get_pg_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                """SELECT array_agg(column_name)
-                     FROM information_schema.columns
-                    WHERE table_schema = 'public'
-                      AND table_name   = 'pack_productivity_hour'
-                      AND column_name IN ('cases_packed', 'leftover_pounds', 'ops_task_tracker_id')"""
-            )
-            cols = cur.fetchone()[0] or []
-    return len(cols) == 3
-
 
 def migrate_pack_productivity(supabase, gc):
-    """Migrate pack_L_prod → ops_task_tracker + pack_productivity_hour + pack_productivity_hour_fail.
+    """Migrate pack_L_prod into the pack_session model.
 
-    Legacy data uses cumulative case counts per product per day. This migration:
-    1. Groups rows by date, sorted by hour
-    2. Converts cumulative → delta (cases packed in each specific hour)
-    3. Identifies product transitions (when a new product starts getting cases)
-    4. Creates one ops_task_tracker per product per day
-    5. Creates pack_productivity_hour rows with delta cases, linked to the tracker
-    6. Creates pack_productivity_hour_fail rows for non-zero fail counts
-
-    Skips entirely if the target DB has moved to the new pack_session model
-    (cases_packed / leftover_pounds / ops_task_tracker_id dropped from
-    pack_productivity_hour by 20260514230400). On those DBs the data
-    should be entered through the new pack_session app flow instead.
+    For each pack_date in the sheet:
+      1. Convert cumulative case counts to hourly deltas per product.
+      2. Insert one pack_session row per active product (harvest_date =
+         pack_date; started_at/stopped_at from notes or hour fallback).
+      3. Insert hourly pack_session_cases for every product with a
+         positive delta.
+      4. Insert one pack_session_labor_hour row per hour (crew counts +
+         metal-detected flag/time).
+      5. Insert pack_session_fails rows for each non-zero fail column.
+      6. Insert one pack_session_leftover row per day (summed across
+         hours by crop: LeftoverPounds→lettuce, wr_*→watercress,
+         ar_*→arugula).
     """
-    if not _legacy_columns_present():
-        print(
-            "  SKIP: pack_productivity_hour has been migrated to the "
-            "pack_session model (legacy columns dropped). Skipping legacy "
-            "sheet load -- data flows in through the pack_session app now."
-        )
-        return
-
     wb = gc.open_by_key(PACK_SHEET_ID)
     data = wb.worksheet("pack_L_prod").get_all_records()
 
     print(f"\nProcessing {len(data)} productivity rows...")
 
-    # --- Group by date, sort by hour ---
+    # Group by date, sort by hour
     by_date = defaultdict(list)
     for r in data:
         pack_date = parse_date(r.get("PackDate"))
@@ -340,62 +309,62 @@ def migrate_pack_productivity(supabase, gc):
 
     print(f"  {len(by_date)} unique pack dates")
 
-    # --- Clear existing data (FK order) ---
-    print("\nClearing productivity tables...")
-    supabase.table("pack_productivity_hour_fail").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
-    supabase.table("pack_productivity_hour").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
-    # Clear only packing task trackers created by this migration (loop until empty)
-    while True:
-        batch = supabase.table("ops_task_tracker").select("id").eq("ops_task_id", "Packing").eq("farm_id", "Lettuce").limit(100).execute()
-        if not batch.data:
-            break
-        supabase.table("ops_task_tracker").delete().in_("id", [t["id"] for t in batch.data]).execute()
+    # Clear lettuce data from the pack_session tree.
+    # pack_session children join by natural key (no FK to pack_session.id),
+    # so each table needs its own DELETE.
+    print("\nClearing pack_session model (lettuce)...")
+    for tbl in (
+        "pack_session_fails",
+        "pack_session_cases",
+        "pack_session_labor_hour",
+        "pack_session_leftover",
+        "pack_session",
+    ):
+        supabase.table(tbl).delete().eq("farm_id", FARM_ID).execute()
     print("  Cleared")
 
-    # --- Process each day ---
-    all_tracker_rows = []
-    all_hour_rows = []
-    all_fail_rows = []
+    session_rows = []
+    cases_rows = []
+    labor_rows = []
+    fails_rows = []
+    leftover_rows = []
 
     for pack_date in sorted(by_date.keys()):
         hours = by_date[pack_date]
+        harvest_date = pack_date  # pack_L_prod has no HarvestDate
 
-        # Compute cumulative → delta per product
-        prev_cumulative = {}  # product_id → previous cumulative value
-        hour_deltas = []      # (hour_num, row, {product_id: delta_cases})
-
+        # Cumulative → delta per product per hour
+        prev_cumulative = {}
+        hour_deltas = []  # list of (hour_num, row, {pid: delta_int})
         for hour_num, r in hours:
             deltas = {}
-            for col, product_id in PRODUCT_COLS.items():
+            for col, pid in PRODUCT_COLS.items():
                 cumulative = safe_numeric(r.get(col), default=None)
                 if cumulative is None:
                     continue
-                prev = prev_cumulative.get(product_id, 0)
+                prev = prev_cumulative.get(pid, 0)
                 delta = max(0, cumulative - prev)
                 if delta > 0 or cumulative > 0:
-                    deltas[product_id] = delta
-                prev_cumulative[product_id] = cumulative
-
+                    deltas[pid] = int(delta)
+                prev_cumulative[pid] = cumulative
             hour_deltas.append((hour_num, r, deltas))
 
-        # Identify which products were active on this day
-        day_products = set()
-        for _, _, deltas in hour_deltas:
-            day_products.update(deltas.keys())
+        # Active products on this day, ordered by first appearance.
+        product_order = []
+        product_first_hour = {}
+        product_last_hour = {}
+        for hour_num, _, deltas in hour_deltas:
+            for pid, d in deltas.items():
+                if d > 0:
+                    if pid not in product_first_hour:
+                        product_order.append(pid)
+                        product_first_hour[pid] = hour_num
+                    product_last_hour[pid] = hour_num
 
-        if not day_products:
+        if not product_order:
             continue
 
-        # Determine product order by first appearance
-        product_order = []
-        seen_products = set()
-        for _, _, deltas in hour_deltas:
-            for pid in deltas:
-                if pid not in seen_products:
-                    product_order.append(pid)
-                    seen_products.add(pid)
-
-        # Find first reporter for the day
+        # First reporter on the day wins for created_by on the parent rows.
         first_reporter = AUDIT_USER
         for _, r, _ in hour_deltas:
             rb = str(r.get("ReportedBy", "")).strip().lower()
@@ -403,194 +372,122 @@ def migrate_pack_productivity(supabase, gc):
                 first_reporter = rb
                 break
 
-        # Create one ops_task_tracker per product per day
-        # Track which hours each product was actively being packed
-        product_hours = defaultdict(list)  # product_id → [(hour_num, r, delta)]
-        for hour_num, r, deltas in hour_deltas:
-            for pid, delta in deltas.items():
-                if delta > 0:
-                    product_hours[pid].append((hour_num, r, delta))
-
-        # Parse product start/finish times from notes across all hours
-        product_times = {}  # pid → {"start": ts, "finish": ts}
-        for hour_num, r, deltas in hour_deltas:
+        # Parse product start/finish times from notes across all hours.
+        product_times = {}
+        for _, r, _ in hour_deltas:
             notes = str(r.get("Notes", "")).strip()
             parsed = parse_product_times(notes, pack_date)
-            for pid, times in parsed.items():
+            for pid, ts in parsed.items():
                 product_times.setdefault(pid, {})
-                if "start" in times and "start" not in product_times[pid]:
-                    product_times[pid]["start"] = times["start"]
-                if "finish" in times:
-                    product_times[pid]["finish"] = times["finish"]
+                if "start" in ts and "start" not in product_times[pid]:
+                    product_times[pid]["start"] = ts["start"]
+                if "finish" in ts:
+                    product_times[pid]["finish"] = ts["finish"]
 
-        # Build tracker rows — one per product per day
-        trackers_for_day = {}  # product_id → tracker row dict (pre-insert)
+        # pack_session rows (one per (pack_date, product))
         for pid in product_order:
-            p_hours = product_hours.get(pid, [])
-            if not p_hours:
-                continue
-
-            first_hour = p_hours[0][0]
-            last_hour = p_hours[-1][0]
-            reported_by = str(p_hours[0][1].get("ReportedBy", "")).strip().lower() or AUDIT_USER
-
-            # Use parsed times if available, otherwise fall back to hour boundaries
-            start_time = product_times.get(pid, {}).get("start") or f"{pack_date}T{first_hour:02d}:00:00"
-            stop_time = product_times.get(pid, {}).get("finish") or f"{pack_date}T{last_hour + 1:02d}:00:00"
-
-            tracker = {
+            first_h = product_first_hour[pid]
+            last_h = product_last_hour[pid]
+            started_at = (product_times.get(pid, {}).get("start")
+                          or f"{pack_date}T{first_h:02d}:00:00")
+            stopped_at = (product_times.get(pid, {}).get("finish")
+                          or f"{pack_date}T{last_h:02d}:00:00")
+            session_rows.append({
                 "org_id": ORG_ID,
-                "farm_id": "Lettuce",
-                "site_id": "lettuce_ph",
-                "ops_task_id": "Packing",
+                "farm_id": FARM_ID,
                 "sales_product_id": pid,
-                "start_time": start_time,
-                "stop_time": stop_time,
-                "is_completed": True,
+                "pack_date": pack_date,
+                "harvest_date": harvest_date,
+                "started_at": started_at,
+                "stopped_at": stopped_at,
+                "created_by": first_reporter,
+                "updated_by": first_reporter,
+            })
+
+        # Accumulate per-day leftover by crop column.
+        day_leftover = {col: 0.0 for col in LEFTOVER_COLS.values()}
+
+        # Hour-level rows
+        for hour_num, r, deltas in hour_deltas:
+            reported_by = str(r.get("ReportedBy", "")).strip().lower() or AUDIT_USER
+            pack_end_hour = f"{pack_date}T{hour_num:02d}:00:00"
+            notes_raw = str(r.get("Notes", "")).strip() or None
+
+            # pack_session_labor_hour (one row per clock hour)
+            is_md = parse_bool(r.get("MD"))
+            md_at = parse_md_time(notes_raw, pack_date) if is_md else None
+            if is_md and not md_at:
+                md_at = pack_end_hour
+            labor_rows.append({
+                "org_id": ORG_ID,
+                "farm_id": FARM_ID,
+                "pack_date": pack_date,
+                "pack_end_hour": pack_end_hour,
+                "catchers": safe_int(r.get("Catchers")) or 0,
+                "packers":  safe_int(r.get("Packers"))  or 0,
+                "mixers":   safe_int(r.get("Mixers"))   or 0,
+                "boxers":   safe_int(r.get("Boxers"))   or 0,
+                "fsafe_metal_detected": is_md,
+                "fsafe_metal_detected_at": md_at,
                 "created_by": reported_by,
                 "updated_by": reported_by,
-            }
-            trackers_for_day[pid] = tracker
-            all_tracker_rows.append(tracker)
+            })
 
-    # Insert all trackers
-    inserted_trackers = insert_rows(supabase, "ops_task_tracker", all_tracker_rows)
-
-    # Build lookup: (date, product_id) → tracker UUID
-    tracker_lookup = {}
-    for t in inserted_trackers:
-        start = t["start_time"]
-        # Extract date from start_time
-        t_date = start[:10]
-        pid = t["sales_product_id"]
-        tracker_lookup[(t_date, pid)] = t["id"]
-
-    print(f"  Created {len(inserted_trackers)} task trackers")
-
-    # --- Second pass: build hour rows and fail rows ---
-    hour_counter = 0
-    pending_fails = {}  # hour_idx → {fail_counts, reported_by}
-    for pack_date in sorted(by_date.keys()):
-        hours = by_date[pack_date]
-
-        # Recompute deltas (same logic as above)
-        prev_cumulative = {}
-        for hour_num, r in hours:
-            deltas = {}
-            for col, product_id in PRODUCT_COLS.items():
-                cumulative = safe_numeric(r.get(col), default=None)
-                if cumulative is None:
+            # pack_session_cases (one row per (hour, product) with delta > 0)
+            for pid, delta in deltas.items():
+                if delta <= 0:
                     continue
-                prev = prev_cumulative.get(product_id, 0)
-                delta = max(0, cumulative - prev)
-                deltas[product_id] = delta
-                prev_cumulative[product_id] = cumulative
+                cases_rows.append({
+                    "org_id": ORG_ID,
+                    "farm_id": FARM_ID,
+                    "pack_date": pack_date,
+                    "harvest_date": harvest_date,
+                    "pack_end_hour": pack_end_hour,
+                    "sales_product_id": pid,
+                    "cases_packed": delta,
+                    "created_by": reported_by,
+                    "updated_by": reported_by,
+                })
 
-            # Common fields for this hour
-            reported_by = str(r.get("ReportedBy", "")).strip().lower() or AUDIT_USER
-            catchers = safe_int(r.get("Catchers")) or 0
-            packers = safe_int(r.get("Packers")) or 0
-            mixers = safe_int(r.get("Mixers")) or 0
-            boxers = safe_int(r.get("Boxers")) or 0
-            is_md = parse_bool(r.get("MD"))
-            notes = str(r.get("Notes", "")).strip() or None
-            pack_end_hour = f"{pack_date}T{hour_num:02d}:00:00"
-
-            # Resolve metal detection timestamp
-            md_at = None
-            if is_md:
-                md_at = parse_md_time(notes, pack_date)
-                if not md_at:
-                    # Default to pack_end_hour and note the fallback
-                    md_at = pack_end_hour
-                    notes = f"[MD time defaulted to hour] {notes}" if notes else "[MD time defaulted to hour]"
-
-            # Leftover pounds — assign general leftover to first product with delta > 0
-            leftover_by_product = {}
-            for lcol, lpid in LEFTOVER_COLS.items():
-                lval = safe_numeric(r.get(lcol), default=None)
-                if lval and lval > 0:
-                    if lpid:
-                        leftover_by_product[lpid] = lval
-                    else:
-                        # General leftover → first active product
-                        for pid in deltas:
-                            if deltas[pid] > 0:
-                                leftover_by_product.setdefault(pid, 0)
-                                leftover_by_product[pid] += lval
-                                break
-
-            # Fail counts (shared across products — assign to first active product)
-            # Use individual categories when available, otherwise use TotalFails as "total"
-            fail_counts = {}
-            has_individual = False
+            # pack_session_fails (per category)
             for fcol, fcat_id in FAIL_COLS.items():
                 fval = safe_int(r.get(fcol))
                 if fval and fval > 0:
-                    fail_counts[fcat_id] = fval
-                    has_individual = True
-            if not has_individual:
-                total_fails = safe_int(r.get("TotalFails"))
-                if total_fails and total_fails > 0:
-                    fail_counts["Total"] = total_fails
+                    fails_rows.append({
+                        "org_id": ORG_ID,
+                        "farm_id": FARM_ID,
+                        "pack_date": pack_date,
+                        "pack_end_hour": pack_end_hour,
+                        "pack_fail_category_id": fcat_id,
+                        "fail_count": fval,
+                        "created_by": reported_by,
+                        "updated_by": reported_by,
+                    })
 
-            # Create one pack_productivity_hour per product with delta > 0
-            first_product_this_hour = True
-            for product_id, delta in deltas.items():
-                if delta <= 0:
-                    continue
+            # Leftover accumulation
+            for lcol, target_col in LEFTOVER_COLS.items():
+                lval = safe_numeric(r.get(lcol), default=0)
+                if lval:
+                    day_leftover[target_col] += lval
 
-                tracker_id = tracker_lookup.get((pack_date, product_id))
-                if not tracker_id:
-                    continue
-
-                hour_counter += 1
-                hour_idx = len(all_hour_rows)
-
-                hour_row = {
-                    "org_id": ORG_ID,
-                    "farm_id": "Lettuce",
-                    "ops_task_tracker_id": tracker_id,
-                    "pack_end_hour": pack_end_hour,
-                    "catchers": catchers,
-                    "packers": packers,
-                    "mixers": mixers,
-                    "boxers": boxers,
-                    "cases_packed": int(delta),
-                    "leftover_pounds": leftover_by_product.get(product_id, 0),
-                    "fsafe_metal_detected_at": md_at if first_product_this_hour else None,
-                    "notes": notes if first_product_this_hour else None,
-                    "created_by": reported_by,
-                    "updated_by": reported_by,
-                }
-                all_hour_rows.append(hour_row)
-
-                # Track fail counts by hour index (resolve to UUID after insert)
-                if first_product_this_hour and fail_counts:
-                    pending_fails[hour_idx] = {
-                        "fail_counts": fail_counts,
-                        "reported_by": reported_by,
-                    }
-
-                first_product_this_hour = False
-
-    inserted_hours = insert_rows(supabase, "pack_productivity_hour", all_hour_rows)
-
-    # Build fail rows using inserted UUIDs
-    for hour_idx, fail_info in pending_fails.items():
-        hour_uuid = inserted_hours[hour_idx]["id"]
-        for fcat_id, fcount in fail_info["fail_counts"].items():
-            all_fail_rows.append({
+        # pack_session_leftover (one row per day, only if any non-zero)
+        if any(v > 0 for v in day_leftover.values()):
+            leftover_rows.append({
                 "org_id": ORG_ID,
-                "farm_id": "Lettuce",
-                "pack_productivity_hour_id": hour_uuid,
-                "pack_productivity_fail_category_id": fcat_id,
-                "fail_count": fcount,
-                "created_by": fail_info["reported_by"],
-                "updated_by": fail_info["reported_by"],
+                "farm_id": FARM_ID,
+                "pack_date": pack_date,
+                "leftover_lettuce":    day_leftover["leftover_lettuce"],
+                "leftover_watercress": day_leftover["leftover_watercress"],
+                "leftover_arugula":    day_leftover["leftover_arugula"],
+                "created_by": first_reporter,
+                "updated_by": first_reporter,
             })
 
-    insert_rows(supabase, "pack_productivity_hour_fail", all_fail_rows)
+    insert_rows(supabase, "pack_session",            session_rows)
+    insert_rows(supabase, "pack_session_cases",      cases_rows)
+    insert_rows(supabase, "pack_session_labor_hour", labor_rows)
+    insert_rows(supabase, "pack_session_fails",      fails_rows)
+    insert_rows(supabase, "pack_session_leftover",   leftover_rows)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -602,13 +499,10 @@ def main():
     gc = get_sheets()
 
     print("=" * 60)
-    print("PACK PRODUCTIVITY MIGRATION")
+    print("PACK PRODUCTIVITY MIGRATION (pack_session model)")
     print("=" * 60)
 
-    # Step 1: Seed fail categories
     migrate_fail_categories(supabase)
-
-    # Step 2: Productivity data (trackers + hours + fails)
     migrate_pack_productivity(supabase, gc)
 
     print("\n" + "=" * 60)
