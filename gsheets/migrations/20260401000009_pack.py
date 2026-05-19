@@ -780,8 +780,8 @@ def parse_time(time_str):
     return None
 
 
-def migrate_pack_dryer_result(supabase, gc):
-    """Migrate pack_L_moisture_checks → pack_dryer_result for lettuce farm.
+def migrate_pack_moisture(supabase, gc):
+    """Migrate pack_L_moisture_checks → pack_moisture for lettuce farm.
 
     Parses site_id from notes (pond references) and maps seed_name to invnt_item_id.
     """
@@ -791,8 +791,8 @@ def migrate_pack_dryer_result(supabase, gc):
     print(f"\nProcessing {len(data)} dryer result rows...")
 
     # Clear existing
-    print("Clearing pack_dryer_result...")
-    supabase.table("pack_dryer_result").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
+    print("Clearing pack_moisture...")
+    supabase.table("pack_moisture").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
 
     rows = []
     skipped = 0
@@ -847,7 +847,7 @@ def migrate_pack_dryer_result(supabase, gc):
         row = {k: v for k, v in row.items() if v is not None}
         rows.append(row)
 
-    insert_rows(supabase, "pack_dryer_result", rows)
+    insert_rows(supabase, "pack_moisture", rows)
     if skipped:
         print(f"  Skipped {skipped} rows (missing date)")
 
@@ -880,7 +880,7 @@ def main():
     migrate_shelf_life(supabase, gc)
 
     # Step 4: Dryer results from pack_L_moisture_checks.
-    migrate_pack_dryer_result(supabase, gc)
+    migrate_pack_moisture(supabase, gc)
 
     print("\n" + "=" * 60)
     print("DONE")

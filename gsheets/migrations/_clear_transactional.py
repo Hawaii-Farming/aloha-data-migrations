@@ -70,7 +70,7 @@ NON_HR_TABLES = [
     "pack_session_cases",
     "pack_session_labor_hour",
     "pack_session_leftover",
-    "pack_dryer_result",
+    "pack_moisture",
     "pack_shelf_life_photo",
     "pack_shelf_life_result",
     "pack_shelf_life",
@@ -149,8 +149,21 @@ def main():
     cur = conn.cursor()
 
     # Phase 1: non-HR tables, all-org TRUNCATE CASCADE.
-    print(f"Phase 1: TRUNCATE CASCADE {len(NON_HR_TABLES)} non-HR tables...")
-    cur.execute("TRUNCATE TABLE " + ", ".join(NON_HR_TABLES) + " CASCADE;")
+    # Filter to tables that actually exist -- the schema occasionally
+    # renames/drops a table (e.g. pack_dryer_result -> pack_moisture in
+    # the 2026-05-19 pack rewrite) and a single missing relation would
+    # otherwise abort the whole TRUNCATE.
+    cur.execute(
+        "SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = ANY(%s)",
+        (NON_HR_TABLES,),
+    )
+    existing = {r[0] for r in cur.fetchall()}
+    missing = [t for t in NON_HR_TABLES if t not in existing]
+    to_truncate = [t for t in NON_HR_TABLES if t in existing]
+    if missing:
+        print(f"Phase 1: skipping {len(missing)} table(s) not in public schema: {', '.join(missing)}")
+    print(f"Phase 1: TRUNCATE CASCADE {len(to_truncate)} non-HR tables...")
+    cur.execute("TRUNCATE TABLE " + ", ".join(to_truncate) + " CASCADE;")
 
     # Phase 2: HR chain, scoped DELETE.
     # 2a. Break external FK to hr_employee (org_quickbooks_token.connected_by)
